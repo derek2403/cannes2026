@@ -440,12 +440,6 @@ graph LR
         T1 --> U1
     end
 
-    subgraph F2[“FLOW 2 - Fee Split”]
-        TRADE[“Every Trade”] -->|”HTS Auto-Fee”| SPLIT{“3% Split”}
-        SPLIT -->|”2%”| POOL[“Oracle Node Pool”]
-        SPLIT -->|”1%”| TREASURY[“Platform Treasury”]
-    end
-
     subgraph F3[“FLOW 3 - Oracle Reward”]
         PA[“Platform Agent”] -->|”Hedera Agent Kit”| CORRECT[“Correct Nodes<br/>weighted by rep”]
     end
