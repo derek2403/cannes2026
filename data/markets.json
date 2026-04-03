@@ -1,0 +1,89 @@
+[
+  {
+    "id": "mkt-1775259549-1870",
+    "created_at": "2026-04-03T23:40:00Z",
+    "ai_insight": {
+      "agent_id": "0.0.8500671",
+      "debate_log_id": "debate-mkt-1775259549-1870",
+      "market_thesis": "Interest rate decisions by the Federal Reserve significantly influence the economy and financial markets, making this a crucial topic for investors and policymakers.",
+      "confidence_score": 85,
+      "suggested_categories": [
+        "Economics",
+        "Monetary Policy"
+      ],
+      "news_sources": [
+        {
+          "title": "EU passes landmark AI regulation bill",
+          "source": "Reuters",
+          "url": "https://example.com/1",
+          "published_at": "2026-04-03T23:39:09Z",
+          "summary": "EU approved comprehensive AI Act mandating transparency for foundation models.",
+          "relevance_score": 0
+        },
+        {
+          "title": "Bitcoin ETF daily inflows surpass $1 billion",
+          "source": "Bloomberg",
+          "url": "https://example.com/2",
+          "published_at": "2026-04-03T23:39:09Z",
+          "summary": "Spot Bitcoin ETFs saw record daily inflows exceeding $1 billion.",
+          "relevance_score": 0
+        },
+        {
+          "title": "SpaceX Starship completes orbital flight",
+          "source": "BBC News",
+          "url": "https://example.com/3",
+          "published_at": "2026-04-03T23:39:09Z",
+          "summary": "SpaceX Starship completed full orbital flight and landing.",
+          "relevance_score": 0
+        },
+        {
+          "title": "Federal Reserve signals rate cut",
+          "source": "CNBC",
+          "url": "https://example.com/4",
+          "published_at": "2026-04-03T23:39:09Z",
+          "summary": "Fed Chair indicated conditions may warrant rate reduction.",
+          "relevance_score": 0
+        },
+        {
+          "title": "Apple partners with OpenAI for Siri",
+          "source": "The Verge",
+          "url": "https://example.com/5",
+          "published_at": "2026-04-03T23:39:09Z",
+          "summary": "Apple integrating OpenAI models into Siri for multi-modal conversations.",
+          "relevance_score": 0
+        }
+      ]
+    },
+    "resolution": {
+      "question": "Will the Federal Reserve announce a rate cut in the September 2023 meeting?",
+      "resolution_criteria": "A 'YES' outcome is determined if the Federal Reserve announces a reduction in the federal funds rate during the September 2023 meeting, as reported by CNBC or the Federal Reserve's official website. A 'NO' outcome occurs if the rate is not cut, or if no decision is announced during this meeting.\nNull clause: The market resolves as INVALID if the September 2023 meeting is canceled or if the Federal Reserve ceases to publicly announce rate changes.",
+      "resolution_date": "2023-09-21",
+      "oracle_type": "ai_swarm",
+      "ancillary_data": "The Federal Reserve's schedule and announcements can be verified through their official communications and major financial news outlets."
+    },
+    "amm": {
+      "lp_pool_address": null,
+      "initial_seed_amount": 1000,
+      "yes_token_id": "0.0.8500681",
+      "no_token_id": "0.0.8500683",
+      "yes_token_balance": 1000,
+      "no_token_balance": 1000,
+      "current_odds_yes": 0.5,
+      "total_liquidity_usd": 0,
+      "trading_fee": 0.02
+    },
+    "ux": {
+      "status": "PROPOSED",
+      "volume_24h": 0,
+      "total_volume": 0,
+      "unique_bettors": 0,
+      "top_bet_size": 0,
+      "is_trending": false
+    },
+    "settlement": {
+      "winning_outcome": null,
+      "settlement_price": null,
+      "dispute_tx_hash": null
+    }
+  }
+]
