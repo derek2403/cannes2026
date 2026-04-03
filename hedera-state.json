@@ -1,0 +1,22 @@
+{
+  "network": "testnet",
+  "operatorId": "0.0.7946371",
+  "registryTopicId": null,
+  "reputationTopicId": null,
+  "agents": [],
+  "floras": [],
+  "hcsStandards": {
+    "HCS-2": "Topic Registry — combined market + agent directory",
+    "HCS-11": "Agent Identity — profile with linked reputation/flora/registry",
+    "HCS-16": "Flora Coordination — 3-phase commit-reveal blind voting",
+    "HCS-20": "Auditable Points — reputation deploy/mint/burn/transfer"
+  },
+  "topicMemoFormats": {
+    "HCS-2": "hcs-2:0:300",
+    "HCS-11": "hcs-11:profile:<accountId>",
+    "HCS-16-communication": "hcs-16:<floraId>:0",
+    "HCS-16-transaction": "hcs-16:<floraId>:1",
+    "HCS-16-state": "hcs-16:<floraId>:2",
+    "HCS-20": "hcs-20"
+  }
+}

@@ -295,12 +295,23 @@ export function computeHCS2State(messages: Record<string, unknown>[]) {
 // Spec: https://hol.org/docs/standards/hcs-11/
 // Profile JSON submitted to a topic. Account memo: hcs-11:hcs://1/<topicId>
 
+export interface AgentProfileLinks {
+  reputationTopicId?: string;   // HCS-20 points topic
+  registryTopicId?: string;     // HCS-2 registry this agent is listed in
+  floraTopicIds?: {              // HCS-16 Flora participation
+    communication?: string;
+    transaction?: string;
+    state?: string;
+  };
+}
+
 export function buildHCS11Profile(
   displayName: string,
   hederaAccountId: string,
   capabilities: number[],
   model: string,
-  bio?: string
+  bio?: string,
+  links?: AgentProfileLinks
 ) {
   return JSON.stringify({
     version: "1.0",
@@ -316,6 +327,9 @@ export function buildHCS11Profile(
     },
     properties: {
       hederaAccountId,
+      ...(links?.reputationTopicId && { reputationTopicId: links.reputationTopicId }),
+      ...(links?.registryTopicId && { registryTopicId: links.registryTopicId }),
+      ...(links?.floraTopicIds && { floraTopics: links.floraTopicIds }),
     },
   });
 }

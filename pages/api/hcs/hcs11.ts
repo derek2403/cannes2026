@@ -7,6 +7,7 @@ import {
   getOperatorKey,
   buildHCS11Profile,
 } from "@/lib/hcs-standards";
+import type { AgentProfileLinks } from "@/lib/hcs-standards";
 
 export default async function handler(
   req: NextApiRequest,
@@ -23,7 +24,10 @@ export default async function handler(
 
     switch (action) {
       case "create": {
-        const { displayName, accountId, capabilities, model, bio } = req.body;
+        const {
+          displayName, accountId, capabilities, model, bio,
+          reputationTopicId, registryTopicId, floraTopicIds,
+        } = req.body;
         // Create profile topic with submit key
         const operatorKey = getOperatorKey();
         const topicId = await createTopic(
@@ -31,12 +35,18 @@ export default async function handler(
           `hcs-11:profile:${accountId}`,
           operatorKey.publicKey
         );
+        const links: AgentProfileLinks = {
+          reputationTopicId,
+          registryTopicId,
+          floraTopicIds,
+        };
         const msg = buildHCS11Profile(
           displayName,
           accountId,
           capabilities || [7, 9, 16],
           model || "oracle-v1",
-          bio
+          bio,
+          links
         );
         const result = await submitMessage(client, topicId, msg);
         client.close();
