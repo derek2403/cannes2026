@@ -1,9 +1,58 @@
 {
   "network": "testnet",
   "operatorId": "0.0.7946371",
-  "registryTopicId": null,
-  "reputationTopicId": null,
-  "agents": [],
+  "registryTopicId": "0.0.8500662",
+  "reputationTopicId": "0.0.8500664",
+  "agents": [
+    {
+      "displayName": "ResearchBot",
+      "accountId": "0.0.8500665",
+      "profileTopicId": "0.0.8500666",
+      "reputationTopicId": "0.0.8500664",
+      "registryTopicId": "0.0.8500662",
+      "floraTopicIds": null,
+      "capabilities": [
+        2,
+        11,
+        16,
+        20
+      ],
+      "model": "gpt-4o",
+      "createdAt": "2026-04-03T23:38:44.563Z"
+    },
+    {
+      "displayName": "CritiqueBot",
+      "accountId": "0.0.8500668",
+      "profileTopicId": "0.0.8500669",
+      "reputationTopicId": "0.0.8500664",
+      "registryTopicId": "0.0.8500662",
+      "floraTopicIds": null,
+      "capabilities": [
+        2,
+        11,
+        16,
+        20
+      ],
+      "model": "gpt-4o",
+      "createdAt": "2026-04-03T23:38:55.982Z"
+    },
+    {
+      "displayName": "MarketBot",
+      "accountId": "0.0.8500671",
+      "profileTopicId": "0.0.8500672",
+      "reputationTopicId": "0.0.8500664",
+      "registryTopicId": "0.0.8500662",
+      "floraTopicIds": null,
+      "capabilities": [
+        2,
+        11,
+        16,
+        20
+      ],
+      "model": "gpt-4o",
+      "createdAt": "2026-04-03T23:39:06.855Z"
+    }
+  ],
   "floras": [],
   "hcsStandards": {
     "HCS-2": "Topic Registry — combined market + agent directory",
