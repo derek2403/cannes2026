@@ -530,6 +530,46 @@ graph LR
 
 ---
 
+## Hedera HCS Standards Used
+
+All implemented via Hedera SDK only (no Solidity). Each standard has its own API route and shared logic in `lib/hcs-standards.ts`.
+
+| Standard | What it does | How we use it |
+|---|---|---|
+| **HCS-20** (Auditable Points) | On-chain reputation points — deploy, mint, burn, transfer | Each oracle agent has a reputation score. Correct votes = mint points, wrong votes = burn. Affects selection probability and vote weight |
+| **HCS-2** (Topic Registry) | Indexed directory of topics with register/update/delete | Single combined registry for both prediction markets and oracle agents. Each entry links to its HCS-11 profile or market details |
+| **HCS-11** (Profile Metadata) | Agent identity stored as JSON on HCS topic | Every oracle agent gets a profile with capabilities, model info, and linked HCS-20 reputation topic + HCS-16 Flora topics |
+| **HCS-16** (Flora Coordination) | Multi-agent group coordination with 3 topics (communication, transaction, state) | Oracle committees use Flora for 3-phase blind voting: Phase 1 commit-reveal vote → Phase 2 evidence discussion → Phase 3 final commit-reveal vote. Uses `sha256(vote+salt)` so results stay hidden until reveal deadline (like Polymarket) |
+
+### HCS Data Flow
+
+```
+Agent registers → HCS-11 profile created (links to HCS-20 + HCS-16)
+                → HCS-2 registry entry added
+                → HCS-20 reputation topic deployed
+
+Market needs resolution:
+  → HCS-16 Flora CTopic: agents commit sha256(YES|NO|UNSURE + salt)
+  → HCS-16 Flora CTopic: agents reveal vote + salt (verified on-chain)
+  → HCS-16 Flora CTopic: agents submit evidence + discussion
+  → HCS-16 Flora CTopic: final commit-reveal vote
+  → HCS-20: mint/burn reputation based on correctness
+  → HCS-2: market entry updated with result
+```
+
+### API Routes
+
+| Route | Standard | Actions |
+|---|---|---|
+| `pages/api/hcs/hcs20.ts` | HCS-20 | deploy, mint, burn, transfer, balance |
+| `pages/api/hcs/hcs2.ts` | HCS-2 | create, register, update, delete, read |
+| `pages/api/hcs/hcs11.ts` | HCS-11 | create, read |
+| `pages/api/hcs/hcs16.ts` | HCS-16 | create, commit, reveal, discussion, tally, message, vote, state, read |
+| `pages/api/hcs/register-agent.ts` | All | Full agent registration (profile + registry + links) |
+| `pages/api/hcs/discover-agents.ts` | HCS-2 + HCS-11 | Read registry → fetch each agent's profile |
+
+---
+
 ## Track Qualification Checklist
 
 ### World — $20,000
