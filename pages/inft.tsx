@@ -13,6 +13,18 @@ interface ResultData {
   [key: string]: unknown;
 }
 
+const btnStyle = {
+  background: "#ea580c",
+  color: "#fff",
+  border: "none",
+  padding: "8px 18px",
+  borderRadius: 6,
+  cursor: "pointer",
+  fontFamily: "monospace",
+  fontSize: 13,
+  fontWeight: 600 as const,
+};
+
 export default function INFTPage() {
   const { address, isConnected } = useAccount();
   const { writeContractAsync } = useWriteContract();
@@ -25,8 +37,7 @@ export default function INFTPage() {
   const [systemPrompt, setSystemPrompt] = useState(
     "You are a helpful AI agent specializing in DeFi analytics. You provide concise, actionable insights."
   );
-  const [modelProvider, setModelProvider] = useState("openai");
-  const [apiKey, setApiKey] = useState("");
+  const modelProvider = "0g-compute";
   const [mintResult, setMintResult] = useState<ResultData | null>(null);
   const [mintLoading, setMintLoading] = useState(false);
 
@@ -57,11 +68,6 @@ export default function INFTPage() {
   const cronStoppedRef = useRef(false);
   const cronLogEndRef = useRef<HTMLDivElement>(null);
 
-  // ── x402 state ────────────────────────────────────────────────
-  const [x402TokenId, setX402TokenId] = useState("1");
-  const [x402Wallet, setX402Wallet] = useState("");
-  const [x402Endpoints, setX402Endpoints] = useState("https://api.example.com/prices");
-  const [x402Result, setX402Result] = useState<ResultData | null>(null);
 
   // ══════════════════════════════════════════════════════════════
   //  HANDLERS
@@ -79,7 +85,7 @@ export default function INFTPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           botId, domainTags, serviceOfferings, systemPrompt,
-          modelProvider, apiKey, persona: botId,
+          modelProvider, persona: botId,
         }),
       });
 
@@ -321,40 +327,14 @@ export default function INFTPage() {
     setCronRunning(false);
   }
 
-  async function handleSetX402() {
-    setX402Result(null);
-    try {
-      const walletAddr = x402Wallet || "0x0000000000000000000000000000000000000000";
-      const endpoints = x402Endpoints.split(",").map((s) => s.trim()).filter(Boolean);
-
-      // Set wallet
-      if (x402Wallet) {
-        await writeContractAsync({
-          address: SPARKINFT_ADDRESS, abi: SPARKINFT_ABI,
-          functionName: "setX402Wallet",
-          args: [BigInt(x402TokenId), walletAddr as `0x${string}`],
-        });
-      }
-      // Set endpoints
-      const hash = await writeContractAsync({
-        address: SPARKINFT_ADDRESS, abi: SPARKINFT_ABI,
-        functionName: "setX402Endpoints",
-        args: [BigInt(x402TokenId), endpoints],
-      });
-      setX402Result({ success: true, txHash: hash, message: "x402 config saved on-chain!", endpoints });
-    } catch (err: unknown) {
-      setX402Result({ success: false, error: err instanceof Error ? err.message : String(err) });
-    }
-  }
-
   // ══════════════════════════════════════════════════════════════
   //  RENDER
   // ══════════════════════════════════════════════════════════════
 
   return (
-    <div style={{ maxWidth: 720, margin: "40px auto", fontFamily: "monospace", padding: "0 20px" }}>
+    <div style={{ maxWidth: 720, margin: "40px auto", fontFamily: "monospace", padding: "0 20px", background: "#fff", color: "#000" }}>
       <h1>0GClaw — Autonomous Agent iNFTs</h1>
-      <p style={{ color: "#888" }}>
+      <p style={{ color: "#000" }}>
         ERC-7857 INFT + Cron + x402 on 0G Galileo Testnet
       </p>
 
@@ -370,7 +350,7 @@ export default function INFTPage() {
       {isConnected && (
         <section style={{ margin: "24px 0", padding: 16, background: "#f8fafc", border: "1px solid #e2e8f0" }}>
           <h2 style={{ marginTop: 0 }}>My iNFTs</h2>
-          <button onClick={handleMyTokens} disabled={myTokensLoading}>
+          <button onClick={handleMyTokens} disabled={myTokensLoading} style={{ ...btnStyle, opacity: myTokensLoading ? 0.6 : 1 }}>
             {myTokensLoading ? "Loading..." : "Check My iNFTs"}
           </button>
           {myTokens && myTokens.success && (
@@ -383,7 +363,7 @@ export default function INFTPage() {
                   {t.cronEnabled && <span style={{ color: "#22c55e", fontSize: 12, marginLeft: 8 }}>CRON ON</span>}
                 </div>
               ))}
-              {(myTokens.count as number) === 0 && <p style={{ color: "#888" }}>No iNFTs yet. Mint one below!</p>}
+              {(myTokens.count as number) === 0 && <p style={{ color: "#000" }}>No iNFTs yet. Mint one below!</p>}
             </div>
           )}
           {myTokens && !myTokens.success && <ResultBlock data={myTokens} />}
@@ -409,25 +389,12 @@ export default function INFTPage() {
             <textarea value={systemPrompt} onChange={(e) => setSystemPrompt(e.target.value)} rows={3} style={{ width: "100%", fontFamily: "monospace", fontSize: 12, marginTop: 4 }} />
           </label>
         </div>
-        <div style={{ marginTop: 12, padding: 12, background: "#fffbeb", border: "2px solid #f59e0b", borderRadius: 6 }}>
-          <p style={{ margin: "0 0 8px", fontWeight: "bold", fontSize: 13 }}>AI Provider Config (stored on 0G Storage)</p>
-          <div>
-            <label>Provider: {" "}
-              <select value={modelProvider} onChange={(e) => setModelProvider(e.target.value)} style={{ fontFamily: "monospace", padding: "4px 8px" }}>
-                <option value="openai">OpenAI</option>
-                <option value="groq">Groq</option>
-                <option value="deepseek">DeepSeek</option>
-              </select>
-            </label>
-          </div>
-          <div style={{ marginTop: 8 }}>
-            <label>API Key: {" "}
-              <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="sk-..."
-                style={{ width: 400, fontFamily: "monospace", fontSize: 12, padding: "6px 8px", border: "1px solid #f59e0b" }} />
-            </label>
-          </div>
+        <div style={{ marginTop: 12, padding: 12, background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 6 }}>
+          <p style={{ margin: 0, fontSize: 13 }}>
+            <strong>AI Provider: 0G Compute</strong> — Decentralized GPU inference, no API key needed.
+          </p>
         </div>
-        <button onClick={handleMint} disabled={!isConnected || mintLoading || !apiKey} style={{ marginTop: 12 }}>
+        <button onClick={handleMint} disabled={!isConnected || mintLoading} style={{ ...btnStyle, marginTop: 12, opacity: (!isConnected || mintLoading) ? 0.6 : 1 }}>
           {mintLoading ? "Minting..." : "Mint Agent iNFT"}
         </button>
         {mintResult && <ResultBlock data={mintResult} />}
@@ -441,7 +408,7 @@ export default function INFTPage() {
         <div>
           <label>Token ID: <input value={viewTokenId} onChange={(e) => setViewTokenId(e.target.value)} style={{ width: 100, fontFamily: "monospace" }} /></label>
         </div>
-        <button onClick={handleViewProfile} style={{ marginTop: 8 }}>View Profile</button>
+        <button onClick={handleViewProfile} style={{ ...btnStyle, marginTop: 8 }}>View Profile</button>
         {profileResult && <ResultBlock data={profileResult} />}
       </section>
 
@@ -454,18 +421,18 @@ export default function INFTPage() {
           <label>Token ID: <input value={chatTokenId} onChange={(e) => setChatTokenId(e.target.value)} style={{ width: 100, fontFamily: "monospace" }} /></label>
         </div>
         <div style={{ marginTop: 12, border: "1px solid #e2e8f0", background: "#f8fafc", minHeight: 200, maxHeight: 400, overflowY: "auto", padding: 12 }}>
-          {chatHistory.length === 0 && <p style={{ color: "#aaa", margin: 0 }}>No messages yet.</p>}
+          {chatHistory.length === 0 && <p style={{ color: "#000", margin: 0 }}>No messages yet.</p>}
           {chatHistory.map((msg, i) => (
             <div key={i} style={{ margin: "8px 0", textAlign: msg.role === "user" ? "right" : "left" }}>
               <span style={{
                 display: "inline-block", padding: "8px 12px", borderRadius: 8, maxWidth: "80%",
                 background: msg.role === "user" ? "#3b82f6" : "#e2e8f0",
-                color: msg.role === "user" ? "#fff" : "#1a1a1a",
+                color: msg.role === "user" ? "#fff" : "#000",
                 fontSize: 13, whiteSpace: "pre-wrap", wordBreak: "break-word",
               }}>{msg.text}</span>
             </div>
           ))}
-          {chatLoading && <div style={{ margin: "8px 0", color: "#888", fontSize: 13 }}>Agent is thinking...</div>}
+          {chatLoading && <div style={{ margin: "8px 0", color: "#000", fontSize: 13 }}>Agent is thinking...</div>}
         </div>
         <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
           <input value={chatInput} onChange={(e) => setChatInput(e.target.value)}
@@ -473,7 +440,7 @@ export default function INFTPage() {
             placeholder="Ask your agent something..."
             disabled={!isConnected || chatLoading}
             style={{ flex: 1, fontFamily: "monospace", padding: "8px 12px" }} />
-          <button onClick={handleChat} disabled={!isConnected || chatLoading || !chatInput.trim()}>Send</button>
+          <button onClick={handleChat} disabled={!isConnected || chatLoading || !chatInput.trim()} style={{ ...btnStyle, opacity: (!isConnected || chatLoading || !chatInput.trim()) ? 0.6 : 1 }}>Send</button>
         </div>
       </section>
 
@@ -482,7 +449,7 @@ export default function INFTPage() {
       {/* ── Cron Config ──────────────────────────────────────── */}
       <section style={{ margin: "24px 0" }}>
         <h2>Cron — Give Your Agent Time</h2>
-        <p style={{ color: "#888", fontSize: 13 }}>Set a schedule for your agent to wake up and act autonomously.</p>
+        <p style={{ color: "#000", fontSize: 13 }}>Set a schedule for your agent to wake up and act autonomously.</p>
         <div>
           <label>Token ID: <input value={cronTokenId} onChange={(e) => setCronTokenId(e.target.value)} style={{ width: 100, fontFamily: "monospace" }} /></label>
         </div>
@@ -497,49 +464,49 @@ export default function INFTPage() {
           </label>
         </div>
         <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button onClick={handleSetCron} disabled={!isConnected}>Save Config On-Chain</button>
-          <button onClick={() => handleToggleCron(true)} disabled={!isConnected} style={{ background: "#22c55e", color: "#fff", border: "none", padding: "6px 14px", borderRadius: 4, cursor: "pointer" }}>Enable On-Chain</button>
-          <button onClick={() => handleToggleCron(false)} disabled={!isConnected} style={{ background: "#ef4444", color: "#fff", border: "none", padding: "6px 14px", borderRadius: 4, cursor: "pointer" }}>Disable On-Chain</button>
+          <button onClick={handleSetCron} disabled={!isConnected} style={{ ...btnStyle, opacity: !isConnected ? 0.6 : 1 }}>Save Config On-Chain</button>
+          <button onClick={() => handleToggleCron(true)} disabled={!isConnected} style={{ background: "#22c55e", color: "#fff", border: "none", padding: "8px 18px", borderRadius: 6, cursor: "pointer", fontFamily: "monospace", fontSize: 13, fontWeight: 600 }}>Enable On-Chain</button>
+          <button onClick={() => handleToggleCron(false)} disabled={!isConnected} style={{ background: "#ef4444", color: "#fff", border: "none", padding: "8px 18px", borderRadius: 6, cursor: "pointer", fontFamily: "monospace", fontSize: 13, fontWeight: 600 }}>Disable On-Chain</button>
         </div>
         {cronResult && <ResultBlock data={cronResult} />}
 
         {/* ── Live Cron Executor ── */}
-        <div style={{ marginTop: 16, padding: 12, background: "#1a1a2e", borderRadius: 8 }}>
+        <div style={{ marginTop: 16, padding: 12, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-            <span style={{ color: "#e2e8f0", fontWeight: "bold", fontSize: 14 }}>
+            <span style={{ color: "#000", fontWeight: "bold", fontSize: 14 }}>
               Live Executor {cronRunning && <span style={{ color: "#22c55e", marginLeft: 8, fontSize: 12 }}>● RUNNING</span>}
-              {!cronRunning && <span style={{ color: "#888", marginLeft: 8, fontSize: 12 }}>○ STOPPED</span>}
+              {!cronRunning && <span style={{ color: "#000", marginLeft: 8, fontSize: 12 }}>○ STOPPED</span>}
             </span>
             <div style={{ display: "flex", gap: 8 }}>
               {!cronRunning ? (
                 <button onClick={handleStartCron} disabled={!isConnected || !cronPrompt.trim()}
-                  style={{ background: "#22c55e", color: "#fff", border: "none", padding: "6px 16px", borderRadius: 4, cursor: "pointer", fontWeight: "bold" }}>
+                  style={{ background: "#22c55e", color: "#fff", border: "none", padding: "8px 18px", borderRadius: 6, cursor: "pointer", fontFamily: "monospace", fontSize: 13, fontWeight: 600 }}>
                   ▶ Start Cron
                 </button>
               ) : (
                 <button onClick={handleStopCron}
-                  style={{ background: "#ef4444", color: "#fff", border: "none", padding: "6px 16px", borderRadius: 4, cursor: "pointer", fontWeight: "bold" }}>
+                  style={{ background: "#ef4444", color: "#fff", border: "none", padding: "8px 18px", borderRadius: 6, cursor: "pointer", fontFamily: "monospace", fontSize: 13, fontWeight: 600 }}>
                   ■ Stop Cron
                 </button>
               )}
               {cronLog.length > 0 && !cronRunning && (
                 <button onClick={() => setCronLog([])}
-                  style={{ background: "#374151", color: "#9ca3af", border: "none", padding: "6px 12px", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>
+                  style={{ background: "#e2e8f0", color: "#000", border: "none", padding: "6px 12px", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>
                   Clear Log
                 </button>
               )}
             </div>
           </div>
-          <div style={{ background: "#0d1117", borderRadius: 6, padding: 10, maxHeight: 300, overflowY: "auto", minHeight: 60 }}>
+          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 6, padding: 10, maxHeight: 300, overflowY: "auto", minHeight: 60 }}>
             {cronLog.length === 0 && (
-              <p style={{ color: "#555", margin: 0, fontSize: 12 }}>
+              <p style={{ color: "#000", margin: 0, fontSize: 12 }}>
                 No executions yet. Hit Start Cron to run every {cronInterval}s.
               </p>
             )}
             {cronLog.map((entry, i) => (
-              <div key={i} style={{ margin: "6px 0", fontSize: 12, borderBottom: "1px solid #1e293b", paddingBottom: 6 }}>
+              <div key={i} style={{ margin: "6px 0", fontSize: 12, borderBottom: "1px solid #e2e8f0", paddingBottom: 6 }}>
                 <span style={{ color: "#6366f1", marginRight: 8 }}>[{entry.time}]</span>
-                <span style={{ color: entry.text.startsWith("Error") ? "#ef4444" : "#e2e8f0", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                <span style={{ color: entry.text.startsWith("Error") ? "#ef4444" : "#000", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
                   {entry.text}
                 </span>
               </div>
@@ -551,31 +518,8 @@ export default function INFTPage() {
 
       <hr style={{ margin: "24px 0" }} />
 
-      {/* ── x402 Config ──────────────────────────────────────── */}
-      <section style={{ margin: "24px 0" }}>
-        <h2>x402 — Give Your Agent Money</h2>
-        <p style={{ color: "#888", fontSize: 13 }}>Set a USDC wallet and paid API endpoints. Your agent auto-pays via HTTP 402.</p>
-        <div>
-          <label>Token ID: <input value={x402TokenId} onChange={(e) => setX402TokenId(e.target.value)} style={{ width: 100, fontFamily: "monospace" }} /></label>
-        </div>
-        <div style={{ marginTop: 8 }}>
-          <label>x402 Wallet (Base Sepolia): <input value={x402Wallet} onChange={(e) => setX402Wallet(e.target.value)} placeholder="0x..." style={{ width: 400, fontFamily: "monospace", fontSize: 11 }} /></label>
-        </div>
-        <div style={{ marginTop: 8 }}>
-          <label>Paid Endpoints (comma-separated):
-            <textarea value={x402Endpoints} onChange={(e) => setX402Endpoints(e.target.value)} rows={2}
-              style={{ width: "100%", fontFamily: "monospace", fontSize: 12, marginTop: 4 }}
-              placeholder="https://api.example.com/prices, https://api.example.com/news" />
-          </label>
-        </div>
-        <button onClick={handleSetX402} disabled={!isConnected} style={{ marginTop: 8 }}>Save x402 Config</button>
-        {x402Result && <ResultBlock data={x402Result} />}
-      </section>
-
-      <hr style={{ margin: "24px 0" }} />
-
       {/* ── Contract Info ────────────────────────────────────── */}
-      <section style={{ margin: "24px 0", fontSize: 12, color: "#888" }}>
+      <section style={{ margin: "24px 0", fontSize: 12, color: "#000" }}>
         <p>Contract: <a href={`https://chainscan-galileo.0g.ai/address/${SPARKINFT_ADDRESS}`} target="_blank" rel="noreferrer">{SPARKINFT_ADDRESS}</a></p>
       </section>
     </div>

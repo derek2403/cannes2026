@@ -34,6 +34,18 @@ interface FTTaskItem {
   fee?: string;
 }
 
+const btnStyle = {
+  background: "#7c3aed",
+  color: "#fff",
+  border: "none",
+  padding: "8px 18px",
+  borderRadius: 6,
+  cursor: "pointer",
+  fontFamily: "monospace",
+  fontSize: 13,
+  fontWeight: 600 as const,
+};
+
 export default function ComputePage() {
   // Services state
   const [services, setServices] = useState<ServiceItem[]>([]);
@@ -41,8 +53,8 @@ export default function ComputePage() {
   const [loading, setLoading] = useState<string | null>(null);
 
   // Account state
-  const [ledgerAmount, setLedgerAmount] = useState("0.5");
-  const [depositAmount, setDepositAmount] = useState("0.5");
+  const [ledgerAmount, setLedgerAmount] = useState("5");
+  const [depositAmount, setDepositAmount] = useState("1");
   const [transferAmount, setTransferAmount] = useState("0.1");
   const [transferProvider, setTransferProvider] = useState("");
   const [accountResult, setAccountResult] = useState<ApiResult | null>(null);
@@ -303,14 +315,16 @@ export default function ComputePage() {
         margin: "40px auto",
         fontFamily: "monospace",
         padding: "0 20px",
+        background: "#fff",
+        color: "#000",
       }}
     >
       <h1>0G Compute Network</h1>
-      <p style={{ color: "#888" }}>
+      <p style={{ color: "#000" }}>
         Decentralized GPU marketplace — inference via OpenAI-compatible API,
         pay-per-request on-chain
       </p>
-      <p style={{ color: "#666", fontSize: 12 }}>
+      <p style={{ color: "#000", fontSize: 12 }}>
         Network: 0G Testnet (evmrpc-testnet.0g.ai) | SDK:
         @0glabs/0g-serving-broker
       </p>
@@ -320,13 +334,14 @@ export default function ComputePage() {
       {/* 1. Discover Services */}
       <section style={{ margin: "24px 0" }}>
         <h2>1. Discover AI Services</h2>
-        <p style={{ color: "#888", fontSize: 13 }}>
+        <p style={{ color: "#000", fontSize: 13 }}>
           List available AI providers on the 0G Compute Network. Each provider
           runs a model and sets input/output pricing.
         </p>
         <button
           onClick={handleListServices}
           disabled={loading === "services"}
+          style={{ ...btnStyle, opacity: loading === "services" ? 0.6 : 1 }}
         >
           {loading === "services" ? "Fetching..." : "List Available Services"}
         </button>
@@ -394,7 +409,7 @@ export default function ComputePage() {
                           setInferProvider(s.provider);
                           setTransferProvider(s.provider);
                         }}
-                        style={{ fontSize: 11 }}
+                        style={{ ...btnStyle, fontSize: 11, padding: "4px 12px" }}
                       >
                         Select
                       </button>
@@ -403,7 +418,7 @@ export default function ComputePage() {
                 ))}
               </tbody>
             </table>
-            <p style={{ color: "#888", fontSize: 11, marginTop: 4 }}>
+            <p style={{ color: "#000", fontSize: 11, marginTop: 4 }}>
               {services.length} service(s) found
             </p>
           </div>
@@ -415,7 +430,7 @@ export default function ComputePage() {
       {/* 2. Account Setup */}
       <section style={{ margin: "24px 0" }}>
         <h2>2. Account Setup</h2>
-        <p style={{ color: "#888", fontSize: 13 }}>
+        <p style={{ color: "#000", fontSize: 13 }}>
           Fund your 0G Compute ledger, then transfer to a provider sub-account
           before making inference calls.
         </p>
@@ -443,7 +458,7 @@ export default function ComputePage() {
             <button
               onClick={() => handleAccountAction("create-ledger")}
               disabled={loading === "account-create-ledger"}
-              style={{ marginLeft: 8 }}
+              style={{ ...btnStyle, marginLeft: 8, opacity: loading === "account-create-ledger" ? 0.6 : 1 }}
             >
               {loading === "account-create-ledger"
                 ? "Creating..."
@@ -475,7 +490,7 @@ export default function ComputePage() {
             <button
               onClick={() => handleAccountAction("deposit")}
               disabled={loading === "account-deposit"}
-              style={{ marginLeft: 8 }}
+              style={{ ...btnStyle, marginLeft: 8, opacity: loading === "account-deposit" ? 0.6 : 1 }}
             >
               {loading === "account-deposit" ? "Depositing..." : "Deposit"}
             </button>
@@ -516,7 +531,7 @@ export default function ComputePage() {
             <button
               onClick={() => handleAccountAction("transfer")}
               disabled={loading === "account-transfer"}
-              style={{ marginLeft: 8 }}
+              style={{ ...btnStyle, marginLeft: 8, opacity: loading === "account-transfer" ? 0.6 : 1 }}
             >
               {loading === "account-transfer"
                 ? "Transferring..."
@@ -525,7 +540,7 @@ export default function ComputePage() {
             <button
               onClick={() => handleAccountAction("transfer-ft")}
               disabled={loading === "account-transfer-ft"}
-              style={{ marginLeft: 8 }}
+              style={{ ...btnStyle, marginLeft: 8, opacity: loading === "account-transfer-ft" ? 0.6 : 1 }}
             >
               {loading === "account-transfer-ft"
                 ? "Transferring..."
@@ -541,6 +556,7 @@ export default function ComputePage() {
           <button
             onClick={handleGetBalance}
             disabled={loading === "balance"}
+            style={{ ...btnStyle, opacity: loading === "balance" ? 0.6 : 1 }}
           >
             {loading === "balance" ? "Checking..." : "Check Balance"}
           </button>
@@ -553,7 +569,7 @@ export default function ComputePage() {
       {/* 3. Inference */}
       <section style={{ margin: "24px 0" }}>
         <h2>3. AI Inference</h2>
-        <p style={{ color: "#888", fontSize: 13 }}>
+        <p style={{ color: "#000", fontSize: 13 }}>
           Send a prompt to a 0G Compute provider. The request is authenticated
           on-chain, the response is verifiable via TEE signatures.
         </p>
@@ -589,7 +605,7 @@ export default function ComputePage() {
         <button
           onClick={handleInference}
           disabled={loading === "inference"}
-          style={{ marginTop: 8 }}
+          style={{ ...btnStyle, marginTop: 8, opacity: loading === "inference" ? 0.6 : 1 }}
         >
           {loading === "inference"
             ? "Running inference..."
@@ -616,7 +632,7 @@ export default function ComputePage() {
                   style={{
                     marginTop: 8,
                     fontSize: 11,
-                    color: "#666",
+                    color: "#000",
                     borderTop: "1px solid #86efac",
                     paddingTop: 8,
                   }}
@@ -652,7 +668,7 @@ export default function ComputePage() {
       {/* 4. Fine-Tuning */}
       <section style={{ margin: "24px 0" }}>
         <h2>4. Fine-Tuning</h2>
-        <p style={{ color: "#888", fontSize: 13 }}>
+        <p style={{ color: "#000", fontSize: 13 }}>
           Train a custom model on your data via 0G Compute. Upload a dataset,
           create a fine-tuning task, and monitor progress — all on decentralized
           GPU infrastructure.
@@ -673,6 +689,7 @@ export default function ComputePage() {
             <button
               onClick={handleFTListServices}
               disabled={loading === "ft-services"}
+              style={{ ...btnStyle, opacity: loading === "ft-services" ? 0.6 : 1 }}
             >
               {loading === "ft-services"
                 ? "Fetching..."
@@ -681,7 +698,7 @@ export default function ComputePage() {
             <button
               onClick={handleFTListModels}
               disabled={loading === "ft-models"}
-              style={{ marginLeft: 8 }}
+              style={{ ...btnStyle, marginLeft: 8, opacity: loading === "ft-models" ? 0.6 : 1 }}
             >
               {loading === "ft-models" ? "Fetching..." : "List Models"}
             </button>
@@ -753,7 +770,7 @@ export default function ComputePage() {
                       <td style={{ padding: 6, border: "1px solid #e2e8f0" }}>
                         <button
                           onClick={() => setFtProvider(s.provider)}
-                          style={{ fontSize: 11 }}
+                          style={{ ...btnStyle, fontSize: 11, padding: "4px 12px" }}
                         >
                           Select
                         </button>
@@ -762,7 +779,7 @@ export default function ComputePage() {
                   ))}
                 </tbody>
               </table>
-              <p style={{ color: "#888", fontSize: 11, marginTop: 4 }}>
+              <p style={{ color: "#000", fontSize: 11, marginTop: 4 }}>
                 {ftServices.length} provider(s) found
               </p>
             </div>
@@ -827,7 +844,7 @@ export default function ComputePage() {
           <button
             onClick={handleFTCreateTask}
             disabled={loading === "ft-create"}
-            style={{ marginTop: 8 }}
+            style={{ ...btnStyle, marginTop: 8, opacity: loading === "ft-create" ? 0.6 : 1 }}
           >
             {loading === "ft-create"
               ? "Uploading & Creating..."
@@ -862,20 +879,21 @@ export default function ComputePage() {
             <button
               onClick={() => handleFTGetTask("status")}
               disabled={loading === "ft-status"}
+              style={{ ...btnStyle, opacity: loading === "ft-status" ? 0.6 : 1 }}
             >
               {loading === "ft-status" ? "Checking..." : "Get Task Status"}
             </button>
             <button
               onClick={() => handleFTGetTask("list")}
               disabled={loading === "ft-list"}
-              style={{ marginLeft: 8 }}
+              style={{ ...btnStyle, marginLeft: 8, opacity: loading === "ft-list" ? 0.6 : 1 }}
             >
               {loading === "ft-list" ? "Loading..." : "List All Tasks"}
             </button>
             <button
               onClick={() => handleFTGetTask("log")}
               disabled={loading === "ft-log"}
-              style={{ marginLeft: 8 }}
+              style={{ ...btnStyle, marginLeft: 8, opacity: loading === "ft-log" ? 0.6 : 1 }}
             >
               {loading === "ft-log" ? "Loading..." : "Get Training Log"}
             </button>

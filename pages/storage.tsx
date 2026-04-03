@@ -5,6 +5,18 @@ interface ApiResult {
   [key: string]: unknown;
 }
 
+const btnStyle = {
+  background: "#2563eb",
+  color: "#fff",
+  border: "none",
+  padding: "8px 18px",
+  borderRadius: 6,
+  cursor: "pointer",
+  fontFamily: "monospace",
+  fontSize: 13,
+  fontWeight: 600 as const,
+};
+
 export default function StoragePage() {
   // Upload state
   const [uploadContent, setUploadContent] = useState(
@@ -100,13 +112,15 @@ export default function StoragePage() {
         margin: "40px auto",
         fontFamily: "monospace",
         padding: "0 20px",
+        background: "#fff",
+        color: "#000",
       }}
     >
       <h1>0G Storage Demo</h1>
-      <p style={{ color: "#888" }}>
+      <p style={{ color: "#000" }}>
         Decentralized, immutable, content-addressed storage via 0G Storage SDK
       </p>
-      <p style={{ color: "#666", fontSize: 12 }}>
+      <p style={{ color: "#000", fontSize: 12 }}>
         Indexer: indexer-storage-testnet-turbo.0g.ai | RPC:
         evmrpc-testnet.0g.ai
       </p>
@@ -116,7 +130,7 @@ export default function StoragePage() {
       {/* 1. Upload Content */}
       <section style={{ margin: "24px 0" }}>
         <h2>1. Upload Knowledge Content</h2>
-        <p style={{ color: "#888", fontSize: 13 }}>
+        <p style={{ color: "#000", fontSize: 13 }}>
           Upload a SPARK knowledge item to 0G Storage. Returns an immutable
           Merkle root hash. Content is erasure-coded across the storage network.
         </p>
@@ -155,7 +169,7 @@ export default function StoragePage() {
             />
             <strong>Encrypt before upload</strong> (AES-256-GCM)
           </label>
-          <p style={{ color: "#888", fontSize: 11, margin: "4px 0 0 24px" }}>
+          <p style={{ color: "#000", fontSize: 11, margin: "4px 0 0 24px" }}>
             Content is encrypted server-side before uploading to 0G Storage.
             Only this SPARK node can decrypt it.
           </p>
@@ -163,7 +177,7 @@ export default function StoragePage() {
         <button
           onClick={handleUpload}
           disabled={uploadLoading}
-          style={{ marginTop: 8 }}
+          style={{ ...btnStyle, marginTop: 8, opacity: uploadLoading ? 0.6 : 1 }}
         >
           {uploadLoading
             ? "Uploading to 0G..."
@@ -179,7 +193,7 @@ export default function StoragePage() {
       {/* 2. Download Content */}
       <section style={{ margin: "24px 0" }}>
         <h2>2. Download by Root Hash</h2>
-        <p style={{ color: "#888", fontSize: 13 }}>
+        <p style={{ color: "#000", fontSize: 13 }}>
           Retrieve content from 0G Storage using its Merkle root hash. Includes
           cryptographic proof verification — the content is guaranteed authentic
           and untampered.
@@ -213,7 +227,7 @@ export default function StoragePage() {
             />
             <strong>Decrypt after download</strong> (AES-256-GCM)
           </label>
-          <p style={{ color: "#888", fontSize: 11, margin: "4px 0 0 24px" }}>
+          <p style={{ color: "#000", fontSize: 11, margin: "4px 0 0 24px" }}>
             Decrypt content that was encrypted before upload. Fails if content
             is not encrypted or key mismatch.
           </p>
@@ -221,7 +235,7 @@ export default function StoragePage() {
         <button
           onClick={handleDownload}
           disabled={downloadLoading}
-          style={{ marginTop: 8 }}
+          style={{ ...btnStyle, marginTop: 8, opacity: downloadLoading ? 0.6 : 1 }}
         >
           {downloadLoading
             ? "Downloading from 0G..."
@@ -237,7 +251,7 @@ export default function StoragePage() {
       {/* 3. KV Storage */}
       <section style={{ margin: "24px 0" }}>
         <h2>3. Knowledge Key-Value Store</h2>
-        <p style={{ color: "#888", fontSize: 13 }}>
+        <p style={{ color: "#000", fontSize: 13 }}>
           Store a knowledge key-value pair on 0G Storage. Each entry is
           immutable and content-addressed via Merkle tree root hashes.
         </p>
@@ -264,7 +278,7 @@ export default function StoragePage() {
         <button
           onClick={handleKvWrite}
           disabled={kvLoading}
-          style={{ marginTop: 8 }}
+          style={{ ...btnStyle, marginTop: 8, opacity: kvLoading ? 0.6 : 1 }}
         >
           {kvLoading ? "Storing..." : "Store Key-Value"}
         </button>
