@@ -1,20 +1,24 @@
-import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
-import { configVariable, defineConfig } from "hardhat/config";
+import "dotenv/config";
+import hardhatEthersPlugin from "@nomicfoundation/hardhat-ethers";
+import hardhatIgnitionEthersPlugin from "@nomicfoundation/hardhat-ignition-ethers";
+import { defineConfig } from "hardhat/config";
 
 export default defineConfig({
-  plugins: [hardhatToolboxViemPlugin],
+  plugins: [hardhatEthersPlugin, hardhatIgnitionEthersPlugin],
   solidity: {
     profiles: {
       default: {
         version: "0.8.28",
+        settings: {
+          optimizer: { enabled: true, runs: 1 },
+          viaIR: true,
+        },
       },
       production: {
         version: "0.8.28",
         settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
+          optimizer: { enabled: true, runs: 200 },
+          viaIR: true,
         },
       },
     },
@@ -24,15 +28,11 @@ export default defineConfig({
       type: "edr-simulated",
       chainType: "l1",
     },
-    hardhatOp: {
-      type: "edr-simulated",
-      chainType: "op",
-    },
-    sepolia: {
+    zgTestnet: {
       type: "http",
       chainType: "l1",
-      url: configVariable("SEPOLIA_RPC_URL"),
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+      url: process.env.ZG_TESTNET_RPC_URL!,
+      accounts: [process.env.ZG_TESTNET_PRIVATE_KEY!],
     },
   },
 });
