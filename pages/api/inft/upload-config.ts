@@ -33,8 +33,8 @@ export default async function handler(
     return res.status(400).json({ error: "Missing botId or systemPrompt" });
   }
 
-  if (!modelProvider || !apiKey) {
-    return res.status(400).json({ error: "Missing modelProvider or apiKey" });
+  if (!modelProvider) {
+    return res.status(400).json({ error: "Missing modelProvider" });
   }
 
   const privateKey = process.env.ZG_STORAGE_PRIVATE_KEY;
@@ -46,16 +46,11 @@ export default async function handler(
 
   try {
     // Build the agent config bundle — stored on 0G Storage
-    // API key is encrypted with AES-256-GCM before upload
-    const encryptedApiKey = encrypt(apiKey);
-
-    const agentConfig = {
+    const agentConfig: Record<string, unknown> = {
       version: "1.0.0",
       botId,
       persona: persona || botId,
-      modelProvider, // "openai" | "anthropic" | "groq" | "deepseek"
-      apiKey: encryptedApiKey, // AES-256-GCM encrypted
-      encrypted: true, // flag to indicate encryption
+      modelProvider, // "0g-compute" | "openai" | "groq" | "deepseek"
       systemPrompt,
       memory: memory || {},
       domainTags: domainTags || "",
@@ -66,6 +61,12 @@ export default async function handler(
         standard: "ERC-7857",
       },
     };
+
+    // Only encrypt and store API key if provided (not needed for 0g-compute)
+    if (apiKey) {
+      agentConfig.apiKey = encrypt(apiKey);
+      agentConfig.encrypted = true;
+    }
 
     const configJson = JSON.stringify(agentConfig, null, 2);
     const configHash = keccak256(toUtf8Bytes(configJson));

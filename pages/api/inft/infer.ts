@@ -187,25 +187,35 @@ export default async function handler(
 
   try {
     // 1. On-chain authorization check
-    const [owner, isAuthorized] = await Promise.all([
-      viemClient.readContract({
-        address: SPARKINFT_ADDRESS,
-        abi: SPARKINFT_ABI,
-        functionName: "ownerOf",
-        args: [BigInt(tokenId)],
-      }),
-      viemClient.readContract({
-        address: SPARKINFT_ADDRESS,
-        abi: SPARKINFT_ABI,
-        functionName: "isAuthorized",
-        args: [BigInt(tokenId), userAddress as `0x${string}`],
-      }),
-    ]);
+    let owner: string | null = null;
+    let isAuthorizedUser = false;
 
-    const isOwner =
-      (owner as string).toLowerCase() === userAddress.toLowerCase();
+    try {
+      const [ownerResult, authResult] = await Promise.all([
+        viemClient.readContract({
+          address: SPARKINFT_ADDRESS,
+          abi: SPARKINFT_ABI,
+          functionName: "ownerOf",
+          args: [BigInt(tokenId)],
+        }),
+        viemClient.readContract({
+          address: SPARKINFT_ADDRESS,
+          abi: SPARKINFT_ABI,
+          functionName: "isAuthorized",
+          args: [BigInt(tokenId), userAddress as `0x${string}`],
+        }),
+      ]);
+      owner = ownerResult as string;
+      isAuthorizedUser = authResult as boolean;
+    } catch {
+      return res.status(404).json({
+        error: `Token #${tokenId} does not exist. Mint an iNFT first.`,
+      });
+    }
 
-    if (!isOwner && !(isAuthorized as boolean)) {
+    const isOwner = owner.toLowerCase() === userAddress.toLowerCase();
+
+    if (!isOwner && !isAuthorizedUser) {
       return res.status(403).json({
         error:
           "Not authorized. You must be the token owner or an authorized user.",
@@ -317,50 +327,32 @@ export default async function handler(
       });
     }
 
-    // 5. Fallback: use server-side AI key from env
-    const fallbackKey = process.env.AI_INFERENCE_KEY;
-    if (fallbackKey) {
+    // 5. Fallback: use 0G Compute for any agent without a stored API key
+    {
       const systemPrompt =
         agentConfig?.systemPrompt ||
         `You are ${p.botId}, a SPARK agent specializing in ${p.domainTags}. You offer ${p.serviceOfferings}. Keep responses concise and helpful.`;
-      const provider = agentConfig?.modelProvider?.toLowerCase() || "openai";
-      const model = PROVIDER_DEFAULT_MODELS[provider] || "gpt-4o-mini";
       const tokens = maxTokens || 500;
 
-      const endpoint =
-        PROVIDER_ENDPOINTS[provider] || PROVIDER_ENDPOINTS.openai;
-      const reply = await callOpenAICompatible(
-        endpoint,
-        fallbackKey,
-        model,
-        systemPrompt,
-        message,
-        tokens
-      );
-
-      return res.status(200).json({
-        success: true,
-        tokenId,
-        agent: p.botId,
-        response: reply,
-        source: "fallback",
-        configOnStorage: !!agentConfig,
-      });
+      try {
+        const result = await callVia0GCompute(systemPrompt, message, tokens);
+        return res.status(200).json({
+          success: true,
+          tokenId,
+          agent: p.botId,
+          response: result.reply,
+          source: "0g-compute",
+          model: result.model,
+          provider: result.provider,
+          configOnStorage: !!agentConfig,
+        });
+      } catch (err) {
+        console.error(`[infer] 0G Compute fallback failed:`, err);
+        return res.status(502).json({
+          error: `0G Compute inference failed: ${err instanceof Error ? err.message : String(err)}`,
+        });
+      }
     }
-
-    // 6. No stored config and no fallback key — simulated response
-    return res.status(200).json({
-      success: true,
-      tokenId,
-      agent: p.botId,
-      response:
-        `[${p.botId}] I'm a SPARK agent specializing in ${p.domainTags}. ` +
-        `I offer ${p.serviceOfferings}. ` +
-        `My config ${agentConfig ? "is on 0G Storage but missing API key" : "is not yet on 0G Storage"}. ` +
-        `Set AI_INFERENCE_KEY in .env or re-mint with an API key to enable live inference.`,
-      simulated: true,
-      configOnStorage: !!agentConfig,
-    });
   } catch (err: unknown) {
     return res.status(500).json({
       error: err instanceof Error ? err.message : String(err),
