@@ -43,6 +43,13 @@ export default defineConfig({
       url: configVariable("WORLD_CHAIN_SEPOLIA_RPC_URL"),
       accounts: [configVariable("WORLD_CHAIN_SEPOLIA_PRIVATE_KEY")],
     },
+    worldChainMainnet: {
+      type: "http",
+      chainType: "op",
+      chainId: 480,
+      url: configVariable("WORLD_CHAIN_MAINNET_RPC_URL"),
+      accounts: [configVariable("WORLD_CHAIN_MAINNET_PRIVATE_KEY")],
+    },
     sepolia: {
       type: "http",
       chainType: "l1",
