@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "orchestrator": "node scripts/orchestrator.mjs",
+    "dev": "next dev & node server/server.mjs",
+    "dev:client": "next dev",
+    "dev:server": "node server/server.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
