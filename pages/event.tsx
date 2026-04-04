@@ -283,7 +283,7 @@ export default function Event() {
                                                     <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all duration-700 ${
                                                         s.icon
                                                             ? isActive
-                                                                ? 'bg-[#D8DBE0] text-gray-700 ring-[3px] ring-[#0066FF]'
+                                                                ? 'bg-[#D8DBE0] text-gray-700 ring-[3px] ring-inset ring-[#0066FF]'
                                                                 : 'bg-[#D8DBE0] text-gray-700'
                                                             : isDone
                                                                 ? 'bg-[#0066FF] text-white'
