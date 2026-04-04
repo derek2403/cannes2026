@@ -187,9 +187,19 @@ export default function MyPositions({
       setStatus(`Tx submitted: ${result.data.userOpHash.slice(0, 10)}...`);
       const receipt = await pollUserOp(result.data.userOpHash);
       if (receipt) {
-        setStatus(`Market disputed → ${newOutcome === Outcome.YES ? "YES" : "NO"}!`);
+        setStatus(`On-chain dispute done. Starting oracle resolution...`);
         refreshPool(marketId);
         refreshPositions();
+
+        // Trigger backend dispute orchestration
+        try {
+          await fetch(`https://localhost:3001/dispute/${marketId}`, {
+            method: "POST",
+          });
+          setStatus(`Dispute resolution started for ${marketId}`);
+        } catch {
+          setStatus(`On-chain dispute succeeded but failed to reach orchestrator`);
+        }
       } else {
         setStatus("Tx may still be pending");
       }
