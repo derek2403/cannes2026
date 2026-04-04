@@ -1,5 +1,6 @@
 import { createConfig, http } from "wagmi";
 import { defineChain } from "viem";
+import { sepolia } from "viem/chains";
 import { injected } from "wagmi/connectors";
 
 export const zgTestnet = defineChain({
@@ -24,11 +25,14 @@ export const zgTestnet = defineChain({
   testnet: true,
 });
 
+export { sepolia };
+
 export const wagmiConfig = createConfig({
-  chains: [zgTestnet],
+  chains: [zgTestnet, sepolia],
   connectors: [injected()],
   transports: {
     [zgTestnet.id]: http(),
+    [sepolia.id]: http(),
   },
   ssr: true,
 });
