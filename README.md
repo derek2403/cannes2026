@@ -1,5 +1,7 @@
 # DIVE — Decentralized Intelligence Verification Engine
 
+> *Dive deep into the truth.*
+
 ## One-liner
 
 **A decentralized verification engine where AI swarms determine real-world truth and trigger on-chain outcomes — powering prediction markets and autonomous settlement.**
