@@ -34,10 +34,10 @@ const marketFilters = [
 // Yes/No Button Pair
 const YesNoButtons = ({ yesPrice, noPrice, compact = false }: { yesPrice: number, noPrice: number, compact?: boolean }) => (
     <div className={`flex gap-1 ${compact ? 'w-24' : 'w-full'} shrink-0`}>
-        <button className={`flex-1 flex justify-center items-center rounded-md font-medium text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 transition-colors ${compact ? 'text-sm py-1' : 'text-base py-2'}`}>
+        <button className={`flex-1 flex justify-center items-center rounded-md font-medium text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 transition-colors ${compact ? 'text-base py-1.5' : 'text-lg py-2.5'}`}>
             Yes
         </button>
-        <button className={`flex-1 flex justify-center items-center rounded-md font-medium text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors ${compact ? 'text-sm py-1' : 'text-base py-2'}`}>
+        <button className={`flex-1 flex justify-center items-center rounded-md font-medium text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors ${compact ? 'text-base py-1.5' : 'text-lg py-2.5'}`}>
             No
         </button>
     </div>
@@ -48,11 +48,11 @@ const UpDownButtons = ({ upPrice, downPrice }: { upPrice: number, downPrice: num
     <div className="flex gap-2 w-full mt-3">
         <button className="flex-1 flex justify-between items-center rounded-lg font-medium text-green-800 bg-green-100 hover:bg-green-200 px-3 py-2 transition-colors">
             <span>Up</span>
-            <span className="text-sm">+ ${upPrice}</span>
+            <span className="text-base">+ ${upPrice}</span>
         </button>
         <button className="flex-1 flex justify-between items-center rounded-lg font-medium text-red-800 bg-red-100 hover:bg-red-200 px-3 py-2 transition-colors">
             <span>Down</span>
-            <span className="text-sm">+ ${downPrice}</span>
+            <span className="text-base">+ ${downPrice}</span>
         </button>
     </div>
 );
@@ -60,10 +60,10 @@ const UpDownButtons = ({ upPrice, downPrice }: { upPrice: number, downPrice: num
 // Team selection Pair
 const TeamButtons = ({ teamA, teamB }: { teamA: string, teamB: string }) => (
     <div className="flex gap-2 w-full mt-3">
-        <button className="flex-1 rounded-lg font-medium text-orange-900 bg-orange-100 hover:bg-orange-200 px-3 py-2 text-base transition-colors truncate">
+        <button className="flex-1 rounded-lg font-medium text-orange-900 bg-orange-100 hover:bg-orange-200 px-3 py-2.5 text-lg transition-colors truncate">
             {teamA}
         </button>
-        <button className="flex-1 rounded-lg font-medium text-blue-900 bg-blue-100 hover:bg-blue-200 px-3 py-2 text-base transition-colors truncate">
+        <button className="flex-1 rounded-lg font-medium text-blue-900 bg-blue-100 hover:bg-blue-200 px-3 py-2.5 text-lg transition-colors truncate">
             {teamB}
         </button>
     </div>
@@ -108,7 +108,7 @@ export default function Market() {
                             key={filter}
                             onClick={() => setActiveFilter(filter)}
                             className={`whitespace-nowrap px-4 py-1.5 rounded-full text-base font-medium transition-colors border ${activeFilter === filter
-                                ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+                                ? 'bg-gray-800 text-white border-gray-800 shadow-md'
                                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
                                 }`}
                         >
@@ -123,7 +123,7 @@ export default function Market() {
                     {/* Card 1: WTI Crude Oil */}
                     <div className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
                         <div className="flex gap-4 mb-4">
-                            <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-base md:text-lg leading-tight group-hover:text-blue-600 transition-colors">
+                            <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors">
                                 What will WTI Crude Oil (WTI) hit in April 2026?
                             </h3>
                         </div>
@@ -131,14 +131,14 @@ export default function Market() {
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-700 text-base font-medium">↑ $120</span>
                                 <div className="flex items-center gap-4">
-                                    <span className="font-semibold text-gray-900">75%</span>
+                                    <span className="font-semibold text-gray-900 text-lg">75%</span>
                                     <YesNoButtons yesPrice={0} noPrice={0} compact />
                                 </div>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-700 text-base font-medium">↑ $130</span>
                                 <div className="flex items-center gap-4">
-                                    <span className="font-semibold text-gray-900">43%</span>
+                                    <span className="font-semibold text-gray-900 text-lg">43%</span>
                                     <YesNoButtons yesPrice={0} noPrice={0} compact />
                                 </div>
                             </div>
@@ -156,7 +156,7 @@ export default function Market() {
                     <div className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
                         <div className="flex justify-between items-start mb-2">
                             <div className="flex gap-4">
-                                <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-base md:text-lg leading-tight group-hover:text-blue-600 transition-colors">
+                                <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors">
                                     BTC 5 Minute Up or Down
                                 </h3>
                             </div>
@@ -191,7 +191,7 @@ export default function Market() {
                                     <span className="font-mono text-gray-500 text-base w-4">2</span>
                                     <span className="text-gray-900 font-semibold font-['Satoshi']">Flyers</span>
                                 </div>
-                                <span className="font-semibold text-gray-900 text-base">70%</span>
+                                <span className="font-semibold text-gray-900 text-lg">70%</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -199,7 +199,7 @@ export default function Market() {
                                     <span className="font-mono text-gray-500 text-base w-4">0</span>
                                     <span className="text-gray-900 font-semibold font-['Satoshi']">Islanders</span>
                                 </div>
-                                <span className="font-semibold text-gray-700 text-base">31%</span>
+                                <span className="font-semibold text-gray-700 text-lg">31%</span>
                             </div>
                         </div>
                         <div className="mt-6">
@@ -219,7 +219,7 @@ export default function Market() {
                     {/* Card: Fed Decision */}
                     <div className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
                         <div className="flex gap-4 mb-4">
-                            <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-base md:text-lg leading-tight group-hover:text-blue-600 transition-colors">
+                            <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors">
                                 Fed decision in April?
                             </h3>
                         </div>
@@ -227,14 +227,14 @@ export default function Market() {
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-700 text-base font-medium">No change</span>
                                 <div className="flex items-center gap-4">
-                                    <span className="font-semibold text-gray-900">98%</span>
+                                    <span className="font-semibold text-gray-900 text-lg">98%</span>
                                     <YesNoButtons yesPrice={0} noPrice={0} compact />
                                 </div>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-700 text-base font-medium">25 bps decrease</span>
                                 <div className="flex items-center gap-4">
-                                    <span className="font-semibold text-gray-900">1%</span>
+                                    <span className="font-semibold text-gray-900 text-lg">1%</span>
                                     <YesNoButtons yesPrice={0} noPrice={0} compact />
                                 </div>
                             </div>
@@ -251,7 +251,7 @@ export default function Market() {
                     {/* Card: Attorney General */}
                     <div className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
                         <div className="flex flex-col gap-4 mb-4">
-                            <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-base md:text-lg leading-tight group-hover:text-blue-600 transition-colors">
+                            <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors">
                                 Who will Trump announce as next Attorney General?
                             </h3>
                         </div>
@@ -259,14 +259,14 @@ export default function Market() {
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-700 text-base font-medium">Lee Zeldin</span>
                                 <div className="flex items-center gap-4">
-                                    <span className="font-semibold text-gray-900">54%</span>
+                                    <span className="font-semibold text-gray-900 text-lg">54%</span>
                                     <YesNoButtons yesPrice={0} noPrice={0} compact />
                                 </div>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-700 text-base font-medium">Ted Cruz</span>
                                 <div className="flex items-center gap-4">
-                                    <span className="font-semibold text-gray-900">-</span>
+                                    <span className="font-semibold text-gray-900 text-lg">-</span>
                                     <YesNoButtons yesPrice={0} noPrice={0} compact />
                                 </div>
                             </div>
@@ -286,7 +286,7 @@ export default function Market() {
                     {/* Card: Trump Admin Leaves */}
                     <div className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
                         <div className="flex flex-col gap-4 mb-4">
-                            <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-base md:text-lg leading-tight group-hover:text-blue-600 transition-colors">
+                            <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors">
                                 Who will leave Trump Administration before 2027?
                             </h3>
                         </div>
@@ -294,14 +294,14 @@ export default function Market() {
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-700 text-base font-medium">Kash Patel</span>
                                 <div className="flex items-center gap-4">
-                                    <span className="font-semibold text-gray-900">76%</span>
+                                    <span className="font-semibold text-gray-900 text-lg">76%</span>
                                     <YesNoButtons yesPrice={0} noPrice={0} compact />
                                 </div>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-700 text-base font-medium">Tulsi Gabbard</span>
                                 <div className="flex items-center gap-4">
-                                    <span className="font-semibold text-gray-900">65%</span>
+                                    <span className="font-semibold text-gray-900 text-lg">65%</span>
                                     <YesNoButtons yesPrice={0} noPrice={0} compact />
                                 </div>
                             </div>
@@ -318,7 +318,7 @@ export default function Market() {
                     {/* Card 4: 2026 NCAA Tournament Winner */}
                     <div className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
                         <div className="flex flex-col gap-4 mb-4">
-                            <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-base md:text-lg leading-tight group-hover:text-blue-600 transition-colors">
+                            <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors">
                                 2026 NCAA Tournament Winner
                             </h3>
                         </div>
@@ -326,14 +326,14 @@ export default function Market() {
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-700 text-base font-medium">Michigan</span>
                                 <div className="flex items-center gap-4">
-                                    <span className="font-semibold text-gray-900">35%</span>
+                                    <span className="font-semibold text-gray-900 text-lg">35%</span>
                                     <YesNoButtons yesPrice={0} noPrice={0} compact />
                                 </div>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-700 text-base font-medium">Arizona</span>
                                 <div className="flex items-center gap-4">
-                                    <span className="font-semibold text-gray-900">32%</span>
+                                    <span className="font-semibold text-gray-900 text-lg">32%</span>
                                     <YesNoButtons yesPrice={0} noPrice={0} compact />
                                 </div>
                             </div>
@@ -350,7 +350,7 @@ export default function Market() {
                     {/* Card 5: US x Iran ceasefire */}
                     <div className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
                         <div className="flex gap-4 mb-4">
-                            <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-base md:text-lg leading-tight group-hover:text-blue-600 transition-colors">
+                            <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors">
                                 US x Iran ceasefire by...?
                             </h3>
                         </div>
@@ -358,14 +358,14 @@ export default function Market() {
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-700 text-base font-medium">December 31</span>
                                 <div className="flex items-center gap-4">
-                                    <span className="font-semibold text-gray-900">69%</span>
+                                    <span className="font-semibold text-gray-900 text-lg">69%</span>
                                     <YesNoButtons yesPrice={0} noPrice={0} compact />
                                 </div>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-700 text-base font-medium">June 30</span>
                                 <div className="flex items-center gap-4">
-                                    <span className="font-semibold text-gray-900">50%</span>
+                                    <span className="font-semibold text-gray-900 text-lg">50%</span>
                                     <YesNoButtons yesPrice={0} noPrice={0} compact />
                                 </div>
                             </div>
@@ -383,7 +383,7 @@ export default function Market() {
                     <div className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
                         <div className="flex justify-between items-start mb-2">
                             <div className="flex gap-4">
-                                <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-base md:text-lg leading-tight group-hover:text-blue-600 transition-colors pr-2">
+                                <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors pr-2">
                                     Strait of Hormuz traffic returns to normal by end of April?
                                 </h3>
                             </div>
@@ -412,7 +412,7 @@ export default function Market() {
                                     <span className="font-mono text-gray-500 text-base w-4">17</span>
                                     <span className="text-gray-900 font-semibold font-['Satoshi']">Timberwolves</span>
                                 </div>
-                                <span className="font-semibold text-gray-900 text-base">30%</span>
+                                <span className="font-semibold text-gray-900 text-lg">30%</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -420,7 +420,7 @@ export default function Market() {
                                     <span className="font-mono text-gray-500 text-base w-4">19</span>
                                     <span className="text-gray-900 font-semibold font-['Satoshi']">76ers</span>
                                 </div>
-                                <span className="font-semibold text-gray-700 text-base">71%</span>
+                                <span className="font-semibold text-gray-700 text-lg">71%</span>
                             </div>
                         </div>
                         <div className="mt-6">
@@ -446,7 +446,7 @@ export default function Market() {
                                     <span className="font-mono text-gray-500 text-base w-4">16</span>
                                     <span className="text-gray-900 font-semibold font-['Satoshi']">Pacers</span>
                                 </div>
-                                <span className="font-semibold text-gray-900 text-base">1%</span>
+                                <span className="font-semibold text-gray-900 text-lg">1%</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -454,7 +454,7 @@ export default function Market() {
                                     <span className="font-mono text-gray-500 text-base w-4">35</span>
                                     <span className="text-gray-900 font-semibold font-['Satoshi']">Hornets</span>
                                 </div>
-                                <span className="font-semibold text-gray-700 text-base">99%</span>
+                                <span className="font-semibold text-gray-700 text-lg">99%</span>
                             </div>
                         </div>
                         <div className="mt-6">

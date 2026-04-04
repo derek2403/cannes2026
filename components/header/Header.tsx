@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 export default function Header() {
     return (
@@ -11,12 +12,12 @@ export default function Header() {
             >
                 {/* Left: Navigation Links */}
                 <nav className="flex items-center gap-2 justify-start pl-2">
-                    <a href="#" className="font-[500] text-[17px] text-[#212529] hover:bg-gray-200/80 px-4 py-2 rounded-xl transition-all tracking-wide">
+                    <Link href="/" className="font-[500] text-[17px] text-[#212529] hover:bg-gray-200/80 px-4 py-2 rounded-xl transition-all tracking-wide">
                         Home
-                    </a>
-                    <a href="#" className="font-[500] text-[17px] text-[#212529] hover:bg-gray-200/80 px-4 py-2 rounded-xl transition-all tracking-wide">
+                    </Link>
+                    <Link href="/market" className="font-[500] text-[17px] text-[#212529] hover:bg-gray-200/80 px-4 py-2 rounded-xl transition-all tracking-wide">
                         Market
-                    </a>
+                    </Link>
                 </nav>
 
                 {/* Center: Logo */}
