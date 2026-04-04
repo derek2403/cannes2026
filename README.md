@@ -568,6 +568,22 @@ Market needs resolution:
 | `pages/api/hcs/register-agent.ts` | All | Full agent registration (profile + registry + links) |
 | `pages/api/hcs/discover-agents.ts` | HCS-2 + HCS-11 | Read registry → fetch each agent's profile |
 
+### World Agent Kit + World ID Routes
+
+| Route | What it does |
+|---|---|
+| `pages/api/world/rp-context.ts` | Generate signed RP context for IDKit widget |
+| `pages/api/world/verify-human.ts` | Forward World ID proof to World's verification API |
+| `pages/api/world/check-agent.ts` | AgentBook lookup — check if wallet is human-backed |
+| `pages/api/world/protected-vote.ts` | Full verification flow with step-by-step events |
+
+**How Agent Kit works:**
+1. Human verifies via World ID (zero-knowledge proof, no personal data)
+2. Agent wallet registered on AgentBook contract (World Chain)
+3. Backend calls `lookupHuman(address)` → returns anonymous `humanId` if registered
+4. Same human always maps to same `humanId` → enforces 1-human-1-vote in oracle consensus
+5. Unregistered wallets are blocked from voting — prevents bot swarms
+
 ---
 
 ## Track Qualification Checklist
