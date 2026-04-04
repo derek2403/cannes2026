@@ -167,16 +167,14 @@ export default function MiniKitPage({ markets }: { markets: MarketData[] }) {
         />
 
         {/* My Positions */}
-        {wallet && (
-          <MyPositions
-            markets={markets}
-            pools={pools}
-            wallet={wallet}
-            setStatus={setStatus}
-            refreshPool={refreshPool}
-            refreshBalance={refreshBalance}
-          />
-        )}
+        <MyPositions
+          markets={markets}
+          pools={pools}
+          wallet={wallet ?? ""}
+          setStatus={setStatus}
+          refreshPool={refreshPool}
+          refreshBalance={refreshBalance}
+        />
 
         {/* Status */}
         {status && (
