@@ -59,8 +59,6 @@ function InteractiveWordCloud() {
 // Semi-circle gauge that actually draws correctly
 function SemiGauge({ yesPercent }: { yesPercent: number }) {
     const noPercent = 100 - yesPercent;
-    // Angle: 0% = -90deg (left), 100% = 90deg (right)
-    const needleAngle = -90 + (yesPercent / 100) * 180;
     return (
         <div className="flex flex-col items-center">
             <svg width="160" height="90" viewBox="0 0 160 90">
@@ -72,10 +70,6 @@ function SemiGauge({ yesPercent }: { yesPercent: number }) {
                 {/* Yes (green) arc — right side */}
                 <path d="M 150 80 A 70 70 0 0 0 10 80" fill="none" stroke="#34d399" strokeWidth="14" strokeLinecap="round"
                     strokeDasharray={`${(yesPercent / 100) * 220} 220`} />
-                {/* Needle */}
-                <line x1="80" y1="80" x2={80 + 50 * Math.cos((needleAngle * Math.PI) / 180)} y2={80 + 50 * Math.sin((needleAngle * Math.PI) / 180)}
-                    stroke="#1f2937" strokeWidth="3" strokeLinecap="round" />
-                <circle cx="80" cy="80" r="5" fill="#1f2937" />
             </svg>
             <div className="flex w-full px-2 justify-between font-bold mt-1">
                 <span className="text-red-600 font-mono text-sm">{noPercent} No</span>
@@ -106,6 +100,290 @@ const STEPS = [
 ];
 
 const OUTCOME_INDEX_PERCENT = { yes: 1, no: 99 } as const;
+
+// ── Linkage Graph (SVG) ──────────────────────────────────────
+
+const AGENT_REFERENCES: Record<string, string[]> = {
+    ResearchBot: ["Reuters", "Bloomberg"], CritiqueBot: ["OPEC+", "IEA"],
+    MarketBot: ["CME", "EIA"], DataBot: ["WorldBank", "IMF"],
+    SentinelBot: ["UN", "Sanctions"], OracleAlpha: ["AP News", "Fed"],
+    TruthSeeker: ["FactCheck", "Snopes"], RiskAnalyst: ["VIX", "CDS"],
+    DeepDive: ["ArXiv", "Paper"], ConsensusAI: ["Delphi", "Survey"],
+    FactChecker: ["Reuters", "AFP"], TrendWatcher: ["Trends", "X"],
+    PolicyBot: ["Congress", "EU"], ArbitrageAI: ["Polymarket", "Kalshi"],
+    SignalBot: ["TradingView", "Coinglass"],
+};
+
+const AGENT_REP: Record<string, number> = {
+    ResearchBot: 18, CritiqueBot: 15, MarketBot: 14, DataBot: 12, SentinelBot: 11,
+    OracleAlpha: 16, TruthSeeker: 13, RiskAnalyst: 17, DeepDive: 10, ConsensusAI: 14,
+    FactChecker: 15, TrendWatcher: 11, PolicyBot: 13, ArbitrageAI: 12, SignalBot: 10,
+};
+
+// Generate rich cross-agent discussion links with message snippets
+function buildAgentLinks(agents: string[], votes: Record<string, "YES" | "NO" | null>) {
+    const links: { from: number; to: number; msg: string }[] = [];
+    const snippets = [
+        "I agree with your supply analysis",
+        "Your demand data contradicts mine",
+        "The sanctions evidence you cited is outdated",
+        "Good point on tail risk — I'm revising",
+        "Your OPEC+ reference confirms my thesis",
+        "I challenge your resolution criteria",
+        "The IEA data supports this position",
+        "Counter: Bloomberg shows opposite trend",
+        "Reviewing your futures curve argument",
+        "I concur on the geopolitical factor",
+        "Your confidence is too high given uncertainty",
+        "Strong evidence — shifting my vote",
+        "Disagree: the fundamentals don't support this",
+        "Cross-referencing with my oracle endpoints",
+        "Your source is unverified — flagging",
+    ];
+    // Create many links — every agent talks to 3–5 others
+    let si = 0;
+    for (let i = 0; i < agents.length; i++) {
+        const numLinks = 3 + Math.floor(Math.random() * 3);
+        const targets = [...Array(agents.length).keys()].filter(j => j !== i).sort(() => Math.random() - 0.5).slice(0, numLinks);
+        for (const j of targets) {
+            if (!links.some(l => (l.from === i && l.to === j) || (l.from === j && l.to === i))) {
+                const fromVote = votes[agents[i]];
+                const toVote = votes[agents[j]];
+                const isAgreement = fromVote === toVote;
+                links.push({ from: i, to: j, msg: `${agents[i]} → ${agents[j]}: ${isAgreement ? snippets[si % snippets.length] : snippets[(si + 7) % snippets.length]}` });
+                si++;
+            }
+        }
+    }
+    return links;
+}
+
+function LinkageGraph3D({
+    agents, votes, messages, finalOutcome,
+}: {
+    agents: string[];
+    votes: Record<string, "YES" | "NO" | null>;
+    messages: { agent: string; text: string }[];
+    finalOutcome: "YES" | "NO" | null;
+}) {
+    const [hoveredAgent, setHoveredAgent] = useState<number | null>(null);
+    const [hoveredLink, setHoveredLink] = useState<number | null>(null);
+    const [selectedAgent, setSelectedAgent] = useState<number | null>(null);
+    const [tooltip, setTooltip] = useState<{ x: number; y: number; text: string } | null>(null);
+    const [zoom, setZoom] = useState(1);
+    const [pan, setPan] = useState({ x: 0, y: 0 });
+    const [dragging, setDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const svgRef = React.useRef<SVGSVGElement>(null);
+
+    const cx = 400, cy = 340, agentRadius = 200, refRadius = 55;
+
+    const agentPositions = agents.map((name, i) => {
+        const angle = (i / agents.length) * 2 * Math.PI - Math.PI / 2;
+        const rep = AGENT_REP[name] || 12;
+        return { name, x: cx + agentRadius * Math.cos(angle), y: cy + agentRadius * Math.sin(angle), size: 14 + (rep - 10) * 2, vote: votes[name], refs: AGENT_REFERENCES[name] || ["Src A", "Src B"], angle, rep };
+    });
+
+    // Build rich links from discussion messages + generated cross-talk
+    const agentLinks = React.useMemo(() => {
+        const fromMessages: { from: number; to: number; msg: string }[] = [];
+        messages.forEach(msg => {
+            const fromIdx = agents.indexOf(msg.agent);
+            if (fromIdx === -1) return;
+            agents.forEach((other, toIdx) => {
+                if (other !== msg.agent && msg.text.includes(other)) {
+                    fromMessages.push({ from: fromIdx, to: toIdx, msg: `${msg.agent}: "${msg.text.slice(0, 80)}..."` });
+                }
+            });
+        });
+        const generated = buildAgentLinks(agents, votes);
+        // Merge, deduplicate
+        const all = [...fromMessages];
+        for (const g of generated) {
+            if (!all.some(l => (l.from === g.from && l.to === g.to) || (l.from === g.to && l.to === g.from))) {
+                all.push(g);
+            }
+        }
+        return all;
+    }, [agents, messages, votes]);
+
+    const truthColor = finalOutcome === "YES" ? "#34d399" : finalOutcome === "NO" ? "#f87171" : "#a3a3a3";
+
+    // Is this link related to hovered/selected agent?
+    const isLinkVisible = (link: { from: number; to: number }) => {
+        if (hoveredAgent !== null) return link.from === hoveredAgent || link.to === hoveredAgent;
+        if (selectedAgent !== null) return link.from === selectedAgent || link.to === selectedAgent;
+        return false; // hide all by default
+    };
+
+    // Is this ref visible?
+    const isRefVisible = (agentIdx: number) => {
+        return hoveredAgent === agentIdx || selectedAgent === agentIdx;
+    };
+
+    // Zoom with scroll
+    const handleWheel = (e: React.WheelEvent) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        setZoom(z => Math.max(0.5, Math.min(4, z * delta)));
+    };
+
+    // Pan with drag
+    const handleMouseDown = (e: React.MouseEvent) => {
+        if (e.button === 0 && !e.shiftKey) {
+            setDragging(true);
+            setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+        }
+    };
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (dragging) {
+            setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+        }
+    };
+    const handleMouseUp = () => setDragging(false);
+
+    // Reset view
+    const resetView = () => { setZoom(1); setPan({ x: 0, y: 0 }); setSelectedAgent(null); };
+
+    // Zoom to agent
+    const zoomToAgent = (idx: number) => {
+        const a = agentPositions[idx];
+        setSelectedAgent(idx === selectedAgent ? null : idx);
+        if (idx !== selectedAgent) {
+            setZoom(2.5);
+            setPan({ x: -(a.x - 400) * 2.5 + 0, y: -(a.y - 340) * 2.5 + 0 });
+        } else {
+            resetView();
+        }
+    };
+
+    const viewBox = `${-pan.x / zoom + 400 - 400 / zoom} ${-pan.y / zoom + 340 - 340 / zoom} ${800 / zoom} ${680 / zoom}`;
+
+    return (
+        <div className="w-full h-full relative" style={{ cursor: dragging ? 'grabbing' : 'grab' }}>
+            <svg ref={svgRef} viewBox={viewBox} className="w-full h-full"
+                onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
+
+                {/* Truth-to-agent lines (always visible, dim) */}
+                {agentPositions.map((a, i) => (
+                    <line key={`truth-${i}`} x1={cx} y1={cy} x2={a.x} y2={a.y} stroke="#374151" strokeWidth="0.8" strokeDasharray="4 4" opacity={hoveredAgent === i || selectedAgent === i ? 0.6 : 0.15} />
+                ))}
+
+                {/* Agent-to-agent links — only visible on hover/select */}
+                {agentLinks.map((link, i) => {
+                    const a = agentPositions[link.from], b = agentPositions[link.to];
+                    const visible = isLinkVisible(link);
+                    if (!visible) return null;
+                    const midX = (a.x + b.x) / 2, midY = (a.y + b.y) / 2;
+                    return (
+                        <g key={`link-${i}`}
+                            onMouseEnter={(e) => { setHoveredLink(i); setTooltip({ x: e.clientX, y: e.clientY, text: link.msg }); }}
+                            onMouseLeave={() => { setHoveredLink(null); setTooltip(null); }}
+                        >
+                            {/* Wider invisible hit area */}
+                            <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="transparent" strokeWidth="12" />
+                            {/* Visible line */}
+                            <line x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+                                stroke={hoveredLink === i ? "#facc15" : "#fbbf24"} strokeWidth={hoveredLink === i ? 2.5 : 1.5}
+                                opacity={hoveredLink === i ? 1 : 0.6} strokeDasharray="6 3"
+                                style={{ transition: 'all 0.2s' }} />
+                            {/* Small dot at midpoint */}
+                            <circle cx={midX} cy={midY} r={hoveredLink === i ? 4 : 2} fill="#fbbf24" opacity={hoveredLink === i ? 1 : 0.5} style={{ transition: 'all 0.2s' }} />
+                        </g>
+                    );
+                })}
+
+                {/* Reference sub-nodes — only visible on hover/select */}
+                {agentPositions.map((a, i) => {
+                    if (!isRefVisible(i)) return null;
+                    const stroke = a.vote === "YES" ? "#34d399" : a.vote === "NO" ? "#f87171" : "#6b7280";
+                    return a.refs.map((ref, ri) => {
+                        const refAngle = a.angle + ((ri - (a.refs.length - 1) / 2) * 0.45);
+                        const rx = a.x + refRadius * Math.cos(refAngle), ry = a.y + refRadius * Math.sin(refAngle);
+                        return (
+                            <g key={`ref-${i}-${ri}`} style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                                <line x1={a.x} y1={a.y} x2={rx} y2={ry} stroke={stroke} strokeWidth="1" opacity="0.5" />
+                                <circle cx={rx} cy={ry} r={7} fill="#1f2937" stroke={stroke} strokeWidth="1.5"
+                                    className="cursor-pointer" onClick={(e) => { e.stopPropagation(); setTooltip({ x: e.clientX, y: e.clientY, text: `Source: ${ref} — cited by ${a.name} (${a.vote})` }); setTimeout(() => setTooltip(null), 3000); }} />
+                                <text x={rx} y={ry + 17} textAnchor="middle" fontSize="7" fill="#d1d5db" fontFamily="monospace" fontWeight="600">{ref}</text>
+                            </g>
+                        );
+                    });
+                })}
+
+                {/* Agent nodes */}
+                {agentPositions.map((a, i) => {
+                    const isActive = hoveredAgent === i || selectedAgent === i;
+                    const fill = a.vote === "YES" ? "#065f46" : a.vote === "NO" ? "#991b1b" : "#374151";
+                    const stroke = a.vote === "YES" ? "#34d399" : a.vote === "NO" ? "#f87171" : "#6b7280";
+                    const glowR = isActive ? a.size + 8 : 0;
+                    return (
+                        <g key={`agent-${i}`}
+                            onMouseEnter={() => setHoveredAgent(i)}
+                            onMouseLeave={() => { if (selectedAgent !== i) setHoveredAgent(null); }}
+                            onClick={(e) => { e.stopPropagation(); zoomToAgent(i); }}
+                            className="cursor-pointer"
+                        >
+                            {/* Glow ring on hover */}
+                            {isActive && <circle cx={a.x} cy={a.y} r={glowR} fill="transparent" stroke={stroke} strokeWidth="1" opacity="0.3" style={{ animation: 'fadeIn 0.2s' }} />}
+                            {/* Main circle */}
+                            <circle cx={a.x} cy={a.y} r={isActive ? a.size + 3 : a.size} fill={fill} stroke={stroke}
+                                strokeWidth={isActive ? 3.5 : 2} style={{ transition: 'all 0.2s' }} />
+                            {/* Name */}
+                            <text x={a.x} y={a.y - 3} textAnchor="middle" fontSize={isActive ? 9 : 8} fill="white" fontWeight="700" fontFamily="monospace">
+                                {a.name.length > 10 ? a.name.slice(0, 9) + '..' : a.name}
+                            </text>
+                            {/* Vote */}
+                            <text x={a.x} y={a.y + 8} textAnchor="middle" fontSize="7" fill={stroke} fontWeight="600" fontFamily="monospace">
+                                {a.vote || '?'}
+                            </text>
+                            {/* Rep badge */}
+                            {isActive && (
+                                <text x={a.x} y={a.y + a.size + 14} textAnchor="middle" fontSize="7" fill="#9ca3af" fontFamily="monospace">
+                                    REP: {a.rep}
+                                </text>
+                            )}
+                        </g>
+                    );
+                })}
+
+                {/* Center: TRUTH node */}
+                <g className="cursor-pointer" onClick={resetView}>
+                    <circle cx={cx} cy={cy} r={36} fill="#111827" stroke={truthColor} strokeWidth="3" />
+                    <circle cx={cx} cy={cy} r={28} fill="transparent" stroke={truthColor} strokeWidth="1" opacity="0.3" />
+                    <text x={cx} y={cy - 4} textAnchor="middle" fontSize="11" fill="white" fontWeight="900">TRUTH</text>
+                    <text x={cx} y={cy + 10} textAnchor="middle" fontSize="8" fill={truthColor} fontWeight="700" fontFamily="monospace">{finalOutcome || 'PENDING'}</text>
+                </g>
+
+                {/* Legend */}
+                <g transform={`translate(${-pan.x / zoom + 400 - 400 / zoom + 10}, ${-pan.y / zoom + 340 - 340 / zoom + 10})`}>
+                    <rect x={0} y={0} width={130} height={90} rx={6} fill="#111827" opacity="0.8" />
+                    <circle cx={12} cy={14} r={5} fill="#065f46" stroke="#34d399" strokeWidth="1" /><text x={24} y={17} fontSize="8" fill="#9ca3af" fontFamily="monospace">YES vote</text>
+                    <circle cx={12} cy={30} r={5} fill="#991b1b" stroke="#f87171" strokeWidth="1" /><text x={24} y={33} fontSize="8" fill="#9ca3af" fontFamily="monospace">NO vote</text>
+                    <line x1={6} y1={46} x2={18} y2={46} stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="3 2" /><text x={24} y={49} fontSize="8" fill="#9ca3af" fontFamily="monospace">Discussion</text>
+                    <circle cx={12} cy={62} r={4} fill="#1f2937" stroke="#6b7280" strokeWidth="1" /><text x={24} y={65} fontSize="8" fill="#9ca3af" fontFamily="monospace">Reference</text>
+                    <text x={8} y={80} fontSize="7" fill="#6b7280" fontFamily="monospace">Hover node | Scroll zoom</text>
+                </g>
+            </svg>
+
+            {/* Floating tooltip */}
+            {tooltip && (
+                <div className="fixed z-[10000] pointer-events-none" style={{ left: tooltip.x + 12, top: tooltip.y - 10 }}>
+                    <div className="bg-gray-900 text-white text-[11px] font-medium px-3 py-2 rounded-lg shadow-xl border border-gray-700 max-w-[300px] leading-relaxed">
+                        {tooltip.text}
+                    </div>
+                </div>
+            )}
+
+            {/* Zoom controls */}
+            <div className="absolute bottom-3 right-3 flex gap-1.5">
+                <button onClick={() => setZoom(z => Math.min(4, z * 1.3))} className="w-7 h-7 rounded bg-gray-800/80 text-white text-sm font-bold hover:bg-gray-700 border border-gray-600">+</button>
+                <button onClick={() => setZoom(z => Math.max(0.5, z * 0.7))} className="w-7 h-7 rounded bg-gray-800/80 text-white text-sm font-bold hover:bg-gray-700 border border-gray-600">-</button>
+                <button onClick={resetView} className="h-7 px-2 rounded bg-gray-800/80 text-white text-[10px] font-bold hover:bg-gray-700 border border-gray-600">Reset</button>
+            </div>
+        </div>
+    );
+}
 
 export default function DisputePage() {
     // disputeStep: 0=initial, 2=r1 commit, 3=r1 reveal, 4=discussion, 5=r2 commit, 6=r2 reveal, 7=final
@@ -515,10 +793,11 @@ export default function DisputePage() {
                 </div>
             </main>
 
-            {/* Discussion Modal */}
+            {/* Discussion Modal — wide: chat left, linkage graph right */}
             {showDiscussion && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm px-4" onClick={() => setShowDiscussion(false)}>
-                    <div className="bg-white rounded-3xl w-full max-w-2xl h-[80vh] max-h-[700px] flex flex-col shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+                    <div className="bg-white rounded-3xl w-full max-w-[1400px] h-[85vh] max-h-[800px] flex flex-col shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+                        {/* Header */}
                         <div className="py-4 px-6 border-b border-gray-100 flex justify-between items-center shrink-0">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-[12px] bg-blue-50 flex items-center justify-center text-blue-600">
@@ -530,27 +809,48 @@ export default function DisputePage() {
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                             </button>
                         </div>
-                        <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-4">
-                            <div className="w-full text-center my-2">
-                                <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full uppercase tracking-wider">Post Round 1 Discussion</span>
-                            </div>
-                            {discussionMessages.map((msg, i) => (
-                                <div key={i} className="flex flex-col gap-1 w-full max-w-[90%]">
-                                    <span className="text-[9px] font-bold text-gray-400 uppercase ml-[52px]">{msg.agent}</span>
-                                    <div className="flex gap-3 items-start">
-                                        <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-[11px] shrink-0 border border-blue-200">
-                                            {msg.agent.slice(0, 2)}
-                                        </div>
-                                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-gray-800 font-medium text-[13px] leading-relaxed">
-                                            {msg.text}
-                                        </div>
+
+                        {/* Body: chat + graph side by side */}
+                        <div className="flex-1 flex overflow-hidden">
+                            {/* Left: Chat */}
+                            <div className="w-1/2 border-r border-gray-100 flex flex-col">
+                                <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-4">
+                                    <div className="w-full text-center my-2">
+                                        <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full uppercase tracking-wider">Post Round 1 Discussion</span>
                                     </div>
+                                    {discussionMessages.map((msg, i) => {
+                                        const vote = agentVotes[msg.agent];
+                                        const isYes = vote === "YES";
+                                        return (
+                                            <div key={i} className="flex flex-col gap-1 w-full max-w-[95%]">
+                                                <span className="text-[9px] font-bold text-gray-400 uppercase ml-[52px]">{msg.agent}</span>
+                                                <div className="flex gap-3 items-start">
+                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-[11px] shrink-0 border ${isYes ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-red-100 text-red-700 border-red-200'}`}>
+                                                        {msg.agent.slice(0, 2)}
+                                                    </div>
+                                                    <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-gray-800 font-medium text-[13px] leading-relaxed">
+                                                        {msg.text}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                            ))}
-                        </div>
-                        <div className="py-4 bg-white text-center text-gray-400 font-medium text-[12px] flex items-center justify-center gap-1.5 shrink-0 border-t border-gray-100/50">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-                            Discussion finalized. Votes locked by protocol.
+                                <div className="py-3 bg-white text-center text-gray-400 font-medium text-[12px] flex items-center justify-center gap-1.5 shrink-0 border-t border-gray-100/50">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                                    Discussion finalized. Votes locked by protocol.
+                                </div>
+                            </div>
+
+                            {/* Right: Linkage Graph */}
+                            <div className="w-1/2 bg-gray-950 flex items-center justify-center overflow-hidden relative">
+                                <LinkageGraph3D
+                                    agents={selectedAgents}
+                                    votes={agentVotes}
+                                    messages={discussionMessages}
+                                    finalOutcome={disputeStep >= 7 ? "YES" : null}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
