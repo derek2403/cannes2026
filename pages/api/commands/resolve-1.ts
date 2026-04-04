@@ -49,7 +49,7 @@ export default async function handler(
     return res.status(405).json({ error: "POST only" });
   }
 
-  const { marketId, committeeSize = 1 } = req.body;
+  const { marketId, committeeSize = 3 } = req.body;
   if (!marketId) {
     return res.status(400).json({ error: "marketId is required" });
   }
@@ -96,20 +96,27 @@ export default async function handler(
       baseUrl,
       agent.inftTokenId!,
       `You are an oracle agent resolving a prediction market.
+Today's date is ${new Date().toISOString().split("T")[0]}.
 
 MARKET QUESTION: ${market.resolution.question}
 
 RESOLUTION CRITERIA: ${market.resolution.resolution_criteria}
 
-Research this question independently. Consider all available evidence.
-You MUST provide a clear vote: YES or NO.
+Research this question independently using real-world evidence.
+You MUST cite specific sources (news articles, official announcements, data sources) with URLs.
+
+Consider all angles carefully. Play devil's advocate against your initial instinct.
+Examine the strongest counterarguments before deciding.
+Think about what evidence would change your mind and whether that evidence exists.
 
 Structure your response:
-1. Key evidence found
-2. Analysis of evidence
-3. Your vote: YES or NO (state clearly)
+1. Key evidence FOR (with reference URLs)
+2. Key evidence AGAINST (with reference URLs)
+3. Strongest counterargument to your initial position
+4. Your vote: YES or NO
+5. References: list all URLs cited
 
-Be concise. End with "My vote: YES" or "My vote: NO".`,
+End with "My vote: YES" or "My vote: NO".`,
       walletAddress
     );
 
@@ -167,7 +174,7 @@ Be concise. End with "My vote: YES" or "My vote: NO".`,
   });
 
   // ── Tally votes ───────────────────────────────────────────────
-  const tally = { YES: 0, NO: 0, UNSURE: 0 };
+  const tally = { YES: 0, NO: 0 };
   for (const r of reveals) {
     tally[r.vote]++;
   }
@@ -240,7 +247,6 @@ Be concise. End with "My vote: YES" or "My vote: NO".`,
     percentages: {
       YES: `${(yesPercent * 100).toFixed(0)}%`,
       NO: `${(noPercent * 100).toFixed(0)}%`,
-      UNSURE: `${((tally.UNSURE / totalVoters) * 100).toFixed(0)}%`,
     },
     consensus,
     resolved,

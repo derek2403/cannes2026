@@ -87,26 +87,23 @@ export async function getWalletAddress(baseUrl: string): Promise<string> {
   return data.address;
 }
 
-/** Extract YES/NO/UNSURE from an agent's text response */
+/** Extract YES/NO from an agent's text response. Always returns YES or NO. */
 export function extractVote(
   text: string
-): "YES" | "NO" | "UNSURE" {
+): "YES" | "NO" {
   const upper = text.toUpperCase();
   // Look for explicit vote patterns first
   const voteMatch = upper.match(
-    /\b(?:MY\s+(?:VOTE|ANSWER|DECISION)\s+(?:IS\s+)?|I\s+VOTE\s+|FINAL\s+(?:ANSWER|VOTE)[:\s]+)(YES|NO|UNSURE)\b/
+    /\b(?:MY\s+(?:VOTE|ANSWER|DECISION)\s+(?:IS\s+)?|I\s+VOTE\s+|FINAL\s+(?:ANSWER|VOTE)[:\s]+)(YES|NO)\b/
   );
-  if (voteMatch) return voteMatch[1] as "YES" | "NO" | "UNSURE";
+  if (voteMatch) return voteMatch[1] as "YES" | "NO";
 
   // Count occurrences
   const yesCount = (upper.match(/\bYES\b/g) || []).length;
   const noCount = (upper.match(/\bNO\b/g) || []).length;
-  const unsureCount = (upper.match(/\bUNSURE\b/g) || []).length;
 
-  if (unsureCount > yesCount && unsureCount > noCount) return "UNSURE";
-  if (yesCount > noCount) return "YES";
-  if (noCount > yesCount) return "NO";
-  return "UNSURE";
+  if (yesCount >= noCount) return "YES";
+  return "NO";
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -145,14 +142,14 @@ export interface CommitEntry {
   tokenId: number;
   commitHash: string;
   salt: string; // stored server-side, not exposed until reveal
-  vote: "YES" | "NO" | "UNSURE";
+  vote: "YES" | "NO";
   reasoning: string;
 }
 
 export interface RevealEntry {
   agent: string;
   tokenId: number;
-  vote: "YES" | "NO" | "UNSURE";
+  vote: "YES" | "NO";
   salt: string;
   commitHash: string;
   verified: boolean;
@@ -272,7 +269,7 @@ export function updateReputation(
   marketId: string,
   marketQuestion: string,
   outcome: "YES" | "NO",
-  agentVotes: { agent: string; vote: "YES" | "NO" | "UNSURE" }[]
+  agentVotes: { agent: string; vote: "YES" | "NO" }[]
 ): { agent: string; vote: string; correct: boolean; change: number; newRep: number }[] {
   const state = readHederaState();
   const results: { agent: string; vote: string; correct: boolean; change: number; newRep: number }[] = [];
@@ -282,7 +279,7 @@ export function updateReputation(
     if (!stateAgent) continue;
 
     const correct = av.vote === outcome;
-    const change = av.vote === "UNSURE" ? 0 : correct ? REP_CORRECT : REP_WRONG;
+    const change = correct ? REP_CORRECT : REP_WRONG;
     const oldRep = stateAgent.reputation ?? 10;
     const newRep = Math.max(0, oldRep + change);
 

@@ -223,5 +223,95 @@
       "settlement_price": null,
       "dispute_tx_hash": null
     }
+  },
+  {
+    "id": "mkt-1775294359789-jkni",
+    "created_at": "2026-04-04T09:19:19.789Z",
+    "ai_insight": {
+      "agent_id": "MarketBot",
+      "debate_log_id": "debate-mkt-1775294359789-jkni",
+      "market_thesis": "Market proposed by MarketBot during AI swarm creation process on theme: AI technology milestones and regulation in 2026",
+      "confidence_score": 40,
+      "suggested_categories": [
+        "AI"
+      ],
+      "news_sources": []
+    },
+    "resolution": {
+      "question": "Will any major country implement a comprehensive regulatory framework for AI technology by June 30, 2026?",
+      "resolution_criteria": "The question will be resolved as 'YES' if a major country (defined as a member of the G20) passes legislation or establishes an official regulatory framework specifically addressing AI technology by the resolution date. It will be resolved as 'NO' if no such legislation or framework is enacted by that date.",
+      "resolution_date": "2026-06-30",
+      "oracle_type": "ai_swarm",
+      "ancillary_data": "Created via /api/commands/create-market with 5 agents"
+    },
+    "amm": {
+      "lp_pool_address": null,
+      "initial_seed_amount": 1000,
+      "yes_token_id": null,
+      "no_token_id": null,
+      "yes_token_balance": 1000,
+      "no_token_balance": 1000,
+      "current_odds_yes": 0.5,
+      "total_liquidity_usd": 0,
+      "trading_fee": 0.02
+    },
+    "ux": {
+      "status": "PROPOSED",
+      "volume_24h": 0,
+      "total_volume": 0,
+      "unique_bettors": 0,
+      "top_bet_size": 0,
+      "is_trending": false
+    },
+    "settlement": {
+      "winning_outcome": null,
+      "settlement_price": null,
+      "dispute_tx_hash": null
+    }
+  },
+  {
+    "id": "mkt-1775294658943-x6y8",
+    "created_at": "2026-04-04T09:24:18.943Z",
+    "ai_insight": {
+      "agent_id": "ResearchBot",
+      "debate_log_id": "debate-mkt-1775294658943-x6y8",
+      "market_thesis": "Market proposed by ResearchBot during AI swarm creation process on theme: geopolitical events and their market impact",
+      "confidence_score": 60,
+      "suggested_categories": [
+        "geopolitical"
+      ],
+      "news_sources": []
+    },
+    "resolution": {
+      "question": "Will the United States impose new economic sanctions on Russia by April 30, 2024?",
+      "resolution_criteria": "The question will resolve to YES if the United States government officially announces and implements new economic sanctions against Russia before the resolution date. It will resolve to NO if no such sanctions are announced or implemented by that date.",
+      "resolution_date": "2024-04-30",
+      "oracle_type": "ai_swarm",
+      "ancillary_data": "Created via /api/commands/create-market with 5 agents"
+    },
+    "amm": {
+      "lp_pool_address": null,
+      "initial_seed_amount": 1000,
+      "yes_token_id": null,
+      "no_token_id": null,
+      "yes_token_balance": 1000,
+      "no_token_balance": 1000,
+      "current_odds_yes": 0.5,
+      "total_liquidity_usd": 0,
+      "trading_fee": 0.02
+    },
+    "ux": {
+      "status": "PROPOSED",
+      "volume_24h": 0,
+      "total_volume": 0,
+      "unique_bettors": 0,
+      "top_bet_size": 0,
+      "is_trending": false
+    },
+    "settlement": {
+      "winning_outcome": null,
+      "settlement_price": null,
+      "dispute_tx_hash": null
+    }
   }
 ]

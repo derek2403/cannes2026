@@ -61,15 +61,17 @@ export default async function handler(
       baseUrl,
       agent.inftTokenId!,
       `You are participating in a prediction market creation process. The theme is: "${theme}".
+Today's date is ${new Date().toISOString().split("T")[0]}.
 
 Propose ONE specific prediction market question that:
 - Is binary (YES/NO resolvable)
-- Has a clear resolution date (within 6 months)
+- Has a clear resolution date between now and 6 months from today (dates must be in 2026 or later, NEVER 2024 or 2025)
 - Is interesting and tradeable
 - Has clear resolution criteria
+- Is grounded in REAL current events — cite at least one news source or reference URL
 
 Format your response as JSON:
-{"question": "...", "resolution_date": "YYYY-MM-DD", "resolution_criteria": "..."}`,
+{"question": "...", "resolution_date": "YYYY-MM-DD", "resolution_criteria": "...", "references": ["https://...", "https://..."]}`,
       walletAddress
     );
     return {

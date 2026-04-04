@@ -52,7 +52,7 @@ export default async function handler(
     return res.status(405).json({ error: "POST only" });
   }
 
-  const { marketId, committeeSize = 1 } = req.body;
+  const { marketId, committeeSize = 3 } = req.body;
   if (!marketId) {
     return res.status(400).json({ error: "marketId is required" });
   }
@@ -96,18 +96,20 @@ export default async function handler(
       baseUrl,
       agent.inftTokenId!,
       `You are an oracle agent in a prediction market dispute resolution.
+Today's date is ${new Date().toISOString().split("T")[0]}.
 
 MARKET QUESTION: ${market.resolution.question}
 
 RESOLUTION CRITERIA: ${market.resolution.resolution_criteria}
 
-Present your analysis. Include:
-1. What evidence supports YES
-2. What evidence supports NO
+Present your analysis WITH REFERENCES. You must cite real sources (news articles, official data, announcements) with URLs.
+1. What evidence supports YES (cite sources with URLs)
+2. What evidence supports NO (cite sources with URLs)
 3. Your initial position and confidence level
 4. Key uncertainties
+5. References: list all URLs cited
 
-Be thorough but concise.`,
+Be thorough but concise. Every claim must have a source.`,
       walletAddress
     );
     initialViews.push({
@@ -134,6 +136,7 @@ Be thorough but concise.`,
       baseUrl,
       agent.inftTokenId!,
       `You are in a group discussion about resolving this prediction market:
+Today's date is ${new Date().toISOString().split("T")[0]}.
 
 MARKET QUESTION: ${market.resolution.question}
 
@@ -141,13 +144,13 @@ Here are all agents' initial analyses:
 
 ${viewSummary}
 
-Now respond to the other agents:
-1. Which arguments do you find compelling?
-2. Which arguments are flawed and why?
-3. Has your position changed?
-4. What additional evidence or reasoning should be considered?
+Now respond to the other agents. You MUST back up every point with references:
+1. Which arguments do you find compelling? Verify their sources.
+2. Which arguments are flawed and why? Provide counter-evidence with URLs.
+3. Has your position changed based on the evidence?
+4. What additional evidence or references should be considered? Cite URLs.
 
-Be specific — reference other agents' points by name.`,
+Be specific — reference other agents' points by name. Every claim needs a source URL.`,
       walletAddress
     );
     responses.push({
@@ -173,22 +176,22 @@ Be specific — reference other agents' points by name.`,
     const result = await callAgent(
       baseUrl,
       agent.inftTokenId!,
-      `Final vote round. You've heard all arguments.
+      `Final vote round. You've heard all arguments and seen all evidence.
+Today's date is ${new Date().toISOString().split("T")[0]}.
 
 MARKET QUESTION: ${market.resolution.question}
 
 Discussion summary:
 ${discussionSummary}
 
-Based on ALL evidence and discussion, cast your FINAL vote.
-You MUST choose exactly one: YES, NO, or UNSURE.
-
-If you are not confident enough to pick YES or NO, vote UNSURE.
+Based on ALL evidence, references, and discussion, cast your FINAL vote.
+You MUST choose YES or NO based on the weight of evidence and references discussed.
+Synthesize what the group has found. Which side has stronger, more credible sources?
+Cite the most decisive references that tipped your decision.
 
 End your response with exactly one of these lines:
 "FINAL VOTE: YES"
-"FINAL VOTE: NO"
-"FINAL VOTE: UNSURE"`,
+"FINAL VOTE: NO"`,
       walletAddress
     );
 
@@ -243,7 +246,7 @@ End your response with exactly one of these lines:
   });
 
   // ── Tally ─────────────────────────────────────────────────────
-  const tally = { YES: 0, NO: 0, UNSURE: 0 };
+  const tally = { YES: 0, NO: 0 };
   for (const v of reveals) {
     tally[v.vote]++;
   }
@@ -251,9 +254,8 @@ End your response with exactly one of these lines:
   const totalVoters = reveals.length;
   const yesPercent = totalVoters > 0 ? tally.YES / totalVoters : 0;
   const noPercent = totalVoters > 0 ? tally.NO / totalVoters : 0;
-  const unsurePercent = totalVoters > 0 ? tally.UNSURE / totalVoters : 0;
 
-  let consensus: "YES" | "NO" | "UNSURE" | null = null;
+  let consensus: "YES" | "NO" | null = null;
   let resolved = false;
 
   if (yesPercent >= 0.7) {
@@ -262,8 +264,6 @@ End your response with exactly one of these lines:
   } else if (noPercent >= 0.7) {
     consensus = "NO";
     resolved = true;
-  } else if (unsurePercent >= 0.7) {
-    consensus = "UNSURE";
   }
 
   phases.push({
@@ -288,7 +288,7 @@ End your response with exactly one of these lines:
     newRep: number;
   }[] = [];
 
-  if (resolved && consensus && consensus !== "UNSURE") {
+  if (resolved && consensus) {
     const idx = markets.findIndex((m) => m.id === marketId);
     if (idx >= 0) {
       markets[idx].ux.status = "RESOLVED";
@@ -319,16 +319,13 @@ End your response with exactly one of these lines:
     percentages: {
       YES: `${(yesPercent * 100).toFixed(0)}%`,
       NO: `${(noPercent * 100).toFixed(0)}%`,
-      UNSURE: `${(unsurePercent * 100).toFixed(0)}%`,
     },
     consensus,
     resolved,
     reputationUpdates: resolved ? reputationUpdates : undefined,
     message: resolved
-      ? consensus === "UNSURE"
-        ? "Agents are UNSURE — resolution delayed."
-        : `Market resolved as ${consensus} after discussion with ${Math.round(Math.max(yesPercent, noPercent) * 100)}% consensus`
-      : `Still no consensus after Phase 2. YES: ${(yesPercent * 100).toFixed(0)}%, NO: ${(noPercent * 100).toFixed(0)}%, UNSURE: ${(unsurePercent * 100).toFixed(0)}%.`,
+      ? `Market resolved as ${consensus} after discussion with ${Math.round(Math.max(yesPercent, noPercent) * 100)}% consensus`
+      : `Still no consensus after Phase 2. YES: ${(yesPercent * 100).toFixed(0)}%, NO: ${(noPercent * 100).toFixed(0)}%.`,
     phases,
   });
 }

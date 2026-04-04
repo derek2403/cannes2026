@@ -260,6 +260,86 @@
       "marketId": "mkt-1775294053822-5rvw",
       "marketQuestion": "Will the United States impose new economic sanctions on Russia by April 30, 2024?",
       "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:19:19.790Z",
+      "agentName": "ResearchBot",
+      "marketId": "mkt-1775294359789-jkni",
+      "marketQuestion": "Will any major country implement a comprehensive regulatory framework for AI technology by June 30, 2026?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:19:19.791Z",
+      "agentName": "CritiqueBot",
+      "marketId": "mkt-1775294359789-jkni",
+      "marketQuestion": "Will any major country implement a comprehensive regulatory framework for AI technology by June 30, 2026?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:19:19.791Z",
+      "agentName": "MarketBot",
+      "marketId": "mkt-1775294359789-jkni",
+      "marketQuestion": "Will any major country implement a comprehensive regulatory framework for AI technology by June 30, 2026?",
+      "role": "proposer"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:19:19.791Z",
+      "agentName": "DataBot",
+      "marketId": "mkt-1775294359789-jkni",
+      "marketQuestion": "Will any major country implement a comprehensive regulatory framework for AI technology by June 30, 2026?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:19:19.791Z",
+      "agentName": "SentinelBot",
+      "marketId": "mkt-1775294359789-jkni",
+      "marketQuestion": "Will any major country implement a comprehensive regulatory framework for AI technology by June 30, 2026?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:24:18.943Z",
+      "agentName": "ResearchBot",
+      "marketId": "mkt-1775294658943-x6y8",
+      "marketQuestion": "Will the United States impose new economic sanctions on Russia by April 30, 2024?",
+      "role": "proposer"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:24:18.944Z",
+      "agentName": "CritiqueBot",
+      "marketId": "mkt-1775294658943-x6y8",
+      "marketQuestion": "Will the United States impose new economic sanctions on Russia by April 30, 2024?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:24:18.944Z",
+      "agentName": "MarketBot",
+      "marketId": "mkt-1775294658943-x6y8",
+      "marketQuestion": "Will the United States impose new economic sanctions on Russia by April 30, 2024?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:24:18.944Z",
+      "agentName": "DataBot",
+      "marketId": "mkt-1775294658943-x6y8",
+      "marketQuestion": "Will the United States impose new economic sanctions on Russia by April 30, 2024?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:24:18.944Z",
+      "agentName": "SentinelBot",
+      "marketId": "mkt-1775294658943-x6y8",
+      "marketQuestion": "Will the United States impose new economic sanctions on Russia by April 30, 2024?",
+      "role": "participant"
     }
   ]
 }
