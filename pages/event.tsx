@@ -220,11 +220,8 @@ export default function Event() {
                             </div>
                         </div>
 
-                        <button
-                            type="button"
-                            className="w-full py-3.5 rounded-xl bg-slate-600 text-white font-bold text-lg flex items-center justify-center cursor-pointer select-none border-0 shadow-[0_4px_0_0_rgb(30_41_59)] hover:bg-slate-500 hover:shadow-[0_4px_0_0_rgb(15_23_42)] active:shadow-none active:translate-y-1 transition-[background-color,box-shadow,transform] duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-400/40"
-                        >
-                            Trade
+                        <button className="w-full py-4 rounded-xl bg-gray-100 text-gray-400 font-bold flex items-center justify-center gap-2 cursor-not-allowed border border-gray-200 text-lg transition-colors">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg> Restricted region
                         </button>
 
                         <p className="mt-5 text-center text-xs text-gray-500 font-medium">
