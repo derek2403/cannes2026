@@ -134,7 +134,7 @@ export default function Docs() {
 
             <Header />
 
-            <div className="w-full flex justify-center px-2 md:px-0 pt-4 sm:pt-5 pb-16">
+            <div className="w-full flex justify-center px-2 md:px-0 pt-8 sm:pt-10 md:pt-12 pb-16">
                 <main className="w-[96%] max-w-[1800px] flex flex-col gap-10 pl-[calc(1.5rem-0.5cm)] lg:pl-[calc(2.5rem-0.5cm)] pr-3 lg:pr-4 box-border">
 
                     {/* Overview */}
