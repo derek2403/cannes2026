@@ -49,7 +49,7 @@ const AGENTS: Agent[] = [
   ]},
   { id: 2, name: "Arbiter Gamma", reputation: 88, vote: "YES", evidence: [
     { label: "Bloomberg Data", type: "source" }, { label: "Statistical Model", type: "proof" },
-    { label: "Academic Paper", type: "reference" }, { label: "Satellite Imagery", type: "proof" },
+    { label: "Academic Paper", type: "reference" },
   ]},
   { id: 3, name: "Watcher Delta", reputation: 65, vote: "YES", evidence: [
     { label: "Skeptic Report", type: "reference" }, { label: "Historical Precedent", type: "source" },
@@ -57,27 +57,11 @@ const AGENTS: Agent[] = [
   { id: 4, name: "Veritas Epsilon", reputation: 82, vote: "YES", evidence: [
     { label: "AP News Wire", type: "source" }, { label: "Gov Database", type: "proof" }, { label: "Witness Testimony", type: "reference" },
   ]},
-  { id: 5, name: "Cipher Zeta", reputation: 71, vote: "YES", evidence: [
-    { label: "Anomaly Detection", type: "proof" }, { label: "Supporting Analysis", type: "reference" },
-  ]},
-  { id: 6, name: "Nexus Eta", reputation: 90, vote: "YES", evidence: [
-    { label: "Consensus Data", type: "proof" }, { label: "Market Signals", type: "source" }, { label: "Cross-validation", type: "proof" },
-  ]},
-  { id: 7, name: "Prism Theta", reputation: 60, vote: "YES", evidence: [
-    { label: "Alternative Source", type: "source" }, { label: "Confirming Report", type: "reference" }, { label: "Edge Case Proof", type: "proof" },
-  ]},
-  { id: 8, name: "Echo Iota", reputation: 85, vote: "YES", evidence: [
-    { label: "Corroborating Source", type: "source" }, { label: "Network Analysis", type: "proof" },
-  ]},
-  { id: 9, name: "Flux Kappa", reputation: 74, vote: "YES", evidence: [
-    { label: "Trend Analysis", type: "proof" }, { label: "Social Sentiment", type: "source" }, { label: "Prediction Model", type: "reference" },
-  ]},
 ];
 
 const DISCUSSIONS: Discussion[] = [
-  { from: 0, to: 1 }, { from: 0, to: 2 }, { from: 1, to: 3 }, { from: 2, to: 4 },
-  { from: 3, to: 5 }, { from: 4, to: 6 }, { from: 5, to: 7 }, { from: 6, to: 8 },
-  { from: 0, to: 6 }, { from: 1, to: 7 }, { from: 2, to: 9 }, { from: 8, to: 9 },
+  { from: 0, to: 1 }, { from: 0, to: 2 }, { from: 1, to: 3 },
+  { from: 2, to: 4 }, { from: 3, to: 4 }, { from: 0, to: 3 },
 ];
 
 /* ═══════════════════════════════════════════════════════════
@@ -154,8 +138,8 @@ function computeLayout(): Layout {
    Candidates (50 random nodes, 10 get chosen)
    ═══════════════════════════════════════════════════════════ */
 
-const TOTAL_CANDIDATES = 50;
-const CHOSEN_MAP = [3, 8, 12, 17, 21, 26, 31, 36, 41, 47];
+const TOTAL_CANDIDATES = 10;
+const CHOSEN_MAP = [1, 3, 5, 7, 9];
 
 function generateCandidatePositions(): THREE.Vector3[] {
   return Array.from({ length: TOTAL_CANDIDATES }, (_, i) => {
@@ -444,7 +428,7 @@ function CurvedFlowParticle({
 
 // Which color-reveal wave each agent belongs to (0=first, 1=second, 2=stays grey)
 // Agent 1 (Sentinel Beta) is the only NO — reveal it alone in wave 1
-const VOTE_WAVE: number[] = [0, 1, 0, 2, 1, 0, 2, 2, 1, 2];
+const VOTE_WAVE: number[] = [0, 1, 0, 2, 2];
 
 function VotingNode({
   position, agent, agentIndex, refs,
@@ -519,7 +503,7 @@ function Scene({ phase, setPhase }: { phase: Phase; setPhase: (p: Phase) => void
 
   useFrame((_, delta) => {
     elapsedRef.current += delta;
-    if (phaseRef.current === "selecting" && elapsedRef.current >= 4.0) {
+    if (phaseRef.current === "selecting" && elapsedRef.current >= 2.5) {
       phaseRef.current = "fading";
       elapsedRef.current = 0;
       setPhase("fading");
@@ -699,8 +683,8 @@ function Stats() {
 }
 
 const PHASE_LABELS: Record<Phase, string> = {
-  idle: "50 candidate agents standing by",
-  selecting: "Selecting 10 oracle agents...",
+  idle: "10 candidate agents standing by",
+  selecting: "Selecting 5 oracle agents...",
   fading: "Forming oracle network...",
   voting: "Agents casting votes...",
   discussion: "Oracle discussion in progress",
