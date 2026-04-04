@@ -52,6 +52,36 @@ export default async function handler(
   }
 
   try {
+    // ── Step 0: World ID verification ───────────────────────────
+    // Every agent must be backed by a verified human via World ID.
+    // Calls AgentBook contract on World Chain to check wallet → humanId.
+    const agentWallet = ownerAddress || undefined;
+    let worldVerified = false;
+    let humanId: string | null = null;
+
+    if (agentWallet) {
+      try {
+        const { checkAgentHuman } = await import("@/lib/world-agentkit");
+        humanId = await checkAgentHuman(agentWallet);
+        worldVerified = humanId !== null;
+      } catch {
+        // World ID packages not available or lookup failed — skip
+      }
+    }
+
+    // If no ownerAddress, try server wallet
+    if (!agentWallet) {
+      try {
+        const tempProvider = new ethers.JsonRpcProvider(ZG_RPC);
+        const tempSigner = new ethers.Wallet(privateKey, tempProvider);
+        const { checkAgentHuman } = await import("@/lib/world-agentkit");
+        humanId = await checkAgentHuman(tempSigner.address);
+        worldVerified = humanId !== null;
+      } catch {
+        // Skip if lookup fails
+      }
+    }
+
     // ── Step 1: Build & upload config to 0G Storage ──────────────
     const agentConfig: Record<string, unknown> = {
       version: "1.0.0",
@@ -269,6 +299,8 @@ export default async function handler(
       reputation,
       domainTags,
       serviceOfferings,
+      worldVerified,
+      humanId,
       createdAt: new Date().toISOString(),
     };
 
@@ -298,6 +330,10 @@ export default async function handler(
         profileTopicId,
         registryTopicId,
         reputationTopicId,
+      },
+      world: {
+        verified: worldVerified,
+        humanId,
       },
       agent: {
         agentName,
