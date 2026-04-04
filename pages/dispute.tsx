@@ -105,17 +105,29 @@ function InteractiveWordCloud() {
     const height = 580;
 
     useEffect(() => {
+        // Seeded LCG so d3-cloud always produces the exact same layout
+        let seed = 42;
+        const seededRand = () => {
+            seed = (seed * 1664525 + 1013904223) & 0xffffffff;
+            return (seed >>> 0) / 0x100000000;
+        };
+        const origRandom = Math.random;
+        Math.random = seededRand;
+
         cloud<WordNode>()
             .size([width, height])
             .words(cloudWordsData.map(d => ({ ...d })))
             .padding(6)
-            .rotate((d: WordNode) => d.forceRotate !== undefined ? d.forceRotate : (Math.random() > 0.5 ? 0 : -90))
+            .rotate((d: WordNode) => d.forceRotate !== undefined ? d.forceRotate : (seededRand() > 0.5 ? 0 : -90))
             .font("Satoshi")
             .fontSize(d => d.size)
             .on("end", (computedWords) => {
+                Math.random = origRandom;
                 setWords(computedWords as WordNode[]);
             })
             .start();
+
+        return () => { Math.random = origRandom; };
     }, []);
 
     return (
@@ -176,7 +188,7 @@ export default function DisputePage() {
 
                 {/* Header (Matching Event Page Style) */}
                 <div className="flex items-start gap-4 mb-10 border-b border-gray-200 pb-8">
-                    <div className="w-14 h-14 rounded-2xl bg-gray-900 flex items-center justify-center shrink-0 shadow-sm border border-gray-800">
+                    <div className="w-14 h-14 rounded-2xl bg-gray-800 flex items-center justify-center shrink-0 shadow-sm border border-gray-700">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 22C7.58172 22 4 18.4183 4 14C4 9.58172 12 2 12 2C12 2 20 9.58172 20 14C20 18.4183 16.4183 22 12 22Z" /></svg>
                     </div>
                     <div className="flex-1">
@@ -205,22 +217,21 @@ export default function DisputePage() {
                             <p className="text-gray-400 font-medium text-lg">March 15</p>
                         </div>
 
-                        {/* Bar Chart Box */}
-                        <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm relative">
-                            <div className="h-16 w-full bg-transparent rounded-xl overflow-visible flex items-center relative border-2 border-gray-900/10">
-                                {/* The filled percentage representation line */}
-                                <div className="absolute left-0 top-0 bottom-0 bg-red-500 rounded-lg w-[99%] z-0 border-2 border-white shadow-[0_0_15px_rgba(239,68,68,0.2)]"></div>
-                                <div className="relative z-10 flex justify-between w-full px-4 items-center">
-                                    <div className="flex items-center">
-                                        {/* Little stem pointing out left */}
-                                        <div className="absolute -left-6 text-gray-500 font-semibold text-xs tracking-wider">Yes</div>
-                                        <div className="absolute -left-1 w-2 h-[2px] bg-gray-400"></div>
-                                    </div>
-                                    <span className="font-bold text-white text-lg ml-auto px-4 tracking-wider">No</span>
-                                </div>
+                        {/* Yes/No Box */}
+                        <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm">
+                            <div className="flex items-center justify-between mb-4">
+                                <span className="font-['Satoshi'] font-bold text-gray-900 text-base">Outcome</span>
+                                <span className="font-mono text-sm font-semibold text-gray-400">1¢ · 99¢</span>
                             </div>
-                            <div className="w-full flex mt-2 px-1">
-                                <span className="font-bold text-gray-800">99</span>
+                            <div className="flex gap-3">
+                                <button className="flex-1 flex flex-col items-center justify-center bg-green-50 hover:bg-green-100 border border-green-200 text-green-700 rounded-xl py-3 transition-colors">
+                                    <span className="text-[11px] font-bold uppercase tracking-wide opacity-70">Yes</span>
+                                    <span className="text-lg font-bold mt-0.5">1¢</span>
+                                </button>
+                                <button className="flex-1 flex flex-col items-center justify-center bg-red-50 hover:bg-red-100 border border-red-500 text-red-700 rounded-xl py-3 transition-colors ring-1 ring-red-200">
+                                    <span className="text-[11px] font-bold uppercase tracking-wide opacity-70">No</span>
+                                    <span className="text-lg font-bold mt-0.5">99¢</span>
+                                </button>
                             </div>
                         </div>
 

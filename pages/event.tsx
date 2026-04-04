@@ -45,7 +45,7 @@ export default function Event() {
 
                     {/* Header Section */}
                     <div className="flex items-start gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-slate-500 flex items-center justify-center shrink-0 shadow-sm border border-slate-600">
+                        <div className="w-14 h-14 rounded-2xl bg-slate-600 flex items-center justify-center shrink-0 shadow-sm border border-slate-700">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 22C7.58172 22 4 18.4183 4 14C4 9.58172 12 2 12 2C12 2 20 9.58172 20 14C20 18.4183 16.4183 22 12 22Z" /></svg>
                         </div>
                         <div className="flex-1">
@@ -132,7 +132,7 @@ export default function Event() {
 
                         <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-100">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-slate-500 flex items-center justify-center shrink-0 shadow-sm border border-slate-600">
+                                <div className="w-10 h-10 rounded-xl bg-slate-600 flex items-center justify-center shrink-0 shadow-sm border border-slate-700">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 22C7.58172 22 4 18.4183 4 14C4 9.58172 12 2 12 2C12 2 20 9.58172 20 14C20 18.4183 16.4183 22 12 22Z" /></svg>
                                 </div>
                                 <span className="font-bold font-['Satoshi'] text-gray-900 text-xl md:text-2xl">{selectedOutcome}</span>
