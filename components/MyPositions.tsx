@@ -187,9 +187,19 @@ export default function MyPositions({
       setStatus(`Tx submitted: ${result.data.userOpHash.slice(0, 10)}...`);
       const receipt = await pollUserOp(result.data.userOpHash);
       if (receipt) {
-        setStatus(`Market disputed → ${newOutcome === Outcome.YES ? "YES" : "NO"}!`);
+        setStatus(`On-chain dispute done. Starting oracle resolution...`);
         refreshPool(marketId);
         refreshPositions();
+
+        // Trigger backend dispute orchestration
+        try {
+          await fetch(`https://localhost:3001/dispute/${marketId}`, {
+            method: "POST",
+          });
+          setStatus(`Dispute resolution started for ${marketId}`);
+        } catch {
+          setStatus(`On-chain dispute succeeded but failed to reach orchestrator`);
+        }
       } else {
         setStatus("Tx may still be pending");
       }
@@ -246,10 +256,6 @@ export default function MyPositions({
 
   const marketIds = Object.keys(positions);
 
-  if (marketIds.length === 0) {
-    return null;
-  }
-
   return (
     <div className="w-full rounded-2xl border border-zinc-200 p-6 dark:border-zinc-800">
       <p className="mb-1 text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
@@ -258,6 +264,12 @@ export default function MyPositions({
       <p className="mb-4 text-sm font-medium text-zinc-700 dark:text-zinc-300">
         Your bets across all markets
       </p>
+
+      {marketIds.length === 0 && (
+        <p className="text-center text-sm text-zinc-400 dark:text-zinc-500">
+          No positions yet
+        </p>
+      )}
 
       <div className="flex flex-col gap-4">
         {marketIds.map((marketId) => {
