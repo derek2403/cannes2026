@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/router';
 import Header from '../components/header/Header';
 import { Roboto, Figtree } from "next/font/google";
 import cloud from 'd3-cloud';
@@ -77,17 +78,6 @@ function SemiGauge({ yesPercent }: { yesPercent: number }) {
             </div>
         </div>
     );
-}
-
-const ALL_AGENTS = [
-    "ResearchBot", "CritiqueBot", "MarketBot", "DataBot", "SentinelBot",
-    "OracleAlpha", "TruthSeeker", "RiskAnalyst", "DeepDive", "ConsensusAI",
-    "FactChecker", "TrendWatcher", "PolicyBot", "ArbitrageAI", "SignalBot",
-];
-
-function selectRandomAgents(count: number): string[] {
-    const shuffled = [...ALL_AGENTS].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, count);
 }
 
 const STEPS = [
@@ -386,6 +376,9 @@ function LinkageGraph3D({
 }
 
 export default function DisputePage() {
+    const router = useRouter();
+    const marketId = (router.query.marketId as string) || "";
+
     // disputeStep: 0=initial, 2=r1 commit, 3=r1 reveal, 4=discussion, 5=r2 commit, 6=r2 reveal, 7=final
     const [disputeStep, setDisputeStep] = useState(0);
     const [currentRound, setCurrentRound] = useState(0);
@@ -397,107 +390,174 @@ export default function DisputePage() {
     const [showDiscussion, setShowDiscussion] = useState(false);
     const [discussionMessages, setDiscussionMessages] = useState<{ agent: string; text: string }[]>([]);
     const [round1Result, setRound1Result] = useState<{ yes: number; no: number } | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [marketQuestion, setMarketQuestion] = useState("What will WTI Crude Oil (WTI) hit in April 2026?");
 
-    // Commit timer
-    useEffect(() => {
-        if ((disputeStep === 2 || disputeStep === 5) && commitTimeLeft > 0) {
-            const t = setInterval(() => setCommitTimeLeft(p => p - 1), 1000);
-            return () => clearInterval(t);
-        }
-    }, [disputeStep, commitTimeLeft]);
+    // Store raw API responses for the graph
+    const [r1Data, setR1Data] = useState<Record<string, unknown> | null>(null);
+    const [r2Data, setR2Data] = useState<Record<string, unknown> | null>(null);
 
-    // Auto-transition: all votes shown in commit → start reveal in right panel
-    useEffect(() => {
-        if ((disputeStep === 2 || disputeStep === 5) && commitTimeLeft === 0 && visibleAgentCount >= selectedAgents.length) {
-            const t = setTimeout(() => {
-                setDisputeStep(prev => prev + 1); // 2→3 or 5→6
-                setAllVotesRevealed(false);
-                startReveal();
-            }, 800);
-            return () => clearTimeout(t);
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [disputeStep, commitTimeLeft, visibleAgentCount, selectedAgents.length]);
-
-    const startDispute = useCallback(() => {
-        const agents = selectRandomAgents(10);
-        setSelectedAgents(agents);
+    // Animate commits appearing one by one
+    const animateAgents = useCallback((agents: string[], delay: number) => {
         setVisibleAgentCount(0);
-        setAgentVotes({});
-        setAllVotesRevealed(false);
-        setRound1Result(null);
-        setCurrentRound(1);
-        setDisputeStep(2);
-        setCommitTimeLeft(10);
-
         let count = 0;
         const interval = setInterval(() => {
             count++;
             setVisibleAgentCount(count);
             if (count >= agents.length) clearInterval(interval);
-        }, 400);
+        }, delay);
     }, []);
 
-    const startRound2 = useCallback(() => {
+    // Animate votes appearing one by one, then force-set all at end
+    const animateReveals = useCallback((agents: string[], votes: Record<string, "YES" | "NO">, onDone: () => void) => {
+        let count = 0;
+        const interval = setInterval(() => {
+            const agent = agents[count];
+            if (agent) setAgentVotes(prev => ({ ...prev, [agent]: votes[agent] }));
+            count++;
+            if (count >= agents.length) {
+                clearInterval(interval);
+                // Force-set ALL votes to ensure none are left as ticks
+                setAgentVotes({ ...votes });
+                setAllVotesRevealed(true);
+                setTimeout(onDone, 2000);
+            }
+        }, 600);
+    }, []);
+
+    // ── DISPUTE BUTTON: calls resolve-1, animates results ──
+    const startDispute = useCallback(async () => {
+        if (!marketId) { alert("No marketId. Add ?marketId=mkt-xxx to the URL."); return; }
+        setLoading(true);
+        setCurrentRound(1);
+        setDisputeStep(2);
+        setCommitTimeLeft(10);
+        setAgentVotes({});
+        setAllVotesRevealed(false);
+        setRound1Result(null);
+
+        try {
+            const res = await fetch("/api/commands/resolve-1", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ marketId, committeeSize: 5 }),
+            });
+            const data = await res.json();
+            setR1Data(data);
+            if (data.question) setMarketQuestion(data.question);
+
+            // Extract agents from committee
+            const agents = (data.committee || []).map((c: { name: string }) => c.name);
+            setSelectedAgents(agents);
+
+            // Animate agents appearing
+            animateAgents(agents, 400);
+
+            // Wait for agents to appear, then show commits
+            await new Promise(r => setTimeout(r, agents.length * 400 + 500));
+            setCommitTimeLeft(0);
+
+            // Wait a beat, then reveal votes
+            await new Promise(r => setTimeout(r, 800));
+            setDisputeStep(3);
+            setAllVotesRevealed(false);
+
+            // Build votes from reveal data
+            const revealPhase = (data.phases || []).find((p: { phase: string }) => p.phase === "phase_1_reveal");
+            const votes: Record<string, "YES" | "NO"> = {};
+            if (revealPhase?.reveals) {
+                for (const r of revealPhase.reveals) votes[r.agent] = r.vote;
+            }
+
+            // Animate reveals
+            animateReveals(agents, votes, () => {
+                const yes = Object.values(votes).filter(v => v === "YES").length;
+                const no = Object.values(votes).filter(v => v === "NO").length;
+                setRound1Result({ yes, no });
+
+                if (data.resolved) {
+                    setDisputeStep(7);
+                } else {
+                    // Extract discussion messages from resolve-1 reasoning
+                    const msgs: { agent: string; text: string }[] = [];
+                    if (revealPhase?.reveals) {
+                        for (const r of revealPhase.reveals) {
+                            if (r.reasoning) msgs.push({ agent: r.agent, text: r.reasoning });
+                        }
+                    }
+                    setDiscussionMessages(msgs);
+                    setDisputeStep(4);
+                }
+                setLoading(false);
+            });
+        } catch (err) {
+            console.error("Dispute failed:", err);
+            setLoading(false);
+        }
+    }, [marketId, animateAgents, animateReveals]);
+
+    // ── ROUND 2 BUTTON: calls resolve-2, animates results ──
+    const startRound2 = useCallback(async () => {
+        if (!marketId) return;
+        setLoading(true);
         setCurrentRound(2);
         setAgentVotes({});
         setAllVotesRevealed(false);
         setCommitTimeLeft(10);
         setDisputeStep(5);
-        // Show all agents immediately (same committee)
-        setVisibleAgentCount(selectedAgents.length);
-    }, [selectedAgents]);
+        setVisibleAgentCount(selectedAgents.length); // show all agents immediately
 
-    const startReveal = useCallback(() => {
-        const isRound2 = disputeStep === 5;
-        const votes: Record<string, "YES" | "NO"> = {};
-        selectedAgents.forEach((agent, i) => {
-            if (isRound2) {
-                votes[agent] = i < 8 ? "YES" : "NO";
-            } else {
-                votes[agent] = i < 4 ? "YES" : "NO";
+        try {
+            const res = await fetch("/api/commands/resolve-2", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ marketId, committeeSize: 5 }),
+            });
+            const data = await res.json();
+            setR2Data(data);
+
+            // Extract discussion messages
+            const msgs: { agent: string; text: string }[] = [];
+            const disc1 = (data.phases || []).find((p: { phase: string }) => p.phase === "discussion_round_1");
+            if (disc1?.views) {
+                for (const v of disc1.views) msgs.push({ agent: v.agent, text: (v.view || "") });
             }
-        });
-
-        let count = 0;
-        const interval = setInterval(() => {
-            const agent = selectedAgents[count];
-            if (agent) {
-                setAgentVotes(prev => ({ ...prev, [agent]: votes[agent] }));
+            const disc2 = (data.phases || []).find((p: { phase: string }) => p.phase === "discussion_round_2");
+            if (disc2?.responses) {
+                for (const r of disc2.responses) msgs.push({ agent: r.agent, text: (r.response || "") });
             }
-            count++;
-            if (count >= selectedAgents.length) {
-                clearInterval(interval);
-                setAllVotesRevealed(true);
+            setDiscussionMessages(msgs);
+            // Auto-open discussion modal so user sees chat in real-time
+            if (msgs.length > 0) setShowDiscussion(true);
 
-                const yes = Object.values(votes).filter(v => v === "YES").length;
-                const no = Object.values(votes).filter(v => v === "NO").length;
+            // Wait for commit timer
+            await new Promise(r => setTimeout(r, 2000));
+            setCommitTimeLeft(0);
 
-                if (!isRound2) {
-                    setRound1Result({ yes, no });
-                    setTimeout(() => {
-                        setDisputeStep(4);
-                        generateDiscussion(votes);
-                    }, 2000);
-                } else {
-                    setTimeout(() => setDisputeStep(7), 2000);
+            // Reveal
+            await new Promise(r => setTimeout(r, 800));
+            setDisputeStep(6);
+            setAllVotesRevealed(false);
+
+            // Build votes from phase 2 reveal
+            const revealPhase = (data.phases || []).find((p: { phase: string }) => p.phase === "phase_2_reveal");
+            const votes: Record<string, "YES" | "NO"> = {};
+            const agents = (data.committee || []).map((c: { name: string }) => c.name);
+            if (revealPhase?.reveals) {
+                for (const r of revealPhase.reveals) votes[r.agent] = r.vote;
+            }
+
+            animateReveals(agents, votes, () => {
+                if (data.resolved) {
+                    setDisputeStep(7);
                 }
-            }
-        }, 600);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedAgents, disputeStep]);
-
-    const generateDiscussion = (votes: Record<string, "YES" | "NO">) => {
-        const yesAgents = Object.entries(votes).filter(([, v]) => v === "YES").map(([a]) => a);
-        const noAgents = Object.entries(votes).filter(([, v]) => v === "NO").map(([a]) => a);
-        setDiscussionMessages([
-            { agent: noAgents[0], text: "Based on current crude oil futures and OPEC+ production data, the probability of WTI reaching this target is below 15%. Supply constraints are insufficient." },
-            { agent: yesAgents[0], text: `I disagree with ${noAgents[0]}. Geopolitical instability indices are lagging — the baseline disruption risk from recent sanctions hasn't been priced in yet.` },
-            { agent: noAgents[1], text: `${yesAgents[0]} raises a valid point about sanctions, but the demand-side data from IEA reports shows consumption declining. The fundamentals don't support YES.` },
-            { agent: yesAgents[1], text: "Looking at Reuters and Bloomberg data, there's a credible scenario with Middle East supply disruptions. The market is underpricing tail risk." },
-            { agent: noAgents[2], text: "After reviewing all arguments, I acknowledge the geopolitical risk factor. The weight of evidence is closer than I initially thought." },
-        ]);
-    };
+                setLoading(false);
+            });
+        } catch (err) {
+            console.error("Round 2 failed:", err);
+            setLoading(false);
+        }
+    }, [marketId, selectedAgents, animateReveals]);
 
     const handleFastForward = (e: React.MouseEvent) => { e.stopPropagation(); setCommitTimeLeft(0); };
 
@@ -533,8 +593,9 @@ export default function DisputePage() {
                             <span className="uppercase">Finance</span><span>&middot;</span><span className="uppercase">Monthly</span>
                         </div>
                         <h1 className="font-['Satoshi'] text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
-                            What will WTI Crude Oil (WTI) hit in April 2026?
+                            {marketQuestion}
                         </h1>
+                        {marketId && <p className="text-sm text-gray-400 font-mono mt-1">{marketId}</p>}
                     </div>
                 </div>
 
@@ -609,8 +670,9 @@ export default function DisputePage() {
                                     <div className="flex items-center gap-2 text-xs text-gray-500">
                                         <span>Bond:</span><span className="font-bold text-gray-900">750 USDC</span>
                                     </div>
-                                    <button onClick={startDispute} className="px-5 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs transition-colors">
-                                        Dispute &amp; Submit Bond
+                                    <button onClick={startDispute} disabled={loading || !marketId} className="px-5 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white font-bold text-xs transition-colors flex items-center gap-2">
+                                        {loading && <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                                        {loading ? 'Running...' : 'Dispute & Submit Bond'}
                                     </button>
                                 </div>
                             )}
@@ -618,26 +680,45 @@ export default function DisputePage() {
                             {disputeStep === 4 && (
                                 <div className="mt-5 pt-4 border-t border-gray-200 flex items-center justify-between">
                                     <span className="text-xs text-gray-500">No consensus. Proceed to Round 2.</span>
-                                    <button onClick={startRound2} className="px-5 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs transition-colors">
-                                        Start Round 2
+                                    <button onClick={startRound2} disabled={loading} className="px-5 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white font-bold text-xs transition-colors flex items-center gap-2">
+                                        {loading && <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                                        {loading ? 'Discussing...' : 'Start Round 2'}
                                     </button>
                                 </div>
                             )}
 
-                            {disputeStep >= 7 && (
-                                <div className="mt-5 pt-4 border-t border-gray-200">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                            {disputeStep >= 7 && (() => {
+                                const finalData = r2Data || r1Data;
+                                const consensus = (finalData as Record<string, unknown>)?.consensus as string || "YES";
+                                const repUpdates = (finalData as Record<string, unknown>)?.reputationUpdates as { agent: string; change: number; newRep: number; correct: boolean }[] || [];
+                                return (
+                                    <div className="mt-5 pt-4 border-t border-gray-200">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                                            </div>
+                                            <span className="text-xs font-bold text-gray-900">Market resolved: <span className="text-blue-500">{consensus}</span></span>
                                         </div>
-                                        <span className="text-xs font-bold text-gray-900">Market resolved: <span className="text-blue-500">Yes</span> (80%)</span>
+                                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-2">
+                                            <div className="text-xs font-bold text-green-700 mb-0.5">Dispute successful</div>
+                                            <p className="text-xs text-green-600">Outcome changed. Bond of <span className="font-bold">750 USDC</span> returned.</p>
+                                        </div>
+                                        {repUpdates.length > 0 && (
+                                            <div className="mt-2">
+                                                <div className="text-[10px] font-bold text-gray-400 uppercase mb-1">Reputation</div>
+                                                {repUpdates.map((u, i) => (
+                                                    <div key={i} className="flex justify-between text-[11px] py-0.5">
+                                                        <span className="text-gray-600">{u.agent}</span>
+                                                        <span className={u.correct ? "text-emerald-600 font-bold" : "text-red-500 font-bold"}>
+                                                            {u.change >= 0 ? '+' : ''}{u.change} → {u.newRep}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                                        <div className="text-xs font-bold text-green-700 mb-0.5">Dispute successful</div>
-                                        <p className="text-xs text-green-600">Outcome changed No → Yes. Bond of <span className="font-bold">750 USDC</span> returned.</p>
-                                    </div>
-                                </div>
-                            )}
+                                );
+                            })()}
                         </div>
                     </div>
 
@@ -676,13 +757,13 @@ export default function DisputePage() {
                                     )}
                                 </h4>
 
-                                <div className="bg-white border-2 border-gray-200 rounded-2xl flex-1 flex flex-col shadow-sm overflow-hidden">
+                                <div className="bg-white border-2 border-gray-200 rounded-2xl flex flex-col shadow-sm overflow-hidden">
                                     <div className="px-5 py-4 border-b border-gray-100 bg-gray-50 text-center">
                                         <h5 className="font-['Satoshi'] font-bold text-lg text-gray-800">
                                             {isRevealPhase || disputeStep === 7 ? 'Vote Results' : 'Commitment Logs'}
                                         </h5>
                                     </div>
-                                    <div className="flex-1 p-3 overflow-y-auto">
+                                    <div className="p-3">
                                         <div className="flex flex-col gap-1.5">
                                             {selectedAgents.slice(0, visibleAgentCount).map((agent) => (
                                                 <div key={agent} className="flex justify-between items-center px-3 py-1.5 hover:bg-gray-50 rounded-lg transition-all" style={{ animation: currentRound === 1 && isCommitPhase ? 'fadeIn 0.5s ease-out' : undefined }}>
@@ -699,6 +780,26 @@ export default function DisputePage() {
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Chat logs button */}
+                                {discussionMessages.length > 0 && (
+                                    <button onClick={() => setShowDiscussion(true)} className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-semibold text-sm transition-all shadow-sm hover:shadow-md">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                                        View Chat Logs ({discussionMessages.length} messages)
+                                    </button>
+                                )}
+
+                                {/* Linkage Graph — below commitment logs */}
+                                {(isRevealPhase || disputeStep === 4 || disputeStep === 7) && selectedAgents.length > 0 && (
+                                    <div className="mt-4 bg-gray-950 rounded-2xl overflow-hidden border border-gray-800 shadow-sm" style={{ height: 400 }}>
+                                        <LinkageGraph3D
+                                            agents={selectedAgents}
+                                            votes={agentVotes}
+                                            messages={discussionMessages}
+                                            finalOutcome={disputeStep >= 7 ? ((r2Data as Record<string, unknown>)?.consensus as "YES" | "NO") || ((r1Data as Record<string, unknown>)?.consensus as "YES" | "NO") || null : null}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center gap-6 my-auto relative z-10">
@@ -720,12 +821,6 @@ export default function DisputePage() {
                             <h3 className={`font-['Satoshi'] font-bold text-2xl transition-colors ${isRightUnlocked ? 'text-gray-900' : 'text-gray-400'}`}>
                                 {currentRound === 2 ? 'Round 2 Reveal' : 'Reveal Phase'}
                             </h3>
-                            {/* Chat button only in round 2 */}
-                            {isRightUnlocked && currentRound === 2 && (
-                                <button onClick={() => setShowDiscussion(true)} className="w-12 h-12 rounded-full bg-white hover:bg-gray-50 border-2 border-gray-300 flex items-center justify-center text-gray-700 shadow-sm hover:shadow-md transition-all">
-                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-                                </button>
-                            )}
                         </div>
 
                         {isRightUnlocked ? (

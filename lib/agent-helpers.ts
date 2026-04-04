@@ -71,7 +71,7 @@ export async function callAgent(
         tokenId,
         message,
         userAddress: walletAddress,
-        maxTokens: 800,
+        maxTokens: 300,
       }),
     });
     const data = await res.json();

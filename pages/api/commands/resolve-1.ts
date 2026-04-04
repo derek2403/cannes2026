@@ -101,26 +101,11 @@ export default async function handler(
     const result = await callAgent(
       baseUrl,
       agent.inftTokenId!,
-      `You are an oracle agent resolving a prediction market.
-Today's date is ${new Date().toISOString().split("T")[0]}.
-
-MARKET QUESTION: ${market.resolution.question}
-
-RESOLUTION CRITERIA: ${market.resolution.resolution_criteria}
-
+      `Oracle agent. Date: ${new Date().toISOString().split("T")[0]}.
+Q: ${market.resolution.question}
 ${roleInstruction}
-
-Research this question independently using real-world evidence.
-You MUST cite specific sources (news articles, official announcements, data sources) with URLs.
-
-Structure your response:
-1. Key evidence FOR (with reference URLs)
-2. Key evidence AGAINST (with reference URLs)
-3. Your assigned role's analysis
-4. Your vote: YES or NO
-5. References: list all URLs cited
-
-End with "My vote: YES" or "My vote: NO".`,
+Give 2-3 sentences of evidence, cite 1-2 URLs, then vote.
+End with "My vote: YES" or "My vote: NO". Be concise.`,
       walletAddress
     );
 

@@ -95,21 +95,9 @@ export default async function handler(
     const result = await callAgent(
       baseUrl,
       agent.inftTokenId!,
-      `You are an oracle agent in a prediction market dispute resolution.
-Today's date is ${new Date().toISOString().split("T")[0]}.
-
-MARKET QUESTION: ${market.resolution.question}
-
-RESOLUTION CRITERIA: ${market.resolution.resolution_criteria}
-
-Present your analysis WITH REFERENCES. You must cite real sources (news articles, official data, announcements) with URLs.
-1. What evidence supports YES (cite sources with URLs)
-2. What evidence supports NO (cite sources with URLs)
-3. Your initial position and confidence level
-4. Key uncertainties
-5. References: list all URLs cited
-
-Be thorough but concise. Every claim must have a source.`,
+      `Oracle dispute. Date: ${new Date().toISOString().split("T")[0]}.
+Q: ${market.resolution.question}
+In 2-3 sentences: your position (YES or NO), one key reason, one reference URL. Be brief.`,
       walletAddress
     );
     initialViews.push({
@@ -135,22 +123,9 @@ Be thorough but concise. Every claim must have a source.`,
     const result = await callAgent(
       baseUrl,
       agent.inftTokenId!,
-      `You are in a group discussion about resolving this prediction market:
-Today's date is ${new Date().toISOString().split("T")[0]}.
-
-MARKET QUESTION: ${market.resolution.question}
-
-Here are all agents' initial analyses:
-
-${viewSummary}
-
-Now respond to the other agents. You MUST back up every point with references:
-1. Which arguments do you find compelling? Verify their sources.
-2. Which arguments are flawed and why? Provide counter-evidence with URLs.
-3. Has your position changed based on the evidence?
-4. What additional evidence or references should be considered? Cite URLs.
-
-Be specific — reference other agents' points by name. Every claim needs a source URL.`,
+      `Q: ${market.resolution.question}
+Others said: ${viewSummary.slice(0, 800)}
+In 2-3 sentences: agree or disagree with one agent by name, give one counter-point. Be brief.`,
       walletAddress
     );
     responses.push({
@@ -176,22 +151,9 @@ Be specific — reference other agents' points by name. Every claim needs a sour
     const result = await callAgent(
       baseUrl,
       agent.inftTokenId!,
-      `Final vote round. You've heard all arguments and seen all evidence.
-Today's date is ${new Date().toISOString().split("T")[0]}.
-
-MARKET QUESTION: ${market.resolution.question}
-
-Discussion summary:
-${discussionSummary}
-
-Based on ALL evidence, references, and discussion, cast your FINAL vote.
-You MUST choose YES or NO based on the weight of evidence and references discussed.
-Synthesize what the group has found. Which side has stronger, more credible sources?
-Cite the most decisive references that tipped your decision.
-
-End your response with exactly one of these lines:
-"FINAL VOTE: YES"
-"FINAL VOTE: NO"`,
+      `Q: ${market.resolution.question}
+Discussion: ${discussionSummary.slice(0, 600)}
+Final vote. One sentence reason, then end with: "FINAL VOTE: YES" or "FINAL VOTE: NO"`,
       walletAddress
     );
 
