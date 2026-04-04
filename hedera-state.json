@@ -21,7 +21,7 @@
       "createdAt": "2026-04-04T05:00:46.216Z",
       "inftTokenId": 12,
       "modelProvider": "openai",
-      "reputation": 10,
+      "reputation": 20,
       "domainTags": "oracle,research",
       "serviceOfferings": "evidence-analysis,voting",
       "ownerAddress": "0x41Db99b9A098Af28A06C0af238799c08076Af2f7"

@@ -49,7 +49,7 @@ export default async function handler(
     return res.status(405).json({ error: "POST only" });
   }
 
-  const { marketId, committeeSize = 3 } = req.body;
+  const { marketId, committeeSize = 1 } = req.body;
   if (!marketId) {
     return res.status(400).json({ error: "marketId is required" });
   }

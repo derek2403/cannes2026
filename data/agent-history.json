@@ -93,6 +93,173 @@
       "marketQuestion": "Will there be a significant escalation in military conflict between Russia and Ukraine by April 30, 2024?",
       "vote": "UNSURE",
       "phase": "resolve-2"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-04T09:02:13.271Z",
+      "agentName": "SentinelBot",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2024?",
+      "vote": "UNSURE",
+      "phase": "phase-1-reveal"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:02:21.971Z",
+      "agentName": "ResearchBot",
+      "marketId": "mkt-1775293341971-lf5e",
+      "marketQuestion": "Will Bitcoin's price exceed $35,000 on December 31, 2023?",
+      "role": "proposer"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:02:21.971Z",
+      "agentName": "CritiqueBot",
+      "marketId": "mkt-1775293341971-lf5e",
+      "marketQuestion": "Will Bitcoin's price exceed $35,000 on December 31, 2023?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:02:21.971Z",
+      "agentName": "MarketBot",
+      "marketId": "mkt-1775293341971-lf5e",
+      "marketQuestion": "Will Bitcoin's price exceed $35,000 on December 31, 2023?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:02:21.971Z",
+      "agentName": "DataBot",
+      "marketId": "mkt-1775293341971-lf5e",
+      "marketQuestion": "Will Bitcoin's price exceed $35,000 on December 31, 2023?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:02:21.972Z",
+      "agentName": "SentinelBot",
+      "marketId": "mkt-1775293341971-lf5e",
+      "marketQuestion": "Will Bitcoin's price exceed $35,000 on December 31, 2023?",
+      "role": "participant"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-04T09:02:45.580Z",
+      "agentName": "SentinelBot",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2024?",
+      "vote": "UNSURE",
+      "phase": "phase-2-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-04T09:04:10.943Z",
+      "agentName": "SentinelBot",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2024?",
+      "vote": "UNSURE",
+      "phase": "phase-1-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-04T09:04:56.675Z",
+      "agentName": "ResearchBot",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2024?",
+      "vote": "YES",
+      "phase": "phase-2-reveal"
+    },
+    {
+      "type": "reputation_change",
+      "timestamp": "2026-04-04T09:04:56.677Z",
+      "agentName": "ResearchBot",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2024?",
+      "vote": "YES",
+      "outcome": "YES",
+      "correct": true,
+      "repChange": 10
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:06:46.443Z",
+      "agentName": "ResearchBot",
+      "marketId": "mkt-1775293606442-02mp",
+      "marketQuestion": "Will NASA's Artemis II mission successfully launch with a crew on board by March 31, 2024?",
+      "role": "proposer"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:06:46.443Z",
+      "agentName": "CritiqueBot",
+      "marketId": "mkt-1775293606442-02mp",
+      "marketQuestion": "Will NASA's Artemis II mission successfully launch with a crew on board by March 31, 2024?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:06:46.443Z",
+      "agentName": "MarketBot",
+      "marketId": "mkt-1775293606442-02mp",
+      "marketQuestion": "Will NASA's Artemis II mission successfully launch with a crew on board by March 31, 2024?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:06:46.443Z",
+      "agentName": "DataBot",
+      "marketId": "mkt-1775293606442-02mp",
+      "marketQuestion": "Will NASA's Artemis II mission successfully launch with a crew on board by March 31, 2024?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:06:46.443Z",
+      "agentName": "SentinelBot",
+      "marketId": "mkt-1775293606442-02mp",
+      "marketQuestion": "Will NASA's Artemis II mission successfully launch with a crew on board by March 31, 2024?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:14:13.824Z",
+      "agentName": "ResearchBot",
+      "marketId": "mkt-1775294053822-5rvw",
+      "marketQuestion": "Will the United States impose new economic sanctions on Russia by April 30, 2024?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:14:13.824Z",
+      "agentName": "CritiqueBot",
+      "marketId": "mkt-1775294053822-5rvw",
+      "marketQuestion": "Will the United States impose new economic sanctions on Russia by April 30, 2024?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:14:13.824Z",
+      "agentName": "MarketBot",
+      "marketId": "mkt-1775294053822-5rvw",
+      "marketQuestion": "Will the United States impose new economic sanctions on Russia by April 30, 2024?",
+      "role": "proposer"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:14:13.824Z",
+      "agentName": "DataBot",
+      "marketId": "mkt-1775294053822-5rvw",
+      "marketQuestion": "Will the United States impose new economic sanctions on Russia by April 30, 2024?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T09:14:13.824Z",
+      "agentName": "SentinelBot",
+      "marketId": "mkt-1775294053822-5rvw",
+      "marketQuestion": "Will the United States impose new economic sanctions on Russia by April 30, 2024?",
+      "role": "participant"
     }
   ]
 }
