@@ -13,12 +13,28 @@ import {
   getOperatorKey,
   buildHCS11Profile,
   buildHCS2Register,
+  buildHCS20Mint,
+  buildRegistrationLog,
+  buildBotRegistrationLog,
 } from "@/lib/hcs-standards";
 import type { AgentProfileLinks } from "@/lib/hcs-standards";
 
 const ZG_RPC = "https://evmrpc-testnet.0g.ai";
 const ZG_INDEXER = "https://indexer-storage-testnet-turbo.0g.ai";
 
+/**
+ * Phase 3 of agent registration (after Hedera account + World ID verification):
+ *   1. Upload agent config to 0G Storage (with humanId baked in)
+ *   2. Mint iNFT on 0G Chain
+ *   3. Create HCS-11 profile (with humanId + all cross-links)
+ *   4. Register in HCS-2 registry
+ *   5. Master HCS log + Bot HCS log
+ *   6. HCS-20 reputation mint
+ *   7. Update hedera-state.json
+ *
+ * Accepts Phase 1 output (hederaAccountId, evmAddress, encryptedAgentKey)
+ * and Phase 2 output (humanId, worldVerified) as inputs.
+ */
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -36,12 +52,24 @@ export default async function handler(
     systemPrompt = "",
     researchInstructions = "",
     reputation = 10,
-    ownerAddress,        // Optional: mint iNFT to this address (nanobot's wallet)
-    hederaAccountId: inputHederaId, // Optional: nanobot's own Hedera account
+    ownerAddress,
+    // Phase 1 outputs
+    hederaAccountId,
+    evmAddress,
+    encryptedAgentKey,
+    // Phase 2 outputs
+    humanId = null,
+    worldVerified = false,
   } = req.body;
 
   if (!agentName) {
     return res.status(400).json({ error: "agentName is required" });
+  }
+
+  if (!hederaAccountId || !evmAddress) {
+    return res.status(400).json({
+      error: "Missing hederaAccountId or evmAddress. Call /api/inft/prepare-agent first.",
+    });
   }
 
   const privateKey = process.env.ZG_STORAGE_PRIVATE_KEY;
@@ -52,37 +80,8 @@ export default async function handler(
   }
 
   try {
-    // ── Step 0: World ID verification ───────────────────────────
-    // Every agent must be backed by a verified human via World ID.
-    // Calls AgentBook contract on World Chain to check wallet → humanId.
-    const agentWallet = ownerAddress || undefined;
-    let worldVerified = false;
-    let humanId: string | null = null;
-
-    if (agentWallet) {
-      try {
-        const { checkAgentHuman } = await import("@/lib/world-agentkit");
-        humanId = await checkAgentHuman(agentWallet);
-        worldVerified = humanId !== null;
-      } catch {
-        // World ID packages not available or lookup failed — skip
-      }
-    }
-
-    // If no ownerAddress, try server wallet
-    if (!agentWallet) {
-      try {
-        const tempProvider = new ethers.JsonRpcProvider(ZG_RPC);
-        const tempSigner = new ethers.Wallet(privateKey, tempProvider);
-        const { checkAgentHuman } = await import("@/lib/world-agentkit");
-        humanId = await checkAgentHuman(tempSigner.address);
-        worldVerified = humanId !== null;
-      } catch {
-        // Skip if lookup fails
-      }
-    }
-
     // ── Step 1: Build & upload config to 0G Storage ──────────────
+    // humanId is baked in from the start (available from Phase 2)
     const agentConfig: Record<string, unknown> = {
       version: "1.0.0",
       botId: agentName,
@@ -93,10 +92,15 @@ export default async function handler(
       memory: {},
       domainTags,
       serviceOfferings,
+      hederaAccountId,
+      evmAddress,
+      worldVerified,
+      humanId,
       metadata: {
         created: new Date().toISOString(),
         type: "spark-agent",
         standard: "ERC-7857",
+        network: "hedera-testnet",
       },
     };
 
@@ -143,13 +147,10 @@ export default async function handler(
       unlinkSync(tmpPath);
       dataDescription = `0g://storage/${rootHash}`;
     } catch {
-      // Fallback if 0G Storage is unavailable
       dataDescription = `spark-agent://${agentName}`;
     }
 
     // ── Step 2: Mint iNFT on-chain ──────────────────────────────
-    // If ownerAddress provided (nanobot), mint to that address.
-    // Otherwise mint to server wallet.
     const mintTo = ownerAddress || signer.address;
 
     const contract = new ethers.Contract(
@@ -167,7 +168,6 @@ export default async function handler(
     );
     const receipt = await mintTx.wait();
 
-    // Extract tokenId from AgentMinted event
     let tokenId: number | null = null;
     for (const log of receipt.logs) {
       try {
@@ -176,7 +176,7 @@ export default async function handler(
           data: log.data,
         });
         if (parsed && parsed.name === "AgentMinted") {
-          tokenId = Number(parsed.args[0]); // tokenId is first indexed param
+          tokenId = Number(parsed.args[0]);
           break;
         }
       } catch {
@@ -185,163 +185,191 @@ export default async function handler(
     }
 
     if (tokenId === null) {
-      // Fallback: read totalMinted
       const total = await contract.totalMinted();
       tokenId = Number(total);
     }
 
-    // ── Step 3: Authorize wallets for inference ─────────────────
-    // Always authorize the server wallet (needed for resolve commands).
-    // If a different ownerAddress was provided (nanobot), they're the
-    // owner so they're auto-authorized. Server needs explicit auth.
-    if (ownerAddress && ownerAddress.toLowerCase() !== signer.address.toLowerCase()) {
-      // iNFT owned by nanobot — authorize the server so it can
-      // call infer during resolve-1/resolve-2
-      try {
-        const authTx = await contract.authorizeUsage(
-          BigInt(tokenId),
-          signer.address
-        );
-        await authTx.wait();
-      } catch {
-        // Owner is the caller, might not have auth to authorize
-        // (only owner can call authorizeUsage). Since server minted
-        // via mintAgent, the contract may auto-set owner. If the
-        // contract transferred ownership, server can still call as deployer.
-      }
-    }
-    // Also authorize server on server-owned tokens (no-op if already owner)
-    if (!ownerAddress) {
-      try {
-        const authTx = await contract.authorizeUsage(
-          BigInt(tokenId),
-          signer.address
-        );
-        await authTx.wait();
-      } catch {
-        // Already authorized as owner
-      }
-    }
-
-    // ── Step 4: Register on Hedera (HCS-11 profile + HCS-2 registry) ──
-    const statePath = join(process.cwd(), "hedera-state.json");
-    const state = JSON.parse(readFileSync(statePath, "utf-8"));
-
-    const registryTopicId = state.registryTopicId || null;
-    const reputationTopicId = state.reputationTopicId || null;
-
+    // ── Steps 3-6: HCS registration + logging ──────────────────
     let profileTopicId: string | null = null;
-    let hederaAccountId: string | null = null;
+    const hederaClient = getClient();
+    const operatorKey = getOperatorKey();
 
     try {
-      const client = getClient();
-      const operatorKey = getOperatorKey();
-
-      // Use nanobot's Hedera ID if provided, otherwise server operator
-      hederaAccountId = inputHederaId || process.env.HEDERA_OPERATOR_ID || null;
-
-      // Create HCS-11 profile topic for this agent
+      // Step 3: HCS-11 profile
       profileTopicId = await createTopic(
-        client,
+        hederaClient,
         `hcs-11:profile:${hederaAccountId}`,
         operatorKey.publicKey
       );
 
-      // Build and submit HCS-11 profile with linked topics
+      const statePath = join(process.cwd(), "hedera-state.json");
+      const state = JSON.parse(readFileSync(statePath, "utf-8"));
+      const registryTopicId = state.registryTopicId || null;
+      const reputationTopicId = state.reputationTopicId || null;
+
       const links: AgentProfileLinks = {
         reputationTopicId: reputationTopicId || undefined,
         registryTopicId: registryTopicId || undefined,
+        inftTokenId: tokenId!,
+        zgRootHash: rootHash || undefined,
+        evmAddress,
+        worldVerified,
+        humanId,
       };
 
       const profileMsg = buildHCS11Profile(
         agentName,
-        hederaAccountId || "",
+        hederaAccountId,
         [2, 11, 16, 20],
         modelProvider,
         `${agentName} — iNFT #${tokenId} oracle agent for prediction market resolution`,
         links
       );
+      await submitMessage(hederaClient, profileTopicId, profileMsg);
 
-      await submitMessage(client, profileTopicId, profileMsg);
-
-      // Register in HCS-2 registry
+      // Step 4: HCS-2 registry
       if (registryTopicId) {
         const regMsg = buildHCS2Register(
           profileTopicId,
-          `agent | ${agentName} | ${hederaAccountId} | inft:${tokenId}`
+          `agent | ${agentName} | ${hederaAccountId} | inft:${tokenId} | 0g:${rootHash}`
         );
-        await submitMessage(client, registryTopicId, regMsg);
+        await submitMessage(hederaClient, registryTopicId, regMsg);
       }
 
-      client.close();
-    } catch {
-      // Hedera registration is best-effort — don't fail the whole mint
-    }
+      // Step 5: Master HCS log
+      if (registryTopicId) {
+        const masterLog = buildRegistrationLog({
+          agentName,
+          hederaAccountId,
+          evmAddress,
+          zgRootHash: rootHash,
+          inftTokenId: tokenId!,
+          profileTopicId,
+          worldVerified,
+          humanId,
+        });
+        await submitMessage(hederaClient, registryTopicId, masterLog);
+      }
 
-    // ── Step 5: Update hedera-state.json ────────────────────────
-    const existingIdx = state.agents.findIndex(
-      (a: { displayName: string }) => a.displayName === agentName
-    );
-
-    const agentEntry = {
-      ...(existingIdx >= 0 ? state.agents[existingIdx] : {}),
-      displayName: agentName,
-      accountId: hederaAccountId,
-      ownerAddress: mintTo,
-      profileTopicId,
-      reputationTopicId,
-      registryTopicId,
-      floraTopicIds: null,
-      capabilities: [2, 11, 16, 20],
-      inftTokenId: tokenId,
-      modelProvider,
-      model: modelProvider,
-      reputation,
-      domainTags,
-      serviceOfferings,
-      worldVerified,
-      humanId,
-      createdAt: new Date().toISOString(),
-    };
-
-    if (existingIdx >= 0) {
-      state.agents[existingIdx] = {
-        ...state.agents[existingIdx],
-        ...agentEntry,
-      };
-    } else {
-      state.agents.push(agentEntry);
-    }
-
-    writeFileSync(statePath, JSON.stringify(state, null, 2));
-
-    // ── Return result ───────────────────────────────────────────
-    return res.status(200).json({
-      success: true,
-      tokenId,
-      ownerAddress: mintTo,
-      serverAddress: signer.address,
-      txHash: mintTx.hash,
-      dataDescription,
-      rootHash,
-      uploadTxHash,
-      hedera: {
-        accountId: hederaAccountId,
-        profileTopicId,
-        registryTopicId,
-        reputationTopicId,
-      },
-      world: {
-        verified: worldVerified,
-        humanId,
-      },
-      agent: {
+      // Bot HCS log
+      const botLog = buildBotRegistrationLog({
         agentName,
+        hederaAccountId,
+        evmAddress,
+        zgRootHash: rootHash,
+        inftTokenId: tokenId!,
+        profileTopicId,
+        worldVerified,
+        humanId,
+      });
+      await submitMessage(hederaClient, profileTopicId, botLog);
+
+      // Step 6: HCS-20 reputation mint
+      if (reputationTopicId) {
+        const repMint = buildHCS20Mint(
+          "rep",
+          String(reputation),
+          hederaAccountId,
+          `Initial reputation for ${agentName}`
+        );
+        await submitMessage(hederaClient, reputationTopicId, repMint);
+      }
+
+      // ── Step 7: Update hedera-state.json ──────────────────────
+      const existingIdx = state.agents.findIndex(
+        (a: { displayName: string }) => a.displayName === agentName
+      );
+
+      const agentEntry = {
+        ...(existingIdx >= 0 ? state.agents[existingIdx] : {}),
+        displayName: agentName,
+        accountId: hederaAccountId,
+        privateKeyEncrypted: encryptedAgentKey || null,
+        evmAddress,
+        ownerAddress: mintTo,
+        profileTopicId,
+        reputationTopicId,
+        registryTopicId,
+        floraTopicIds: null,
+        capabilities: [2, 11, 16, 20],
         inftTokenId: tokenId,
         modelProvider,
+        model: modelProvider,
         reputation,
-      },
-    });
+        domainTags,
+        serviceOfferings,
+        worldVerified,
+        humanId,
+        zgRootHash: rootHash || null,
+        createdAt: new Date().toISOString(),
+      };
+
+      if (existingIdx >= 0) {
+        state.agents[existingIdx] = {
+          ...state.agents[existingIdx],
+          ...agentEntry,
+        };
+      } else {
+        state.agents.push(agentEntry);
+      }
+
+      writeFileSync(statePath, JSON.stringify(state, null, 2));
+
+      hederaClient.close();
+
+      return res.status(200).json({
+        success: true,
+        tokenId,
+        ownerAddress: mintTo,
+        serverAddress: signer.address,
+        txHash: mintTx.hash,
+        dataDescription,
+        rootHash,
+        uploadTxHash,
+        hedera: {
+          accountId: hederaAccountId,
+          evmAddress,
+          profileTopicId,
+          registryTopicId,
+          reputationTopicId,
+        },
+        world: {
+          verified: worldVerified,
+          humanId,
+        },
+        agent: {
+          agentName,
+          inftTokenId: tokenId,
+          modelProvider,
+          reputation,
+        },
+      });
+    } catch (hcsErr) {
+      hederaClient.close();
+      return res.status(200).json({
+        success: true,
+        tokenId,
+        ownerAddress: mintTo,
+        serverAddress: signer.address,
+        txHash: mintTx.hash,
+        dataDescription,
+        rootHash,
+        uploadTxHash,
+        hedera: {
+          accountId: hederaAccountId,
+          evmAddress,
+          profileTopicId: null,
+          error: hcsErr instanceof Error ? hcsErr.message : String(hcsErr),
+        },
+        world: { verified: worldVerified, humanId },
+        agent: {
+          agentName,
+          inftTokenId: tokenId,
+          modelProvider,
+          reputation,
+        },
+      });
+    }
   } catch (err: unknown) {
     return res.status(500).json({
       error: err instanceof Error ? err.message : String(err),

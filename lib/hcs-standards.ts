@@ -303,6 +303,12 @@ export interface AgentProfileLinks {
     transaction?: string;
     state?: string;
   };
+  // Bidirectional linking fields (0G ↔ Hedera ↔ World ID)
+  inftTokenId?: number;
+  zgRootHash?: string;
+  evmAddress?: string;
+  worldVerified?: boolean;
+  humanId?: string | null;
 }
 
 export function buildHCS11Profile(
@@ -330,7 +336,75 @@ export function buildHCS11Profile(
       ...(links?.reputationTopicId && { reputationTopicId: links.reputationTopicId }),
       ...(links?.registryTopicId && { registryTopicId: links.registryTopicId }),
       ...(links?.floraTopicIds && { floraTopics: links.floraTopicIds }),
+      ...(links?.inftTokenId != null && { inftTokenId: links.inftTokenId }),
+      ...(links?.zgRootHash && { zgRootHash: links.zgRootHash }),
+      ...(links?.evmAddress && { evmAddress: links.evmAddress }),
+      ...(links?.worldVerified != null && { worldVerified: links.worldVerified }),
+      ...(links?.humanId && { humanId: links.humanId }),
     },
+  });
+}
+
+// ── Registration Log Builders (Spark-style cross-chain logs) ────────
+
+export interface RegistrationLogParams {
+  agentName: string;
+  hederaAccountId: string;
+  evmAddress: string;
+  zgRootHash: string;
+  inftTokenId: number;
+  profileTopicId: string;
+  worldVerified?: boolean;
+  humanId?: string | null;
+}
+
+/** Master topic log — submitted to the HCS-2 registry topic */
+export function buildRegistrationLog(params: RegistrationLogParams) {
+  return JSON.stringify({
+    p: "hcs-11",
+    op: "agent_registered",
+    agent_name: params.agentName,
+    hedera_account_id: params.hederaAccountId,
+    evm_address: params.evmAddress,
+    zg_root_hash: params.zgRootHash,
+    inft_token_id: params.inftTokenId,
+    profile_topic_id: params.profileTopicId,
+    world_verified: params.worldVerified ?? false,
+    human_id: params.humanId ?? null,
+    timestamp: new Date().toISOString(),
+  });
+}
+
+/** Bot topic log — submitted to the agent's own HCS-11 profile topic */
+export function buildBotRegistrationLog(params: RegistrationLogParams) {
+  return JSON.stringify({
+    p: "hcs-11",
+    op: "i_registered",
+    agent_name: params.agentName,
+    hedera_account_id: params.hederaAccountId,
+    evm_address: params.evmAddress,
+    zg_root_hash: params.zgRootHash,
+    inft_token_id: params.inftTokenId,
+    profile_topic_id: params.profileTopicId,
+    world_verified: params.worldVerified ?? false,
+    human_id: params.humanId ?? null,
+    timestamp: new Date().toISOString(),
+  });
+}
+
+/** World ID verification log — submitted after AgentBook registration */
+export function buildWorldIdLog(
+  evmAddress: string,
+  humanId: string,
+  txHash: string
+) {
+  return JSON.stringify({
+    p: "hcs-11",
+    op: "world_id_verified",
+    evm_address: evmAddress,
+    human_id: humanId,
+    tx_hash: txHash,
+    timestamp: new Date().toISOString(),
   });
 }
 

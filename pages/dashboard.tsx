@@ -187,24 +187,61 @@ export default function DashboardPage() {
     }
   }
 
-  // ── Mint handler ────────────────────────────────────────────
+  // ── Mint handler: Phase 1 (Hedera) → Phase 3 (0G + iNFT + HCS) ─
+  // World ID registration is done separately on the /world page.
+  // Here we just check AgentBook for existing humanId automatically.
   async function handleMint() {
     if (!form.agentName.trim()) return;
-    setMintStep("Uploading config + minting iNFT + registering on Hedera...");
+    setMintStep("Creating Hedera account...");
     setMintError(null);
+
     try {
+      // Phase 1: Create Hedera account
+      const prepRes = await fetch("/api/inft/prepare-agent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const prep = await prepRes.json();
+      if (!prepRes.ok) throw new Error(prep.error || "Prepare failed");
+
+      setMintStep(`Hedera ${prep.hederaAccountId} created. Checking World ID...`);
+
+      // Check AgentBook for existing human verification
+      let worldVerified = false;
+      let humanId: string | null = null;
+      try {
+        const checkRes = await fetch("/api/world/check-agent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address: prep.evmAddress }),
+        });
+        const checkData = await checkRes.json();
+        if (checkData.isHumanBacked && checkData.humanId) {
+          worldVerified = true;
+          humanId = checkData.humanId;
+        }
+      } catch { /* skip */ }
+
+      setMintStep("Uploading to 0G + minting iNFT + HCS logging...");
+
+      // Phase 3: Register (0G upload + iNFT mint + HCS)
       const res = await fetch("/api/inft/register-agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          hederaAccountId: prep.hederaAccountId,
+          evmAddress: prep.evmAddress,
+          encryptedAgentKey: prep.encryptedAgentKey,
+          worldVerified,
+          humanId,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Mint failed");
 
-      const hederaInfo = data.hedera?.accountId
-        ? ` | Hedera: ${data.hedera.accountId}`
-        : "";
-      setMintStep(`Done! iNFT #${data.tokenId} minted${hederaInfo}`);
+      const wid = worldVerified ? " | World ID verified" : "";
+      setMintStep(`Done! iNFT #${data.tokenId} | Hedera: ${prep.hederaAccountId}${wid}`);
       setForm({
         agentName: "",
         domainTags: "oracle,research",
@@ -214,12 +251,11 @@ export default function DashboardPage() {
         systemPrompt: "",
         researchInstructions: "",
       });
-      // Reload agents
       setTimeout(() => {
         loadAgents();
         setMintStep(null);
         setShowCreate(false);
-      }, 2000);
+      }, 3000);
     } catch (err: unknown) {
       setMintError(err instanceof Error ? err.message : String(err));
       setMintStep(null);
@@ -587,7 +623,7 @@ export default function DashboardPage() {
                         opacity: !form.agentName.trim() || !!mintStep ? 0.6 : 1,
                       }}
                     >
-                      {mintStep ? "Minting..." : "Mint Agent iNFT"}
+                      {mintStep ? "Creating..." : "Create Agent"}
                     </button>
 
                     {mintStep && (
@@ -601,6 +637,7 @@ export default function DashboardPage() {
                       </span>
                     )}
                   </div>
+
                 </div>
               )}
             </section>

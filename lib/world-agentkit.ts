@@ -69,3 +69,40 @@ export async function checkAgentHuman(
   const v = getAgentBookVerifier();
   return v.lookupHuman(address.trim(), chainId);
 }
+
+// ── AgentBook Nonce Reader ──────────────────────────────────
+// Reads the next nonce for an address from the AgentBook contract
+// Needed for Phase 2 of registration (IDKit signal construction)
+
+const AGENT_BOOK_CONTRACT = "0xA23aB2712eA7BBa896930544C7d6636a96b944dA";
+const AGENT_BOOK_ABI = [
+  {
+    inputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "getNextNonce",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view" as const,
+    type: "function" as const,
+  },
+] as const;
+
+export async function getAgentBookNonce(evmAddress: string): Promise<string> {
+  const { createPublicClient, http } = await import("viem");
+  const client = createPublicClient({
+    chain: {
+      id: 480,
+      name: "World Chain",
+      nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+      rpcUrls: { default: { http: ["https://worldchain-mainnet.g.alchemy.com/public"] } },
+    },
+    transport: http(),
+  });
+
+  const nonce = await client.readContract({
+    address: AGENT_BOOK_CONTRACT,
+    abi: AGENT_BOOK_ABI,
+    functionName: "getNextNonce",
+    args: [evmAddress as `0x${string}`],
+  });
+
+  return nonce.toString();
+}
