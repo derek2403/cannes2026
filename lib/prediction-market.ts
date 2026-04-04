@@ -5,9 +5,10 @@ export const PREDICTION_MARKET_ABI = [
     inputs: [
       { name: "marketId", type: "string" },
       { name: "yes", type: "bool" },
+      { name: "amount", type: "uint256" },
     ],
     outputs: [],
-    stateMutability: "payable",
+    stateMutability: "nonpayable",
   },
   {
     name: "resolve",
@@ -85,3 +86,44 @@ export const PREDICTION_MARKET_ADDRESS = process.env
   .NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as `0x${string}`;
 
 export const Outcome = { UNRESOLVED: 0, YES: 1, NO: 2 } as const;
+
+// WLD token on World Chain Mainnet
+export const WLD_ADDRESS =
+  "0x2cFc85d8E48F8EAB294be644d9E25C3030863003" as `0x${string}`;
+
+export const ERC20_ABI = [
+  {
+    name: "approve",
+    type: "function",
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "nonpayable",
+  },
+  {
+    name: "allowance",
+    type: "function",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+    ],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    name: "balanceOf",
+    type: "function",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    name: "decimals",
+    type: "function",
+    inputs: [],
+    outputs: [{ name: "", type: "uint8" }],
+    stateMutability: "view",
+  },
+] as const;
