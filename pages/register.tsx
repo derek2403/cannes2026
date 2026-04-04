@@ -105,136 +105,122 @@ export default function Register() {
 
             <Header />
 
-            <main className="w-full max-w-3xl mx-auto px-4 pt-10 pb-20">
+            <main className="w-[96%] max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-12 lg:pt-8 lg:pb-10">
 
-                {/* Page Header */}
-                <div className="mb-8">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-9 h-9 rounded-lg bg-slate-700 flex items-center justify-center shadow-sm border border-slate-800 shrink-0">
-                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="12" cy="8" r="4" />
-                                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                                <path d="M20 8h2M2 8h2M12 2V1M18.36 3.64l1.41-1.41M5.64 3.64 4.22 2.22" />
-                            </svg>
-                        </div>
-                        <h1 className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-2xl sm:text-3xl tracking-tight">
-                            Register Agent
-                        </h1>
-                    </div>
-                    <p className="text-[#6c757d] text-base leading-relaxed max-w-2xl pl-12">
-                        Deploy an AI agent on-chain. Fill in the identity, capabilities, and system configuration below.
-                    </p>
-                    <div className="h-px bg-gray-200 mt-6" />
-                </div>
-
-                {/* Form Card */}
                 <form
                     id="register-agent-form"
                     onSubmit={handleSubmit}
-                    className="bg-white rounded-2xl border border-gray-200 shadow-sm p-9 lg:p-10 flex flex-col gap-8"
+                    className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8 lg:p-9 xl:p-10 grid grid-cols-1 lg:grid-cols-2 lg:gap-x-10 xl:gap-x-12 lg:gap-y-0 gap-7 lg:items-stretch lg:min-h-[min(720px,calc(100dvh-6.5rem))]"
                 >
-
-                    {/* Section: Identity */}
-                    <div>
-                        <p className="font-[family-name:var(--font-roboto)] font-[700] text-[#6c757d] text-sm uppercase tracking-widest mb-5">
-                            Agent Identity
-                        </p>
-                        <div className="flex flex-col gap-6">
-
-                            {/* Agent Name */}
-                            <div className="flex flex-col gap-2">
-                                <label htmlFor="agentName" className="text-base font-[500] text-[#212529]">
-                                    Agent Name <span className="text-[#adb5bd] font-normal text-[0.95em]">(optional)</span>
-                                </label>
-                                <input
-                                    id="agentName"
-                                    name="agentName"
-                                    type="text"
-                                    value={form.agentName}
-                                    onChange={handleChange}
-                                    placeholder="Display name for your agent"
-                                    className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-[#f8f9fa] text-black text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all"
-                                />
+                    {/* ── Left: intro + identity + capabilities ───────────────── */}
+                    <div className="flex flex-col gap-6 min-w-0">
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center shadow-sm border border-slate-800 shrink-0">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <circle cx="12" cy="8" r="4" />
+                                        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                                        <path d="M20 8h2M2 8h2M12 2V1M18.36 3.64l1.41-1.41M5.64 3.64 4.22 2.22" />
+                                    </svg>
+                                </div>
+                                <h1 className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-2xl sm:text-3xl tracking-tight">
+                                    Register Agent
+                                </h1>
                             </div>
+                            <p className="text-[#6c757d] text-base leading-relaxed max-w-xl pl-[3.25rem]">
+                                Deploy an AI agent on-chain. Fill in the identity, capabilities, and system configuration.
+                            </p>
+                        </div>
 
-                            {/* Owner Address */}
-                            <div className="flex flex-col gap-2">
-                                <label htmlFor="ownerAddress" className="text-base font-[500] text-[#212529]">
-                                    Owner Address <span className="text-red-400 text-sm align-top">*</span>
-                                </label>
-                                <input
-                                    id="ownerAddress"
-                                    name="ownerAddress"
-                                    type="text"
-                                    value={form.ownerAddress}
-                                    onChange={handleChange}
-                                    required
-                                    placeholder="0x…"
-                                    className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-[#f8f9fa] text-black text-base font-mono placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all"
-                                />
+                        <div className="h-px bg-gray-100 lg:hidden" />
+
+                        <div>
+                            <p className="font-[family-name:var(--font-roboto)] font-[700] text-[#6c757d] text-sm uppercase tracking-widest mb-4">
+                                Agent Identity
+                            </p>
+                            <div className="flex flex-col gap-5">
+                                <div className="flex flex-col gap-2">
+                                    <label htmlFor="agentName" className="text-base font-[500] text-[#212529]">
+                                        Agent Name <span className="text-[#adb5bd] font-normal text-[0.95em]">(optional)</span>
+                                    </label>
+                                    <input
+                                        id="agentName"
+                                        name="agentName"
+                                        type="text"
+                                        value={form.agentName}
+                                        onChange={handleChange}
+                                        placeholder="Display name for your agent"
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-[#f8f9fa] text-black text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all"
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <label htmlFor="ownerAddress" className="text-base font-[500] text-[#212529]">
+                                        Owner Address <span className="text-red-400 text-sm align-top">*</span>
+                                    </label>
+                                    <input
+                                        id="ownerAddress"
+                                        name="ownerAddress"
+                                        type="text"
+                                        value={form.ownerAddress}
+                                        onChange={handleChange}
+                                        required
+                                        placeholder="0x…"
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-[#f8f9fa] text-black text-base font-mono placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="h-px bg-gray-100" />
+
+                        <div>
+                            <p className="font-[family-name:var(--font-roboto)] font-[700] text-[#6c757d] text-sm uppercase tracking-widest mb-4">
+                                Capabilities
+                            </p>
+                            <div className="flex flex-col gap-5">
+                                <div className="flex flex-col gap-2">
+                                    <label htmlFor="domainTags" className="text-base font-[500] text-[#212529]">
+                                        Domain Tags <span className="text-red-400 text-sm align-top">*</span>
+                                    </label>
+                                    <input
+                                        id="domainTags"
+                                        name="domainTags"
+                                        type="text"
+                                        value={form.domainTags}
+                                        onChange={handleChange}
+                                        required
+                                        placeholder="tag1,tag2"
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-[#f8f9fa] text-black text-base font-mono placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all"
+                                    />
+                                    <p className="text-sm text-[#6c757d]">Comma-separated, e.g. <span className="font-mono text-[0.95em]">defi,analytics,oracle</span></p>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <label htmlFor="serviceOfferings" className="text-base font-[500] text-[#212529]">
+                                        Service Offerings <span className="text-red-400 text-sm align-top">*</span>
+                                    </label>
+                                    <input
+                                        id="serviceOfferings"
+                                        name="serviceOfferings"
+                                        type="text"
+                                        value={form.serviceOfferings}
+                                        onChange={handleChange}
+                                        required
+                                        placeholder="offering1,offering2"
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-[#f8f9fa] text-black text-base font-mono placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all"
+                                    />
+                                    <p className="text-sm text-[#6c757d]">Comma-separated, e.g. <span className="font-mono text-[0.95em]">scraping,analysis,voting</span></p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="h-px bg-gray-100" />
-
-                    {/* Section: Capabilities */}
-                    <div>
-                        <p className="font-[family-name:var(--font-roboto)] font-[700] text-[#6c757d] text-sm uppercase tracking-widest mb-5">
-                            Capabilities
-                        </p>
-                        <div className="flex flex-col gap-6">
-
-                            {/* Domain Tags */}
-                            <div className="flex flex-col gap-2">
-                                <label htmlFor="domainTags" className="text-base font-[500] text-[#212529]">
-                                    Domain Tags <span className="text-red-400 text-sm align-top">*</span>
-                                </label>
-                                <input
-                                    id="domainTags"
-                                    name="domainTags"
-                                    type="text"
-                                    value={form.domainTags}
-                                    onChange={handleChange}
-                                    required
-                                    placeholder="tag1,tag2"
-                                    className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-[#f8f9fa] text-black text-base font-mono placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all"
-                                />
-                                <p className="text-sm text-[#6c757d]">Comma-separated list of domain tags, e.g. <span className="font-mono text-[0.95em]">defi,analytics,oracle</span></p>
-                            </div>
-
-                            {/* Service Offerings */}
-                            <div className="flex flex-col gap-2">
-                                <label htmlFor="serviceOfferings" className="text-base font-[500] text-[#212529]">
-                                    Service Offerings <span className="text-red-400 text-sm align-top">*</span>
-                                </label>
-                                <input
-                                    id="serviceOfferings"
-                                    name="serviceOfferings"
-                                    type="text"
-                                    value={form.serviceOfferings}
-                                    onChange={handleChange}
-                                    required
-                                    placeholder="offering1,offering2"
-                                    className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-[#f8f9fa] text-black text-base font-mono placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all"
-                                />
-                                <p className="text-sm text-[#6c757d]">Comma-separated list, e.g. <span className="font-mono text-[0.95em]">scraping,analysis,voting</span></p>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <div className="h-px bg-gray-100" />
-
-                    {/* Section: Model Configuration */}
-                    <div>
-                        <p className="font-[family-name:var(--font-roboto)] font-[700] text-[#6c757d] text-sm uppercase tracking-widest mb-5">
-                            Model Configuration
-                        </p>
-                        <div className="flex flex-col gap-6">
-
-                            {/* Model Provider */}
-                            <div className="flex flex-col gap-2">
+                    {/* ── Right: model + prompt + submit (uses vertical space) ─── */}
+                    <div className="flex flex-col gap-5 min-h-0 min-w-0 lg:h-full lg:border-l lg:border-gray-100 lg:pl-10 xl:pl-11 pt-2 lg:pt-0 border-t lg:border-t-0 border-gray-100">
+                        <div className="flex flex-col flex-1 min-h-0 gap-5 lg:min-h-0">
+                            <p className="font-[family-name:var(--font-roboto)] font-[700] text-[#6c757d] text-sm uppercase tracking-widest shrink-0">
+                                Model Configuration
+                            </p>
+                            <div className="flex flex-col gap-2 shrink-0">
                                 <label htmlFor="modelProvider" className="text-base font-[500] text-[#212529]">
                                     Model Provider <span className="text-red-400 text-sm align-top">*</span>
                                 </label>
@@ -244,7 +230,7 @@ export default function Register() {
                                     value={form.modelProvider}
                                     onChange={handleChange}
                                     required
-                                    className="w-full pl-4 pr-11 py-3.5 rounded-xl border border-gray-200 bg-[#f8f9fa] text-black text-base focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all appearance-none cursor-pointer"
+                                    className="w-full pl-4 pr-11 py-3 rounded-xl border border-gray-200 bg-[#f8f9fa] text-black text-base focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all appearance-none cursor-pointer"
                                     style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236c757d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 16px center' }}
                                 >
                                     <option value="0g-compute">0g-compute</option>
@@ -255,10 +241,8 @@ export default function Register() {
                                     <option value="ollama">ollama</option>
                                 </select>
                             </div>
-
-                            {/* System Prompt */}
-                            <div className="flex flex-col gap-2">
-                                <label htmlFor="systemPrompt" className="text-base font-[500] text-[#212529]">
+                            <div className="flex flex-col gap-2 flex-1 min-h-[12rem] lg:min-h-0">
+                                <label htmlFor="systemPrompt" className="text-base font-[500] text-[#212529] shrink-0">
                                     System Prompt <span className="text-red-400 text-sm align-top">*</span>
                                 </label>
                                 <textarea
@@ -267,45 +251,41 @@ export default function Register() {
                                     value={form.systemPrompt}
                                     onChange={handleChange}
                                     required
-                                    rows={6}
+                                    rows={5}
                                     placeholder="Describe how the agent should behave…"
-                                    className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-[#f8f9fa] text-black text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all resize-y leading-relaxed min-h-[10rem]"
+                                    className="w-full flex-1 min-h-[12rem] px-4 py-3 rounded-xl border border-gray-200 bg-[#f8f9fa] text-black text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all resize-y lg:resize-none leading-relaxed"
                                 />
                             </div>
-
                         </div>
-                    </div>
 
-                    <div className="h-px bg-gray-100" />
-
-                    {/* Submit */}
-                    <div className="flex items-center justify-between gap-4 pt-2">
-                        <p className="text-sm text-[#6c757d]">
-                            <span className="text-red-400">*</span> Required fields
-                        </p>
-                        <button
-                            id="submit-register-agent"
-                            type="submit"
-                            disabled={isLoading}
-                            className="flex items-center gap-2.5 bg-slate-700 hover:bg-slate-800 disabled:bg-slate-400 text-white px-8 py-3 rounded-full font-[500] text-base shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-all duration-200 active:scale-[0.98]"
-                        >
-                            {isLoading ? (
-                                <>
-                                    <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                    </svg>
-                                    Registering…
-                                </>
-                            ) : (
-                                <>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M12 5v14M5 12l7 7 7-7" />
-                                    </svg>
-                                    Register Agent
-                                </>
-                            )}
-                        </button>
+                        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-4 pt-1 shrink-0">
+                            <p className="text-sm text-[#6c757d]">
+                                <span className="text-red-400">*</span> Required fields
+                            </p>
+                            <button
+                                id="submit-register-agent"
+                                type="submit"
+                                disabled={isLoading}
+                                className="flex items-center justify-center gap-2.5 bg-slate-700 hover:bg-slate-800 disabled:bg-slate-400 text-white px-8 py-3 rounded-full font-[500] text-base shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-all duration-200 active:scale-[0.98] w-full sm:w-auto"
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                        </svg>
+                                        Registering…
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M12 5v14M5 12l7 7 7-7" />
+                                        </svg>
+                                        Register Agent
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </form>
 
@@ -313,7 +293,7 @@ export default function Register() {
                 {(status === 'success' || status === 'error') && (
                     <div
                         ref={resultRef}
-                        className={`mt-8 rounded-2xl border p-7 transition-all duration-300 ${status === 'success'
+                        className={`mt-8 rounded-2xl border p-6 sm:p-7 transition-all duration-300 ${status === 'success'
                             ? 'bg-green-50 border-green-200'
                             : 'bg-red-50 border-red-200'
                             }`}
@@ -338,7 +318,7 @@ export default function Register() {
                                     <p className="text-base text-red-700">{errorMsg}</p>
                                 )}
                                 {status === 'success' && response && (
-                                    <pre className="mt-4 text-sm font-mono text-green-900 bg-green-100/60 rounded-xl p-5 overflow-x-auto whitespace-pre-wrap break-all border border-green-200">
+                                    <pre className="mt-3 text-sm font-mono text-green-900 bg-green-100/60 rounded-xl p-4 sm:p-5 overflow-x-auto whitespace-pre-wrap break-all border border-green-200">
                                         {JSON.stringify(response, null, 2)}
                                     </pre>
                                 )}
