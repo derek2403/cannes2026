@@ -156,6 +156,9 @@ function InteractiveWordCloud() {
     );
 }
 
+/** Implied probability index shown on the Outcome card (yes % / no %). */
+const OUTCOME_INDEX_PERCENT = { yes: 1, no: 99 } as const;
+
 export default function DisputePage() {
     const [isUnlocked, setIsUnlocked] = useState(false);
     const [timeLeft, setTimeLeft] = useState(10);
@@ -217,27 +220,53 @@ export default function DisputePage() {
                             <p className="text-gray-400 font-medium text-lg">March 15</p>
                         </div>
 
-                        {/* Yes/No Box */}
+                        {/* Outcome index: pill bar + labels below (no connector underlines) */}
                         <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm">
-                            <div className="flex items-center justify-between mb-4">
-                                <span className="font-['Satoshi'] font-bold text-gray-900 text-base">Outcome</span>
-                                <span className="font-mono text-sm font-semibold text-gray-400">1¢ · 99¢</span>
+                            <div className="flex items-center justify-between gap-3 mb-5">
+                                <span className="font-['Satoshi'] font-bold text-gray-900 text-base shrink-0">Outcome</span>
+                                <span className="text-sm font-semibold tabular-nums text-right leading-snug">
+                                    <span className="text-emerald-500">{OUTCOME_INDEX_PERCENT.yes}% yes</span>
+                                    <span className="text-gray-400 font-medium"> · </span>
+                                    <span className="text-red-600">{OUTCOME_INDEX_PERCENT.no}% no</span>
+                                </span>
                             </div>
-                            <div className="flex gap-3">
-                                <button className="flex-1 flex flex-col items-center justify-center bg-green-50 hover:bg-green-100 border border-green-200 text-green-700 rounded-xl py-3 transition-colors">
-                                    <span className="text-[11px] font-bold uppercase tracking-wide opacity-70">Yes</span>
-                                    <span className="text-lg font-bold mt-0.5">1¢</span>
-                                </button>
-                                <button className="flex-1 flex flex-col items-center justify-center bg-red-50 hover:bg-red-100 border border-red-500 text-red-700 rounded-xl py-3 transition-colors ring-1 ring-red-200">
-                                    <span className="text-[11px] font-bold uppercase tracking-wide opacity-70">No</span>
-                                    <span className="text-lg font-bold mt-0.5">99¢</span>
-                                </button>
+
+                            <div className="relative h-10 sm:h-11 w-full rounded-full border border-gray-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden bg-gray-50">
+                                <div
+                                    className="absolute inset-y-0 left-0 bg-emerald-400 border-r border-white/90"
+                                    style={{ width: `${OUTCOME_INDEX_PERCENT.yes}%` }}
+                                />
+                                <div
+                                    className="absolute inset-y-0 bg-red-500/85"
+                                    style={{
+                                        left: `${OUTCOME_INDEX_PERCENT.yes}%`,
+                                        right: 0,
+                                    }}
+                                />
+                                <div
+                                    className="absolute top-0 bottom-0 w-px bg-gray-300/80 z-[1] pointer-events-none"
+                                    style={{ left: `${OUTCOME_INDEX_PERCENT.yes}%` }}
+                                />
+                            </div>
+
+                            <div className="flex justify-between items-baseline gap-6 mt-3">
+                                <span className="text-sm font-bold uppercase tracking-wide text-emerald-500 shrink-0">
+                                    Yes
+                                </span>
+                                <div className="flex items-baseline gap-2.5 shrink-0 pl-2">
+                                    <span className="text-xl sm:text-2xl font-bold tabular-nums text-gray-900 leading-none">
+                                        {OUTCOME_INDEX_PERCENT.no}%
+                                    </span>
+                                    <span className="text-sm font-bold uppercase tracking-wide text-red-600 leading-none pb-0.5">
+                                        No
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
                         {/* Dispute Box (Click to unlock the right columns) */}
                         <div
-                            className={`bg-white rounded-3xl border-2 p-6 flex flex-col justify-center shadow-sm hover:shadow-md transition-all cursor-pointer group ${isUnlocked ? 'border-blue-400 ring-4 ring-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
+                            className={`bg-white rounded-3xl border-2 p-6 flex flex-col justify-center shadow-sm hover:shadow-md transition-all cursor-pointer group ${isUnlocked ? 'border-gray-200 shadow-md' : 'border-gray-200 hover:border-gray-300'}`}
                             onClick={() => setIsUnlocked(!isUnlocked)}
                         >
                             <div className="flex items-center justify-between pointer-events-none">
@@ -256,9 +285,9 @@ export default function DisputePage() {
                     </div>
 
                     {/* Middle Column: Commit Phase */}
-                    <div className={`rounded-3xl border-2 flex flex-col p-8 transition-all duration-700 h-full relative overflow-hidden ${isUnlocked ? 'bg-white border-blue-400 shadow-[0_10px_40px_rgb(59,130,246,0.1)]' : 'bg-gray-100 border-gray-200 shadow-inner'}`}>
-                        {/* Bright glowing overlay active after unlock */}
-                        {isUnlocked && <div className="absolute inset-0 bg-gradient-to-tr from-blue-50/50 to-transparent pointer-events-none"></div>}
+                    <div className={`rounded-3xl border-2 flex flex-col p-8 transition-all duration-700 h-full relative overflow-hidden ${isUnlocked ? 'bg-white border-gray-200 shadow-[0_10px_40px_rgba(0,0,0,0.06)]' : 'bg-gray-100 border-gray-200 shadow-inner'}`}>
+                        {/* Soft overlay active after unlock */}
+                        {isUnlocked && <div className="absolute inset-0 bg-gradient-to-tr from-gray-50/60 to-transparent pointer-events-none"></div>}
 
                         <div className="flex justify-between items-center mb-8 relative z-10">
                             <h3 className={`font-['Satoshi'] font-bold text-2xl transition-colors duration-500 ${isUnlocked ? 'text-gray-900' : 'text-gray-400'}`}>Commit Phase</h3>
@@ -318,8 +347,8 @@ export default function DisputePage() {
                     </div>
 
                     {/* Right Column: Reveal Phase */}
-                    <div className={`rounded-3xl border-2 flex flex-col p-8 transition-all duration-700 h-full relative overflow-hidden ${isUnlocked && timeLeft === 0 ? 'bg-white border-blue-400 shadow-[0_10px_40px_rgb(59,130,246,0.1)]' : 'bg-gray-100 border-gray-200 shadow-inner'}`}>
-                        {isUnlocked && timeLeft === 0 && <div className="absolute inset-0 bg-gradient-to-tr from-blue-50/50 to-transparent pointer-events-none"></div>}
+                    <div className={`rounded-3xl border-2 flex flex-col p-8 transition-all duration-700 h-full relative overflow-hidden ${isUnlocked && timeLeft === 0 ? 'bg-white border-gray-200 shadow-[0_10px_40px_rgba(0,0,0,0.06)]' : 'bg-gray-100 border-gray-200 shadow-inner'}`}>
+                        {isUnlocked && timeLeft === 0 && <div className="absolute inset-0 bg-gradient-to-tr from-gray-50/60 to-transparent pointer-events-none"></div>}
 
                         <div className="flex justify-between items-center mb-6 relative z-10">
                             <h3 className={`font-['Satoshi'] font-bold text-2xl transition-colors duration-500 ${isUnlocked && timeLeft === 0 ? 'text-gray-900' : 'text-gray-400'}`}>Reveal Phase</h3>
@@ -338,14 +367,14 @@ export default function DisputePage() {
                                     <div className="flex-1 bg-white border border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center shadow-sm">
                                         <div className="relative w-32 h-16 overflow-hidden mb-2">
                                             {/* gauge arc */}
-                                            <div className="absolute top-0 left-0 w-32 h-32 rounded-full border-[12px] border-gray-100 border-t-red-400 border-l-red-400 border-r-gray-200 border-b-transparent -rotate-45"></div>
+                                            <div className="absolute top-0 left-0 w-32 h-32 rounded-full border-[12px] border-gray-100 border-t-red-500/80 border-l-red-500/80 border-r-emerald-400 border-b-transparent -rotate-45"></div>
                                             {/* Needle */}
                                             <div className="absolute bottom-0 left-16 w-1 h-14 bg-gray-800 origin-bottom rounded-full -rotate-12 transition-transform shadow-md z-10"></div>
                                             <div className="absolute bottom-0 left-16 w-3 h-3 bg-gray-900 rounded-full -translate-x-1/2 translate-y-1/2 z-20"></div>
                                         </div>
                                         <div className="flex w-full px-2 justify-between font-bold">
-                                            <span className="text-red-500 font-mono text-sm leading-none">60 No</span>
-                                            <span className="text-gray-600 font-mono text-sm leading-none">40 Yes</span>
+                                            <span className="text-red-600 font-mono text-sm leading-none">60 No</span>
+                                            <span className="text-emerald-500 font-mono text-sm leading-none">40 Yes</span>
                                         </div>
                                     </div>
 
