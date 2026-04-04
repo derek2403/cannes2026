@@ -1,389 +1,413 @@
-import { useState, useEffect, useCallback } from "react";
-import { MiniKit } from "@worldcoin/minikit-js";
-import { IDKit, orbLegacy } from "@worldcoin/idkit-core";
-import type { IDKitCompletionResult } from "@worldcoin/idkit-core";
-import { QRCodeSVG } from "qrcode.react";
-import { encodeFunctionData, createPublicClient, http } from "viem";
-import { Geist } from "next/font/google";
-import { COUNTER_ABI, COUNTER_ADDRESS } from "@/lib/counter";
+import { useState, useCallback } from "react";
+import { IDKitRequestWidget, orbLegacy } from "@worldcoin/idkit";
+import type { IDKitResult, RpContext } from "@worldcoin/idkit";
 
-const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+type Result = Record<string, unknown> | null;
 
-const APP_ID = process.env.NEXT_PUBLIC_APP_ID as `app_${string}`;
-const RP_ID = process.env.NEXT_PUBLIC_RP_ID!;
+/* ── Shared UI ─────────────────────────────────────── */
 
-// World Chain Sepolia
-const WORLD_CHAIN_SEPOLIA_ID = 4801;
-const client = createPublicClient({
-  chain: {
-    id: WORLD_CHAIN_SEPOLIA_ID,
-    name: "World Chain Sepolia",
-    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-    rpcUrls: {
-      default: {
-        http: ["https://worldchain-sepolia.g.alchemy.com/public"],
-      },
-    },
-  },
-  transport: http(),
-});
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="border border-gray-700 rounded-lg p-6 mb-6">
+      <h2 className="text-xl font-bold mb-4">{title}</h2>
+      {children}
+    </div>
+  );
+}
 
-export default function WorldPage() {
-  const [wallet, setWallet] = useState<string | null>(null);
-  const [verified, setVerified] = useState(false);
-  const [qrUrl, setQrUrl] = useState<string | null>(null);
-  const [counter, setCounter] = useState<string | null>(null);
-  const [status, setStatus] = useState("");
-  const [isMiniKit, setIsMiniKit] = useState(false);
+function ResultBox({ result, error }: { result: Result; error: string }) {
+  if (error) {
+    return (
+      <pre className="mt-4 p-3 bg-red-900/30 border border-red-700 rounded text-red-300 text-sm overflow-auto whitespace-pre-wrap">
+        {error}
+      </pre>
+    );
+  }
+  if (result) {
+    return (
+      <pre className="mt-4 p-3 bg-green-900/30 border border-green-700 rounded text-green-300 text-sm overflow-auto whitespace-pre-wrap">
+        {JSON.stringify(result, null, 2)}
+      </pre>
+    );
+  }
+  return null;
+}
 
-  const readCounter = useCallback(async () => {
-    if (!COUNTER_ADDRESS) return;
+async function callApi(
+  url: string,
+  body: Record<string, unknown>
+): Promise<Record<string, unknown>> {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Request failed");
+  return data;
+}
+
+/* ── 1. World ID Verification ──────────────────────── */
+
+function VerifyHuman() {
+  const [open, setOpen] = useState(false);
+  const [rpContext, setRpContext] = useState<RpContext | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<Result>(null);
+  const [error, setError] = useState("");
+
+  const appId = process.env.NEXT_PUBLIC_WORLD_APP_ID as `app_${string}` | undefined;
+
+  const handleOpen = useCallback(async () => {
+    setLoading(true);
+    setError("");
     try {
-      const value = await client.readContract({
-        address: COUNTER_ADDRESS,
-        abi: COUNTER_ABI,
-        functionName: "x",
+      const ctx = await callApi("/api/world/rp-context", {
+        action: "verify-oracle",
       });
-      setCounter(value.toString());
-    } catch {
-      setCounter("?");
+      setRpContext(ctx as unknown as RpContext);
+      setOpen(true);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to get RP context");
+    }
+    setLoading(false);
+  }, []);
+
+  const handleVerify = useCallback(async (proof: IDKitResult) => {
+    const data = await callApi("/api/world/verify-human", proof as unknown as Record<string, unknown>);
+    if ((data as Record<string, unknown>).error) {
+      throw new Error((data as Record<string, unknown>).error as string);
     }
   }, []);
 
-  useEffect(() => {
-    setIsMiniKit(MiniKit.isInstalled());
-    readCounter();
-  }, [readCounter]);
+  const handleSuccess = useCallback((proof: IDKitResult) => {
+    setResult(proof as unknown as Record<string, unknown>);
+    setOpen(false);
+  }, []);
 
-  // Step 1: World ID verification via IDKit
-  const handleVerify = async () => {
+  if (!appId) {
+    return (
+      <Section title="1. Verify Human Identity (World ID)">
+        <p className="text-yellow-400 text-sm mb-2">
+          Set NEXT_PUBLIC_WORLD_APP_ID in .env.local to enable World ID verification.
+        </p>
+        <p className="text-gray-400 text-sm">
+          Get your app_id from{" "}
+          <a
+            href="https://developer.world.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 underline"
+          >
+            developer.world.org
+          </a>
+        </p>
+      </Section>
+    );
+  }
+
+  return (
+    <Section title="1. Verify Human Identity (World ID)">
+      <p className="text-gray-400 text-sm mb-4">
+        Prove you are a unique human via World ID. This anonymous proof ties your
+        identity to your oracle agent — no personal data shared.
+      </p>
+      <button
+        onClick={handleOpen}
+        disabled={loading}
+        className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500 disabled:opacity-50"
+      >
+        {loading ? "Loading..." : "Verify with World ID"}
+      </button>
+
+      {rpContext && (
+        <IDKitRequestWidget
+          app_id={appId}
+          action="verify-oracle"
+          rp_context={rpContext}
+          preset={orbLegacy()}
+          allow_legacy_proofs={true}
+          open={open}
+          onOpenChange={setOpen}
+          handleVerify={handleVerify}
+          onSuccess={handleSuccess}
+          onError={(code) => setError(`World ID error: ${code}`)}
+        />
+      )}
+
+      <ResultBox result={result} error={error} />
+    </Section>
+  );
+}
+
+/* ── 2. Register Agent on AgentBook ────────────────── */
+
+function RegisterAgent() {
+  const [address, setAddress] = useState("");
+
+  return (
+    <Section title="2. Register Agent on AgentBook">
+      <p className="text-gray-400 text-sm mb-4">
+        Link your verified human identity to your AI agent&apos;s wallet. This is done
+        once via the AgentKit CLI — it calls World App for verification and registers
+        the binding on World Chain.
+      </p>
+
+      <div className="mb-4">
+        <label className="block text-sm text-gray-400 mb-1">
+          Agent Wallet Address
+        </label>
+        <input
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          placeholder="0x..."
+          className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
+        />
+      </div>
+
+      <div className="bg-gray-800 border border-gray-600 rounded p-4">
+        <p className="text-sm text-gray-300 mb-2">Run this CLI command to register:</p>
+        <code className="block bg-gray-900 p-3 rounded text-green-400 text-sm">
+          npx @worldcoin/agentkit-cli register {address || "<agent-wallet-address>"}
+        </code>
+        <p className="text-xs text-gray-500 mt-2">
+          This opens World App for human verification, then submits the registration
+          transaction to World Chain. One human = one agent.
+        </p>
+      </div>
+    </Section>
+  );
+}
+
+/* ── 3. Verify Agent (AgentBook Lookup) ────────────── */
+
+function CheckAgent() {
+  const [address, setAddress] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<Result>(null);
+  const [error, setError] = useState("");
+
+  const handleCheck = async () => {
+    setLoading(true);
+    setError("");
+    setResult(null);
     try {
-      setStatus("Getting RP signature...");
-      const rpSig = await fetch("/api/rp-signature", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "verify-human" }),
-      }).then((r) => r.json());
-
-      if (rpSig.error) {
-        setStatus(`RP signature error: ${rpSig.error}`);
-        return;
-      }
-
-      setStatus("Creating verification request...");
-      const request = await IDKit.request({
-        app_id: APP_ID,
-        action: "verify-human",
-        rp_context: {
-          rp_id: RP_ID,
-          nonce: rpSig.nonce,
-          created_at: rpSig.created_at,
-          expires_at: rpSig.expires_at,
-          signature: rpSig.sig,
-        },
-        allow_legacy_proofs: true,
-        environment: "production",
-      }).preset(orbLegacy());
-
-      // Show QR code for web users
-      if (request.connectorURI) {
-        setQrUrl(request.connectorURI);
-        setStatus("Scan the QR code with World App");
-      } else {
-        setStatus("Waiting for World App confirmation...");
-      }
-
-      const completion: IDKitCompletionResult =
-        await request.pollUntilCompletion();
-
-      setQrUrl(null);
-
-      if (!completion.success) {
-        const failed = completion as { success: false; error: string };
-        setStatus(`Verification failed: ${failed.error}`);
-        return;
-      }
-
-      // Verify proof on backend
-      setStatus("Verifying proof on server...");
-      const verifyRes = await fetch("/api/verify-proof", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idkitResponse: completion.result }),
-      });
-
-      const text = await verifyRes.text();
-      let verifyData;
-      try {
-        verifyData = JSON.parse(text);
-      } catch {
-        setStatus(`Server error: ${text.slice(0, 200)}`);
-        return;
-      }
-
-      if (verifyData.success) {
-        setVerified(true);
-        setStatus("");
-      } else {
-        setStatus(verifyData.error ?? "Proof verification failed");
-      }
-    } catch (err) {
-      setQrUrl(null);
-      setStatus(
-        `Verify error: ${err instanceof Error ? err.message : String(err)}`
-      );
+      const data = await callApi("/api/world/check-agent", { address });
+      setResult(data);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unknown error");
     }
-  };
-
-  // Step 2: Wallet auth (SIWE) via MiniKit
-  const handleSignIn = async () => {
-    if (!MiniKit.isInstalled()) {
-      setStatus("Open this app in World App");
-      return;
-    }
-
-    try {
-      setStatus("Fetching nonce...");
-      const nonceRes = await fetch("/api/auth/nonce");
-      const { nonce } = await nonceRes.json();
-
-      setStatus("Requesting wallet signature...");
-      const result = await MiniKit.walletAuth({
-        nonce,
-        statement: "Sign in to Cannes 2026",
-        expirationTime: new Date(Date.now() + 1000 * 60 * 60),
-      });
-
-      if (result.executedWith === "fallback") {
-        setStatus("Fallback auth not supported");
-        return;
-      }
-
-      setStatus("Verifying SIWE...");
-      const verifyRes = await fetch("/api/auth/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ payload: result.data, nonce }),
-      });
-
-      const text = await verifyRes.text();
-      let verifyData;
-      try {
-        verifyData = JSON.parse(text);
-      } catch {
-        setStatus(`Server error: ${text.slice(0, 200)}`);
-        return;
-      }
-
-      if (verifyData.isValid) {
-        setWallet(verifyData.address);
-        setStatus("");
-      } else {
-        setStatus(verifyData.error ?? "Sign in failed");
-      }
-    } catch (err) {
-      setStatus(
-        `Sign in error: ${err instanceof Error ? err.message : String(err)}`
-      );
-    }
-  };
-
-  // Step 3: Send transaction via MiniKit
-  const handleIncrement = async () => {
-    if (!COUNTER_ADDRESS) {
-      setStatus("Counter contract not deployed yet");
-      return;
-    }
-    if (!MiniKit.isInstalled()) {
-      setStatus("Open this app in World App");
-      return;
-    }
-
-    try {
-      setStatus("Sending transaction...");
-
-      const result = await MiniKit.sendTransaction({
-        chainId: WORLD_CHAIN_SEPOLIA_ID,
-        transactions: [
-          {
-            to: COUNTER_ADDRESS,
-            data: encodeFunctionData({
-              abi: COUNTER_ABI,
-              functionName: "inc",
-            }),
-          },
-        ],
-      });
-
-      setStatus(`sendTransaction result: ${JSON.stringify(result).slice(0, 300)}`);
-
-      if (result.executedWith === "fallback") {
-        setStatus("Fallback not supported");
-        return;
-      }
-
-      if (result.data.status !== "success") {
-        setStatus(`Tx failed: ${JSON.stringify(result.data)}`);
-        return;
-      }
-
-      setStatus(`Tx submitted: ${result.data.userOpHash.slice(0, 10)}...`);
-
-      const pollUserOp = async (hash: string) => {
-        for (let i = 0; i < 30; i++) {
-          await new Promise((r) => setTimeout(r, 2000));
-          const res = await fetch(
-            `https://developer.world.org/api/v2/minikit/userop/${hash}`
-          );
-          const data = await res.json();
-          if (data.status === "success") return data;
-        }
-        return null;
-      };
-
-      const receipt = await pollUserOp(result.data.userOpHash);
-      if (receipt) {
-        setStatus("Counter incremented!");
-        readCounter();
-      } else {
-        setStatus("Tx may still be pending");
-        readCounter();
-      }
-    } catch (err: any) {
-      const details = err?.code || err?.errorCode || err?.type || "";
-      setStatus(
-        `Tx error: ${details ? details + " - " : ""}${JSON.stringify(err, Object.getOwnPropertyNames(err ?? {})).slice(0, 300)}`
-      );
-    }
+    setLoading(false);
   };
 
   return (
-    <div
-      className={`${geist.className} flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black`}
-    >
-      <main className="flex w-full max-w-md flex-col items-center gap-6 px-6 py-16">
-        <div className="text-center">
-          <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Cannes 2026
-          </h1>
-          <p className="mt-2 text-zinc-500 dark:text-zinc-400">
-            World ID + MiniKit Demo
-          </p>
-        </div>
+    <Section title="3. Verify Agent (AgentBook Lookup)">
+      <p className="text-gray-400 text-sm mb-4">
+        Check if any wallet address is registered as a human-backed agent on
+        AgentBook. Returns the anonymous human ID if registered.
+      </p>
 
-        {/* MiniKit status */}
+      <div className="flex gap-3 items-end">
+        <div className="flex-1">
+          <label className="block text-sm text-gray-400 mb-1">
+            Agent Wallet Address
+          </label>
+          <input
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="0x..."
+            className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
+          />
+        </div>
+        <button
+          onClick={handleCheck}
+          disabled={loading || !address}
+          className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500 disabled:opacity-50"
+        >
+          {loading ? "Checking..." : "Check AgentBook"}
+        </button>
+      </div>
+      <ResultBox result={result} error={error} />
+    </Section>
+  );
+}
+
+/* ── 4. Verify Agent (Live Demo) ───────────────────── */
+
+type Step = { step: string; status: string; detail: string };
+
+function VerifyAgent() {
+  const [address, setAddress] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [steps, setSteps] = useState<Step[]>([]);
+  const [verified, setVerified] = useState<boolean | null>(null);
+  const [humanId, setHumanId] = useState<string | null>(null);
+
+  const handleVerify = async () => {
+    setLoading(true);
+    setSteps([]);
+    setVerified(null);
+    setHumanId(null);
+
+    // Show step 1 immediately while waiting
+    setSteps([
+      { step: "AgentBook Lookup", status: "running", detail: `Calling lookupHuman(${address}) on World Chain...` },
+    ]);
+
+    try {
+      const res = await fetch("/api/world/protected-vote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address }),
+      });
+      const data = await res.json();
+      setSteps(data.steps || []);
+      setVerified(data.verified);
+      setHumanId(data.humanId || null);
+    } catch (e: unknown) {
+      setSteps([
+        { step: "Error", status: "failed", detail: e instanceof Error ? e.message : "Unknown error" },
+      ]);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <Section title="4. Verify Agent is Human-Backed (Live Demo)">
+      <p className="text-gray-400 text-sm mb-4">
+        Calls <code className="text-blue-400">lookupHuman()</code> on the AgentBook
+        contract (World Chain) to check if a wallet is tied to a verified human
+        via World ID.
+      </p>
+
+      <div className="flex gap-3 items-end mb-4">
+        <div className="flex-1">
+          <label className="block text-sm text-gray-400 mb-1">
+            Agent Wallet Address
+          </label>
+          <input
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="0x..."
+            className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
+          />
+        </div>
+        <button
+          onClick={handleVerify}
+          disabled={loading || !address}
+          className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500 disabled:opacity-50"
+        >
+          {loading ? "Checking..." : "Verify"}
+        </button>
+      </div>
+
+      <div className="text-xs text-gray-500 mb-4">
+        <p>
+          <span className="text-green-400">Registered:</span>{" "}
+          <code
+            className="text-gray-300 cursor-pointer hover:text-white"
+            onClick={() => setAddress("0x5B638972D1362701f298e9F02F67f8f485c3c52e")}
+          >
+            0x5B638972D1362701f298e9F02F67f8f485c3c52e
+          </code>
+        </p>
+        <p>
+          <span className="text-red-400">Unregistered:</span>{" "}
+          <code
+            className="text-gray-300 cursor-pointer hover:text-white"
+            onClick={() => setAddress("0x0000000000000000000000000000000000000001")}
+          >
+            0x0000000000000000000000000000000000000001
+          </code>
+        </p>
+      </div>
+
+      {/* Step-by-step verification events */}
+      {steps.length > 0 && (
+        <div className="space-y-2">
+          {steps.map((s, i) => (
+            <div
+              key={i}
+              className={`p-3 rounded border text-sm ${
+                s.status === "passed"
+                  ? "bg-green-900/20 border-green-700"
+                  : s.status === "failed"
+                  ? "bg-red-900/20 border-red-700"
+                  : s.status === "running"
+                  ? "bg-blue-900/20 border-blue-700"
+                  : "bg-gray-800 border-gray-600"
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <span>
+                  {s.status === "passed"
+                    ? "✓"
+                    : s.status === "failed"
+                    ? "✗"
+                    : s.status === "running"
+                    ? "..."
+                    : "•"}
+                </span>
+                <span className="font-medium text-white">{s.step}</span>
+              </div>
+              <p className="text-xs text-gray-400 ml-6">{s.detail}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Final result */}
+      {verified !== null && (
         <div
-          className={`w-full rounded-xl px-4 py-3 text-center text-sm ${
-            isMiniKit
-              ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-              : "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
+          className={`mt-4 p-4 rounded border ${
+            verified
+              ? "bg-green-900/30 border-green-600"
+              : "bg-red-900/30 border-red-600"
           }`}
         >
-          {isMiniKit
-            ? "Running in World App"
-            : "Not in World App (MiniKit unavailable)"}
-        </div>
-
-        {/* Step 1: World ID Verification */}
-        <div className="w-full rounded-2xl border border-zinc-200 p-6 dark:border-zinc-800">
-          <p className="mb-1 text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-            Step 1
+          <p className={`text-lg font-bold ${verified ? "text-green-400" : "text-red-400"}`}>
+            {verified ? "VERIFIED — Human-Backed Agent" : "NOT VERIFIED — No Human Linked"}
           </p>
-          <p className="mb-4 text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Verify you are human
-          </p>
-
-          {verified ? (
-            <div className="flex items-center justify-between rounded-xl bg-green-50 px-4 py-3 dark:bg-green-900/20">
-              <span className="text-sm text-green-700 dark:text-green-400">
-                World ID Verified
-              </span>
-              <span className="text-xs text-green-600 dark:text-green-500">
-                &#10003;
-              </span>
-            </div>
-          ) : (
-            <>
-              <button
-                onClick={handleVerify}
-                className="w-full rounded-xl bg-zinc-900 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-              >
-                Verify with World ID
-              </button>
-              {qrUrl && (
-                <div className="mt-4 flex flex-col items-center gap-3">
-                  <QRCodeSVG value={qrUrl} size={200} />
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    Scan with World App
-                  </p>
-                </div>
-              )}
-            </>
+          {humanId && (
+            <p className="text-xs text-gray-400 mt-1">
+              Anonymous Human ID: <code className="text-green-300">{humanId}</code>
+            </p>
+          )}
+          {!verified && (
+            <p className="text-xs text-gray-400 mt-1">
+              This wallet has no World ID proof registered on AgentBook.
+              Register via: <code className="text-blue-400">npx agentkit register {address}</code>
+            </p>
           )}
         </div>
+      )}
+    </Section>
+  );
+}
 
-        {/* Step 2: Wallet Auth */}
-        <div className="w-full rounded-2xl border border-zinc-200 p-6 dark:border-zinc-800">
-          <p className="mb-1 text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-            Step 2
-          </p>
-          <p className="mb-4 text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Sign in with wallet
-          </p>
+/* ── Page ──────────────────────────────────────────── */
 
-          {wallet ? (
-            <div className="flex items-center justify-between rounded-xl bg-green-50 px-4 py-3 dark:bg-green-900/20">
-              <span className="text-sm text-green-700 dark:text-green-400">
-                {wallet.slice(0, 6)}...{wallet.slice(-4)}
-              </span>
-              <span className="text-xs text-green-600 dark:text-green-500">
-                Connected
-              </span>
-            </div>
-          ) : (
-            <button
-              onClick={handleSignIn}
-              disabled={!verified}
-              className="w-full rounded-xl bg-zinc-900 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-            >
-              Sign In with World App
-            </button>
-          )}
-        </div>
+export default function WorldPage() {
+  return (
+    <main className="min-h-screen bg-gray-950 text-white p-8 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold mb-2">
+        World — Agent Kit + World ID
+      </h1>
+      <p className="text-gray-400 mb-8">
+        Human-verified AI agents for sybil-resistant oracle consensus.
+        Each oracle agent must be backed by a unique verified human.
+      </p>
 
-        {/* Step 3: Counter */}
-        <div className="w-full rounded-2xl border border-zinc-200 p-6 dark:border-zinc-800">
-          <p className="mb-1 text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-            Step 3
-          </p>
-          <p className="mb-4 text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Interact on-chain
-          </p>
-
-          <div className="mb-4 text-center">
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Counter Value
-            </p>
-            <p className="mt-1 text-4xl font-bold text-zinc-900 dark:text-zinc-50">
-              {counter ?? "..."}
-            </p>
-          </div>
-          <button
-            onClick={handleIncrement}
-            disabled={!wallet}
-            className="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
-          >
-            Increment Counter
-          </button>
-        </div>
-
-        {/* Status */}
-        {status && (
-          <div className="w-full rounded-xl bg-yellow-50 px-4 py-2 text-center text-sm text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400">
-            {status}
-          </div>
-        )}
-      </main>
-    </div>
+      <VerifyHuman />
+      <RegisterAgent />
+      <CheckAgent />
+      <VerifyAgent />
+    </main>
   );
 }

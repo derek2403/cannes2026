@@ -355,20 +355,375 @@ function ScheduleTransaction() {
   );
 }
 
+// ── HCS-20: Auditable Points ──────────────────────────────────
+
+function HCS20Points() {
+  const [topicId, setTopicId] = useState("");
+  const [name, setName] = useState("Oracle Reputation");
+  const [tick, setTick] = useState("rep");
+  const [max, setMax] = useState("999999999");
+  const [lim, setLim] = useState("100");
+  const [amt, setAmt] = useState("10");
+  const [to, setTo] = useState("");
+  const [from, setFrom] = useState("");
+  const [loading, setLoading] = useState("");
+  const [result, setResult] = useState<Result>(null);
+  const [error, setError] = useState("");
+
+  const call = async (action: string, body: Record<string, unknown>) => {
+    setLoading(action);
+    setError("");
+    setResult(null);
+    try {
+      const data = await callApi("/api/hcs/hcs20", { action, ...body });
+      setResult(data);
+      if (data.topicId && action === "deploy") setTopicId(data.topicId as string);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unknown error");
+    }
+    setLoading("");
+  };
+
+  return (
+    <Section title="5. HCS-20: Reputation Points">
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Name</label>
+          <input value={name} onChange={(e) => setName(e.target.value)} className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Ticker</label>
+          <input value={tick} onChange={(e) => setTick(e.target.value)} className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Max Supply</label>
+          <input value={max} onChange={(e) => setMax(e.target.value)} className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Mint Limit</label>
+          <input value={lim} onChange={(e) => setLim(e.target.value)} className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+      </div>
+      <button onClick={() => call("deploy", { name, tick, max, lim })} disabled={!!loading} className="bg-yellow-600 hover:bg-yellow-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium mr-2">
+        {loading === "deploy" ? "Deploying..." : "Deploy Ticker"}
+      </button>
+
+      <hr className="border-gray-700 my-4" />
+
+      <div className="grid grid-cols-3 gap-3 mb-3">
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Topic ID</label>
+          <input value={topicId} onChange={(e) => setTopicId(e.target.value)} placeholder="0.0.xxxxx" className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Amount</label>
+          <input value={amt} onChange={(e) => setAmt(e.target.value)} className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">To Account</label>
+          <input value={to} onChange={(e) => setTo(e.target.value)} placeholder="0.0.xxxxx" className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+      </div>
+      <div className="mb-3">
+        <label className="block text-sm text-gray-400 mb-1">From Account (burn/transfer)</label>
+        <input value={from} onChange={(e) => setFrom(e.target.value)} placeholder="0.0.xxxxx" className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+      </div>
+      <div className="flex gap-2 flex-wrap">
+        <button onClick={() => call("mint", { topicId, tick, amt, to })} disabled={!!loading || !topicId} className="bg-green-600 hover:bg-green-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium">
+          {loading === "mint" ? "Minting..." : "Mint"}
+        </button>
+        <button onClick={() => call("burn", { topicId, tick, amt, from })} disabled={!!loading || !topicId} className="bg-red-600 hover:bg-red-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium">
+          {loading === "burn" ? "Burning..." : "Burn"}
+        </button>
+        <button onClick={() => call("transfer", { topicId, tick, amt, from, to })} disabled={!!loading || !topicId} className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium">
+          {loading === "transfer" ? "Transferring..." : "Transfer"}
+        </button>
+        <button onClick={() => call("balance", { topicId })} disabled={!!loading || !topicId} className="bg-gray-600 hover:bg-gray-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium">
+          {loading === "balance" ? "Loading..." : "Check Balance"}
+        </button>
+      </div>
+      <ResultBox result={result} error={error} />
+    </Section>
+  );
+}
+
+// ── HCS-2: Topic Registry ──────────────────────────────────
+
+function HCS2Registry() {
+  const [registryTopicId, setRegistryTopicId] = useState("");
+  const [entryTopicId, setEntryTopicId] = useState("");
+  const [uid, setUid] = useState("");
+  const [memo, setMemo] = useState("");
+  const [loading, setLoading] = useState("");
+  const [result, setResult] = useState<Result>(null);
+  const [error, setError] = useState("");
+
+  const call = async (action: string, body: Record<string, unknown>) => {
+    setLoading(action);
+    setError("");
+    setResult(null);
+    try {
+      const data = await callApi("/api/hcs/hcs2", { action, ...body });
+      setResult(data);
+      if (data.topicId && action === "create") setRegistryTopicId(data.topicId as string);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unknown error");
+    }
+    setLoading("");
+  };
+
+  return (
+    <Section title="6. HCS-2: Market Registry">
+      <button onClick={() => call("create", {})} disabled={!!loading} className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium mb-4">
+        {loading === "create" ? "Creating..." : "Create Registry"}
+      </button>
+
+      <hr className="border-gray-700 my-4" />
+
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Registry Topic ID</label>
+          <input value={registryTopicId} onChange={(e) => setRegistryTopicId(e.target.value)} placeholder="0.0.xxxxx" className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Entry Topic ID</label>
+          <input value={entryTopicId} onChange={(e) => setEntryTopicId(e.target.value)} placeholder="0.0.xxxxx" className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">UID (for update/delete)</label>
+          <input value={uid} onChange={(e) => setUid(e.target.value)} placeholder="sequence #" className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Memo</label>
+          <input value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="description" className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+      </div>
+      <div className="flex gap-2 flex-wrap">
+        <button onClick={() => call("register", { registryTopicId, entryTopicId, memo })} disabled={!!loading || !registryTopicId} className="bg-green-600 hover:bg-green-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium">
+          {loading === "register" ? "Registering..." : "Register"}
+        </button>
+        <button onClick={() => call("update", { registryTopicId, uid, entryTopicId, memo })} disabled={!!loading || !registryTopicId || !uid} className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium">
+          {loading === "update" ? "Updating..." : "Update"}
+        </button>
+        <button onClick={() => call("delete", { registryTopicId, uid, memo })} disabled={!!loading || !registryTopicId || !uid} className="bg-red-600 hover:bg-red-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium">
+          {loading === "delete" ? "Deleting..." : "Delete"}
+        </button>
+        <button onClick={() => call("read", { registryTopicId })} disabled={!!loading || !registryTopicId} className="bg-gray-600 hover:bg-gray-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium">
+          {loading === "read" ? "Reading..." : "Read Registry"}
+        </button>
+      </div>
+      <ResultBox result={result} error={error} />
+    </Section>
+  );
+}
+
+// ── HCS-11: Agent Profile ──────────────────────────────────
+
+function HCS11Profile() {
+  const [topicId, setTopicId] = useState("");
+  const [displayName, setDisplayName] = useState("Oracle Agent Alpha");
+  const [accountId, setAccountId] = useState("");
+  const [model, setModel] = useState("oracle-v1");
+  const [bio, setBio] = useState("Prediction market oracle node");
+  const [loading, setLoading] = useState("");
+  const [result, setResult] = useState<Result>(null);
+  const [error, setError] = useState("");
+
+  const call = async (action: string, body: Record<string, unknown>) => {
+    setLoading(action);
+    setError("");
+    setResult(null);
+    try {
+      const data = await callApi("/api/hcs/hcs11", { action, ...body });
+      setResult(data);
+      if (data.topicId && action === "create") setTopicId(data.topicId as string);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unknown error");
+    }
+    setLoading("");
+  };
+
+  return (
+    <Section title="7. HCS-11: Agent Profile">
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Display Name</label>
+          <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Account ID</label>
+          <input value={accountId} onChange={(e) => setAccountId(e.target.value)} placeholder="0.0.xxxxx" className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Model</label>
+          <input value={model} onChange={(e) => setModel(e.target.value)} className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Bio</label>
+          <input value={bio} onChange={(e) => setBio(e.target.value)} className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <button onClick={() => call("create", { displayName, accountId, model, bio, capabilities: [7, 9, 16] })} disabled={!!loading || !accountId} className="bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium">
+          {loading === "create" ? "Creating..." : "Create Profile"}
+        </button>
+      </div>
+
+      <hr className="border-gray-700 my-4" />
+
+      <div className="flex gap-3 items-end">
+        <div className="flex-1">
+          <label className="block text-sm text-gray-400 mb-1">Profile Topic ID</label>
+          <input value={topicId} onChange={(e) => setTopicId(e.target.value)} placeholder="0.0.xxxxx" className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+        <button onClick={() => call("read", { topicId })} disabled={!!loading || !topicId} className="bg-gray-600 hover:bg-gray-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium">
+          {loading === "read" ? "Reading..." : "Read Profile"}
+        </button>
+      </div>
+      <ResultBox result={result} error={error} />
+    </Section>
+  );
+}
+
+// ── HCS-16: Flora (Group Oracle Debate) ──────────────────────────────────
+
+function HCS16Flora() {
+  const [floraId, setFloraId] = useState("oracle-committee-1");
+  const [cTopicId, setCTopicId] = useState("");
+  const [sTopicId, setSTopicId] = useState("");
+  const [content, setContent] = useState("Evidence suggests YES based on reuters.com source");
+  const [candidateId, setCandidateId] = useState("");
+  const [hash, setHash] = useState("");
+  const [epoch, setEpoch] = useState("1");
+  const [readTopicId, setReadTopicId] = useState("");
+  const [loading, setLoading] = useState("");
+  const [result, setResult] = useState<Result>(null);
+  const [error, setError] = useState("");
+
+  const call = async (action: string, body: Record<string, unknown>) => {
+    setLoading(action);
+    setError("");
+    setResult(null);
+    try {
+      const data = await callApi("/api/hcs/hcs16", { action, ...body });
+      setResult(data);
+      if (action === "create") {
+        if (data.communicationTopicId) {
+          setCTopicId(data.communicationTopicId as string);
+          setReadTopicId(data.communicationTopicId as string);
+        }
+        if (data.stateTopicId) setSTopicId(data.stateTopicId as string);
+      }
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unknown error");
+    }
+    setLoading("");
+  };
+
+  return (
+    <Section title="8. HCS-16: Flora (Group Oracle Debate)">
+      <div className="flex gap-3 items-end mb-4">
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Flora ID</label>
+          <input value={floraId} onChange={(e) => setFloraId(e.target.value)} className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-48 text-white" />
+        </div>
+        <button onClick={() => call("create", { floraId })} disabled={!!loading} className="bg-pink-600 hover:bg-pink-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium">
+          {loading === "create" ? "Creating..." : "Create Flora"}
+        </button>
+      </div>
+
+      <hr className="border-gray-700 my-4" />
+
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Communication Topic</label>
+          <input value={cTopicId} onChange={(e) => setCTopicId(e.target.value)} placeholder="0.0.xxxxx" className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Message Content</label>
+          <input value={content} onChange={(e) => setContent(e.target.value)} className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+      </div>
+      <button onClick={() => call("message", { communicationTopicId: cTopicId, content })} disabled={!!loading || !cTopicId} className="bg-pink-600 hover:bg-pink-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium mr-2">
+        {loading === "message" ? "Sending..." : "Send Message"}
+      </button>
+
+      <hr className="border-gray-700 my-4" />
+
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Candidate Account (vote)</label>
+          <input value={candidateId} onChange={(e) => setCandidateId(e.target.value)} placeholder="0.0.xxxxx" className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+        <div className="flex gap-2 items-end">
+          <button onClick={() => call("vote", { communicationTopicId: cTopicId, candidateAccountId: candidateId, approve: true })} disabled={!!loading || !cTopicId || !candidateId} className="bg-green-600 hover:bg-green-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium">
+            Approve
+          </button>
+          <button onClick={() => call("vote", { communicationTopicId: cTopicId, candidateAccountId: candidateId, approve: false })} disabled={!!loading || !cTopicId || !candidateId} className="bg-red-600 hover:bg-red-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium">
+            Reject
+          </button>
+        </div>
+      </div>
+
+      <hr className="border-gray-700 my-4" />
+
+      <div className="grid grid-cols-3 gap-3 mb-3">
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">State Topic</label>
+          <input value={sTopicId} onChange={(e) => setSTopicId(e.target.value)} placeholder="0.0.xxxxx" className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">State Hash</label>
+          <input value={hash} onChange={(e) => setHash(e.target.value)} placeholder="sha384..." className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Epoch</label>
+          <input value={epoch} onChange={(e) => setEpoch(e.target.value)} className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+      </div>
+      <button onClick={() => call("state", { stateTopicId: sTopicId, hash: hash || "test-hash-" + Date.now(), epoch: Number(epoch) })} disabled={!!loading || !sTopicId} className="bg-pink-600 hover:bg-pink-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium mr-2">
+        {loading === "state" ? "Updating..." : "Update State"}
+      </button>
+
+      <hr className="border-gray-700 my-4" />
+
+      <div className="flex gap-3 items-end">
+        <div className="flex-1">
+          <label className="block text-sm text-gray-400 mb-1">Read Topic ID</label>
+          <input value={readTopicId} onChange={(e) => setReadTopicId(e.target.value)} placeholder="0.0.xxxxx" className="bg-gray-800 border border-gray-600 rounded px-3 py-2 w-full text-white" />
+        </div>
+        <button onClick={() => call("read", { topicId: readTopicId })} disabled={!!loading || !readTopicId} className="bg-gray-600 hover:bg-gray-700 disabled:opacity-50 px-4 py-2 rounded text-white font-medium">
+          {loading === "read" ? "Reading..." : "Read Messages"}
+        </button>
+      </div>
+      <ResultBox result={result} error={error} />
+    </Section>
+  );
+}
+
 export default function HederaPage() {
   return (
     <div className="min-h-screen bg-gray-950 text-white p-8">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-2">Hedera SDK Test Page</h1>
         <p className="text-gray-400 mb-8">
-          Test Account, HTS Token, HCS Topic, and Scheduled Transaction operations
-          on Hedera Testnet.
+          Test Account, HTS Token, HCS Topic, Scheduled Transaction, and HCS
+          Standards on Hedera Testnet.
         </p>
 
         <CreateAccount />
         <CreateToken />
         <CreateTopic />
         <ScheduleTransaction />
+
+        <h2 className="text-2xl font-bold mt-12 mb-6 border-t border-gray-700 pt-8">
+          HCS Standards
+        </h2>
+
+        <HCS20Points />
+        <HCS2Registry />
+        <HCS11Profile />
+        <HCS16Flora />
       </div>
     </div>
   );
