@@ -61,27 +61,27 @@ export default async function handler(
       }
 
       case "message": {
-        const { communicationTopicId, content } = req.body;
+        const { communicationTopicId, floraAccountId, content } = req.body;
         const operatorId = process.env.HEDERA_OPERATOR_ID!;
-        const msg = buildHCS16Message(operatorId, operatorId, content);
+        const msg = buildHCS16Message(operatorId, floraAccountId || communicationTopicId, content);
         const result = await submitMessage(client, communicationTopicId, msg);
         client.close();
         return res.json(result);
       }
 
       case "vote": {
-        const { communicationTopicId, candidateAccountId, approve } = req.body;
+        const { communicationTopicId, floraAccountId, candidateAccountId, approve } = req.body;
         const operatorId = process.env.HEDERA_OPERATOR_ID!;
-        const msg = buildHCS16Vote(operatorId, operatorId, candidateAccountId, approve);
+        const msg = buildHCS16Vote(operatorId, floraAccountId || communicationTopicId, candidateAccountId, approve);
         const result = await submitMessage(client, communicationTopicId, msg);
         client.close();
         return res.json(result);
       }
 
       case "state": {
-        const { stateTopicId, hash, epoch } = req.body;
+        const { stateTopicId, floraAccountId, hash, epoch } = req.body;
         const operatorId = process.env.HEDERA_OPERATOR_ID!;
-        const msg = buildHCS16StateUpdate(operatorId, operatorId, hash, epoch);
+        const msg = buildHCS16StateUpdate(operatorId, floraAccountId || stateTopicId, hash, epoch);
         const result = await submitMessage(client, stateTopicId, msg);
         client.close();
         return res.json(result);
@@ -101,13 +101,13 @@ export default async function handler(
 
       case "commit": {
         // Agent commits hash(vote|salt) — vote stays hidden until reveal
-        const { communicationTopicId, vote, phase, marketId } = req.body;
+        const { communicationTopicId, floraAccountId, vote, phase, marketId } = req.body;
         const operatorId = process.env.HEDERA_OPERATOR_ID!;
 
         const salt = generateSalt();
         const commitHash = hashVote(vote as VoteOption, salt);
 
-        const msg = buildHCS16Commit(operatorId, operatorId, phase, commitHash, marketId);
+        const msg = buildHCS16Commit(operatorId, floraAccountId || communicationTopicId, phase, commitHash, marketId);
         const result = await submitMessage(client, communicationTopicId, msg);
 
         client.close();
@@ -124,11 +124,11 @@ export default async function handler(
 
       case "reveal": {
         // Agent reveals vote + salt — anyone can verify hash matches commit
-        const { communicationTopicId, vote, salt, phase, marketId } = req.body;
+        const { communicationTopicId, floraAccountId, vote, salt, phase, marketId } = req.body;
         const operatorId = process.env.HEDERA_OPERATOR_ID!;
 
         const msg = buildHCS16Reveal(
-          operatorId, operatorId, phase,
+          operatorId, floraAccountId || communicationTopicId, phase,
           vote as VoteOption, salt, marketId
         );
         const result = await submitMessage(client, communicationTopicId, msg);
@@ -139,11 +139,11 @@ export default async function handler(
 
       case "discussion": {
         // Phase 2: post evidence & reasoning between vote rounds
-        const { communicationTopicId, marketId, content, evidenceUrl } = req.body;
+        const { communicationTopicId, floraAccountId, marketId, content, evidenceUrl } = req.body;
         const operatorId = process.env.HEDERA_OPERATOR_ID!;
 
         const msg = buildHCS16Discussion(
-          operatorId, operatorId, marketId, content, evidenceUrl
+          operatorId, floraAccountId || communicationTopicId, marketId, content, evidenceUrl
         );
         const result = await submitMessage(client, communicationTopicId, msg);
 

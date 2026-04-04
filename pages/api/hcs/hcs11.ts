@@ -43,7 +43,7 @@ export default async function handler(
         const msg = buildHCS11Profile(
           displayName,
           accountId,
-          capabilities || [7, 9, 16],
+          capabilities || [2, 11, 16, 20],
           model || "oracle-v1",
           bio,
           links

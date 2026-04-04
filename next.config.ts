@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
     "@0gfoundation/0g-ts-sdk",
     "@0glabs/0g-serving-broker",
     "ethers",
+    "@worldcoin/minikit-js", 
+    "@worldcoin/idkit-core"
   ],
 };
 

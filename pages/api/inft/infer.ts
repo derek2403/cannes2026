@@ -57,8 +57,14 @@ async function callVia0GCompute(
   let lastError: Error | null = null;
   for (const p of ZG_COMPUTE_PROVIDERS) {
     try {
+      // Acknowledge provider if not already done
+      const acked = await broker.inference.acknowledged(p.address);
+      if (!acked) {
+        await broker.inference.acknowledgeProviderSigner(p.address);
+      }
+
       const { endpoint, model } = await broker.inference.getServiceMetadata(p.address);
-      const headers = await broker.inference.getRequestHeaders(p.address);
+      const headers = await broker.inference.getRequestHeaders(p.address, message);
 
       const resp = await fetch(`${endpoint}/chat/completions`, {
         method: "POST",

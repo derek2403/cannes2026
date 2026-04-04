@@ -23,6 +23,7 @@ export default async function handler(
     domainTags,
     serviceOfferings,
     systemPrompt,
+    researchInstructions,
     modelProvider,
     apiKey,
     memory,
@@ -52,6 +53,7 @@ export default async function handler(
       persona: persona || botId,
       modelProvider, // "0g-compute" | "openai" | "groq" | "deepseek"
       systemPrompt,
+      researchInstructions: researchInstructions || "",
       memory: memory || {},
       domainTags: domainTags || "",
       serviceOfferings: serviceOfferings || "",
