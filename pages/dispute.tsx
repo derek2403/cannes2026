@@ -406,7 +406,7 @@ export default function DisputePage() {
                                 <div className="flex flex-col gap-4 flex-1">
                                     {/* References */}
                                     <div className="flex-1 bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex flex-col max-h-[380px]">
-                                        <h5 className="font-bold text-gray-900 mb-2 text-[15px] font-['Satoshi'] tracking-wide">Rimage.pngeferences</h5>
+                                        <h5 className="font-bold text-gray-900 mb-2 text-[15px] font-['Satoshi'] tracking-wide">References</h5>
                                         <div className="w-full h-px bg-gray-200 mb-3"></div>
                                         <div className="flex flex-col gap-2 overflow-y-auto pr-2 pb-2">
                                             <div className="text-sm font-medium text-gray-600 hover:text-blue-600 cursor-pointer flex gap-1.5 items-center">
