@@ -1,0 +1,87 @@
+export const PREDICTION_MARKET_ABI = [
+  {
+    name: "bet",
+    type: "function",
+    inputs: [
+      { name: "marketId", type: "string" },
+      { name: "yes", type: "bool" },
+    ],
+    outputs: [],
+    stateMutability: "payable",
+  },
+  {
+    name: "resolve",
+    type: "function",
+    inputs: [
+      { name: "marketId", type: "string" },
+      { name: "outcome", type: "uint8" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    name: "claim",
+    type: "function",
+    inputs: [{ name: "marketId", type: "string" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    name: "getPool",
+    type: "function",
+    inputs: [{ name: "marketId", type: "string" }],
+    outputs: [
+      { name: "yesPool", type: "uint256" },
+      { name: "noPool", type: "uint256" },
+      { name: "resolved", type: "bool" },
+      { name: "outcome", type: "uint8" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    name: "getPosition",
+    type: "function",
+    inputs: [
+      { name: "marketId", type: "string" },
+      { name: "bettor", type: "address" },
+    ],
+    outputs: [
+      { name: "yesAmt", type: "uint256" },
+      { name: "noAmt", type: "uint256" },
+      { name: "hasClaimed", type: "bool" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    name: "BetPlaced",
+    type: "event",
+    inputs: [
+      { name: "marketId", type: "string", indexed: false },
+      { name: "bettor", type: "address", indexed: true },
+      { name: "yes", type: "bool", indexed: false },
+      { name: "amount", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    name: "MarketResolved",
+    type: "event",
+    inputs: [
+      { name: "marketId", type: "string", indexed: false },
+      { name: "outcome", type: "uint8", indexed: false },
+    ],
+  },
+  {
+    name: "Claimed",
+    type: "event",
+    inputs: [
+      { name: "marketId", type: "string", indexed: false },
+      { name: "bettor", type: "address", indexed: true },
+      { name: "payout", type: "uint256", indexed: false },
+    ],
+  },
+] as const;
+
+export const PREDICTION_MARKET_ADDRESS = process.env
+  .NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as `0x${string}`;
+
+export const Outcome = { UNRESOLVED: 0, YES: 1, NO: 2 } as const;
