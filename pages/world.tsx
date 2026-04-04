@@ -215,8 +215,15 @@ export default function WorldPage() {
         ],
       });
 
+      setStatus(`sendTransaction result: ${JSON.stringify(result).slice(0, 300)}`);
+
       if (result.executedWith === "fallback") {
         setStatus("Fallback not supported");
+        return;
+      }
+
+      if (result.data.status !== "success") {
+        setStatus(`Tx failed: ${JSON.stringify(result.data)}`);
         return;
       }
 
@@ -242,9 +249,10 @@ export default function WorldPage() {
         setStatus("Tx may still be pending");
         readCounter();
       }
-    } catch (err) {
+    } catch (err: any) {
+      const details = err?.code || err?.errorCode || err?.type || "";
       setStatus(
-        `Transaction error: ${err instanceof Error ? err.message : String(err)}`
+        `Tx error: ${details ? details + " - " : ""}${JSON.stringify(err, Object.getOwnPropertyNames(err ?? {})).slice(0, 300)}`
       );
     }
   };
