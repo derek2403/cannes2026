@@ -78,6 +78,7 @@ export default function MyPositions({
 }: MyPositionsProps) {
   const [positions, setPositions] = useState<Record<string, PositionInfo>>({});
   const [resolveOutcomes, setResolveOutcomes] = useState<Record<string, number>>({});
+  const [disputeOutcomes, setDisputeOutcomes] = useState<Record<string, number>>({});
 
   const refreshPositions = useCallback(async () => {
     const results: Record<string, PositionInfo> = {};
@@ -150,6 +151,51 @@ export default function MyPositions({
     } catch (err) {
       setStatus(
         `Resolve error: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+  };
+
+  const handleDispute = async (marketId: string) => {
+    if (!MiniKit.isInstalled()) {
+      setStatus("Open this app in World App");
+      return;
+    }
+
+    const newOutcome = disputeOutcomes[marketId] ?? Outcome.YES;
+
+    try {
+      setStatus(`Disputing → ${newOutcome === Outcome.YES ? "YES" : "NO"}...`);
+      const result = await MiniKit.sendTransaction({
+        chainId: WORLD_CHAIN_ID,
+        transactions: [
+          {
+            to: PM_ADDRESS,
+            data: encodeFunctionData({
+              abi: PREDICTION_MARKET_ABI,
+              functionName: "dispute",
+              args: [marketId, newOutcome],
+            }),
+          },
+        ],
+      });
+
+      if (result.executedWith === "fallback") {
+        setStatus("Fallback not supported");
+        return;
+      }
+
+      setStatus(`Tx submitted: ${result.data.userOpHash.slice(0, 10)}...`);
+      const receipt = await pollUserOp(result.data.userOpHash);
+      if (receipt) {
+        setStatus(`Market disputed → ${newOutcome === Outcome.YES ? "YES" : "NO"}!`);
+        refreshPool(marketId);
+        refreshPositions();
+      } else {
+        setStatus("Tx may still be pending");
+      }
+    } catch (err) {
+      setStatus(
+        `Dispute error: ${err instanceof Error ? err.message : String(err)}`
       );
     }
   };
@@ -293,6 +339,31 @@ export default function MyPositions({
                 <p className="text-center text-xs text-zinc-400 dark:text-zinc-500">
                   Winnings claimed
                 </p>
+              )}
+
+              {/* Dispute button */}
+              {isResolved && (
+                <div className="mt-3 flex items-center gap-2 border-t border-zinc-200 pt-3 dark:border-zinc-700">
+                  <select
+                    value={disputeOutcomes[marketId] ?? (pool?.outcome === Outcome.YES ? Outcome.NO : Outcome.YES)}
+                    onChange={(e) =>
+                      setDisputeOutcomes((prev) => ({
+                        ...prev,
+                        [marketId]: Number(e.target.value),
+                      }))
+                    }
+                    className="rounded-lg border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                  >
+                    <option value={Outcome.YES}>YES</option>
+                    <option value={Outcome.NO}>NO</option>
+                  </select>
+                  <button
+                    onClick={() => handleDispute(marketId)}
+                    className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-700"
+                  >
+                    Dispute
+                  </button>
+                </div>
               )}
             </div>
           );
