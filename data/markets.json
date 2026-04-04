@@ -313,5 +313,95 @@
       "settlement_price": null,
       "dispute_tx_hash": null
     }
+  },
+  {
+    "id": "mkt-1775340469958-eqs4",
+    "created_at": "2026-04-04T22:07:49.958Z",
+    "ai_insight": {
+      "agent_id": "BetaAnalyst",
+      "debate_log_id": "debate-mkt-1775340469958-eqs4",
+      "market_thesis": "Market proposed by BetaAnalyst during AI swarm creation process on theme: AI regulation and autonomous systems in 2026",
+      "confidence_score": 26,
+      "suggested_categories": [
+        "AI"
+      ],
+      "news_sources": []
+    },
+    "resolution": {
+      "question": "Will the European Union finalize and approve the AI Act by October 2026?",
+      "resolution_criteria": "The market will resolve to YES if the European Parliament and Council of the European Union formally approve the AI Act by the resolution date. It will resolve to NO if the act is not approved by then or if it is delayed beyond this date.",
+      "resolution_date": "2026-10-31",
+      "oracle_type": "ai_swarm",
+      "ancillary_data": "Created via /api/commands/create-market with 19 agents"
+    },
+    "amm": {
+      "lp_pool_address": null,
+      "initial_seed_amount": 1000,
+      "yes_token_id": null,
+      "no_token_id": null,
+      "yes_token_balance": 1000,
+      "no_token_balance": 1000,
+      "current_odds_yes": 0.5,
+      "total_liquidity_usd": 0,
+      "trading_fee": 0.02
+    },
+    "ux": {
+      "status": "PROPOSED",
+      "volume_24h": 0,
+      "total_volume": 0,
+      "unique_bettors": 0,
+      "top_bet_size": 0,
+      "is_trending": false
+    },
+    "settlement": {
+      "winning_outcome": null,
+      "settlement_price": null,
+      "dispute_tx_hash": null
+    }
+  },
+  {
+    "id": "mkt-1775341779551-6vz9",
+    "created_at": "2026-04-04T22:29:39.551Z",
+    "ai_insight": {
+      "agent_id": "AlphaOracle",
+      "debate_log_id": "debate-mkt-1775341779551-6vz9",
+      "market_thesis": "Market proposed by AlphaOracle during AI swarm creation process on theme: AI regulation and autonomous systems in 2026",
+      "confidence_score": 60,
+      "suggested_categories": [
+        "AI"
+      ],
+      "news_sources": []
+    },
+    "resolution": {
+      "question": "Will the European Union finalize and implement the AI Act by October 4, 2026?",
+      "resolution_criteria": "The resolution will be 'YES' if the European Union officially publishes the final text of the AI Act and it comes into effect by the specified date. The resolution will be 'NO' if the Act is not finalized, not published, or if its implementation is postponed beyond this date.",
+      "resolution_date": "2026-10-04",
+      "oracle_type": "ai_swarm",
+      "ancillary_data": "Created via /api/commands/create-market with 10 agents"
+    },
+    "amm": {
+      "lp_pool_address": null,
+      "initial_seed_amount": 1000,
+      "yes_token_id": null,
+      "no_token_id": null,
+      "yes_token_balance": 1000,
+      "no_token_balance": 1000,
+      "current_odds_yes": 0.5,
+      "total_liquidity_usd": 0,
+      "trading_fee": 0.02
+    },
+    "ux": {
+      "status": "RESOLVED",
+      "volume_24h": 0,
+      "total_volume": 0,
+      "unique_bettors": 0,
+      "top_bet_size": 0,
+      "is_trending": false
+    },
+    "settlement": {
+      "winning_outcome": "YES",
+      "settlement_price": 0.95,
+      "dispute_tx_hash": null
+    }
   }
 ]

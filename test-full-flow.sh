@@ -12,8 +12,8 @@
 
 BASE="http://localhost:3000"
 AGENT_NAME="DIVEAgent-$(date +%s)"
-TMP="$TEMP/dive-test-$$.json"
-TMP2="$TEMP/dive-test2-$$.json"
+TMP="${TMPDIR:-/tmp}/dive-test-$$.json"
+TMP2="${TMPDIR:-/tmp}/dive-test2-$$.json"
 
 # Helper: parse JSON field from temp file
 jval() {

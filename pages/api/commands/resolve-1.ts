@@ -91,7 +91,13 @@ export default async function handler(
   // Votes are hashed with a random salt — no agent sees others' votes.
   const commits: CommitEntry[] = [];
 
-  const commitPromises = committee.map(async (agent) => {
+  const commitPromises = committee.map(async (agent, idx) => {
+    // Assign adversarial roles: odd-indexed agents must argue the contrarian side
+    const isContrarian = idx % 2 === 1;
+    const roleInstruction = isContrarian
+      ? `IMPORTANT: You have been randomly assigned as a CONTRARIAN REVIEWER. Your job is to find every possible reason this should resolve as NO. Be skeptical, find counter-evidence, and challenge the obvious answer. Only vote YES if you find absolutely overwhelming evidence that overcomes your contrarian analysis.`
+      : `IMPORTANT: You have been randomly assigned as a PROPONENT REVIEWER. Your job is to find every possible reason this should resolve as YES. Be thorough in finding supporting evidence. Only vote NO if you find absolutely overwhelming evidence against.`;
+
     const result = await callAgent(
       baseUrl,
       agent.inftTokenId!,
@@ -102,17 +108,15 @@ MARKET QUESTION: ${market.resolution.question}
 
 RESOLUTION CRITERIA: ${market.resolution.resolution_criteria}
 
+${roleInstruction}
+
 Research this question independently using real-world evidence.
 You MUST cite specific sources (news articles, official announcements, data sources) with URLs.
-
-Consider all angles carefully. Play devil's advocate against your initial instinct.
-Examine the strongest counterarguments before deciding.
-Think about what evidence would change your mind and whether that evidence exists.
 
 Structure your response:
 1. Key evidence FOR (with reference URLs)
 2. Key evidence AGAINST (with reference URLs)
-3. Strongest counterargument to your initial position
+3. Your assigned role's analysis
 4. Your vote: YES or NO
 5. References: list all URLs cited
 
@@ -203,6 +207,7 @@ End with "My vote: YES" or "My vote: NO".`,
       commitHash: r.commitHash,
       salt: r.salt,
       verified: r.verified,
+      reasoning: r.reasoning,
     })),
     tally,
   });
