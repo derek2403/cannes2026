@@ -246,10 +246,6 @@ export default function MyPositions({
 
   const marketIds = Object.keys(positions);
 
-  if (marketIds.length === 0) {
-    return null;
-  }
-
   return (
     <div className="w-full rounded-2xl border border-zinc-200 p-6 dark:border-zinc-800">
       <p className="mb-1 text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
@@ -258,6 +254,12 @@ export default function MyPositions({
       <p className="mb-4 text-sm font-medium text-zinc-700 dark:text-zinc-300">
         Your bets across all markets
       </p>
+
+      {marketIds.length === 0 && (
+        <p className="text-center text-sm text-zinc-400 dark:text-zinc-500">
+          No positions yet
+        </p>
+      )}
 
       <div className="flex flex-col gap-4">
         {marketIds.map((marketId) => {
