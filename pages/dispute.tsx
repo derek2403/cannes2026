@@ -227,7 +227,7 @@ export default function DisputePage() {
                                 <span className="text-sm font-semibold tabular-nums text-right leading-snug">
                                     <span className="text-emerald-500">{OUTCOME_INDEX_PERCENT.yes}% yes</span>
                                     <span className="text-gray-400 font-medium"> · </span>
-                                    <span className="text-red-600">{OUTCOME_INDEX_PERCENT.no}% no</span>
+                                    <span className="text-red-500">{OUTCOME_INDEX_PERCENT.no}% no</span>
                                 </span>
                             </div>
 
@@ -237,7 +237,7 @@ export default function DisputePage() {
                                     style={{ width: `${OUTCOME_INDEX_PERCENT.yes}%` }}
                                 />
                                 <div
-                                    className="absolute inset-y-0 bg-red-500/85"
+                                    className="absolute inset-y-0 bg-red-400/92"
                                     style={{
                                         left: `${OUTCOME_INDEX_PERCENT.yes}%`,
                                         right: 0,
@@ -257,7 +257,7 @@ export default function DisputePage() {
                                     <span className="text-xl sm:text-2xl font-bold tabular-nums text-gray-900 leading-none">
                                         {OUTCOME_INDEX_PERCENT.no}%
                                     </span>
-                                    <span className="text-sm font-bold uppercase tracking-wide text-red-600 leading-none pb-0.5">
+                                    <span className="text-sm font-bold uppercase tracking-wide text-red-500 leading-none pb-0.5">
                                         No
                                     </span>
                                 </div>
@@ -269,18 +269,21 @@ export default function DisputePage() {
                             className={`bg-white rounded-3xl border-2 p-6 flex flex-col justify-center shadow-sm hover:shadow-md transition-all cursor-pointer group ${isUnlocked ? 'border-gray-200 shadow-md' : 'border-gray-200 hover:border-gray-300'}`}
                             onClick={() => setIsUnlocked(!isUnlocked)}
                         >
-                            <div className="flex items-center justify-between pointer-events-none">
-                                <h3 className="font-['Satoshi'] font-bold text-2xl text-gray-900 mb-1">Dispute</h3>
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`transition-all ${isUnlocked ? 'text-blue-500 translate-x-1' : 'text-gray-300 group-hover:text-gray-500 group-hover:translate-x-1'}`}><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <div className="flex items-center justify-between gap-3 pointer-events-none">
+                                <h3 className="font-['Satoshi'] font-bold text-2xl text-gray-900 shrink-0">Dispute</h3>
+                                <div className="flex items-center gap-2 sm:gap-3 min-w-0 justify-end">
+                                    {timeLeft > 0 ? (
+                                        <p className="text-gray-500 font-medium text-sm sm:text-[15px] flex items-center gap-1.5 whitespace-nowrap">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-gray-500"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                                            <span>ending in :</span>
+                                            <span className="text-gray-900 font-mono font-bold tracking-tighter text-[15px] sm:text-[17px]">0h0m{timeLeft}s</span>
+                                        </p>
+                                    ) : (
+                                        <span className="text-green-600 font-bold font-mono uppercase tracking-wider text-xs sm:text-sm whitespace-nowrap">Complete</span>
+                                    )}
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`shrink-0 transition-all ${isUnlocked ? 'text-blue-500 translate-x-1' : 'text-gray-300 group-hover:text-gray-500 group-hover:translate-x-1'}`}><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                </div>
                             </div>
-                            <p className="text-gray-500 font-medium mt-1 pointer-events-none flex items-center gap-1.5">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                                {timeLeft > 0 ? (
-                                    <>ending in : <span className="text-gray-900 font-mono tracking-tighter">0h0m{timeLeft}s</span></>
-                                ) : (
-                                    <span className="text-green-600 font-bold font-mono uppercase tracking-wider text-sm mt-0.5">Complete</span>
-                                )}
-                            </p>
                         </div>
                     </div>
 
@@ -316,7 +319,7 @@ export default function DisputePage() {
 
                                 <div className="bg-white border-2 border-gray-200 rounded-2xl flex-1 flex flex-col shadow-sm overflow-hidden">
                                     <div className="px-5 py-4 border-b border-gray-100 bg-gray-50 text-center">
-                                        <h5 className="font-['Satoshi'] font-bold text-lg text-gray-800 tracking-wider inline-block" style={{ textDecorationStyle: 'wavy', textDecorationLine: 'underline', textDecorationColor: '#cbd5e1', textUnderlineOffset: '6px' }}>commitment logs</h5>
+                                        <h5 className="font-['Satoshi'] font-bold text-lg text-gray-800 tracking-wider">Commitment Logs</h5>
                                     </div>
                                     <div className="flex-1 p-3 pb-3 mb-1">
                                         <div className="flex flex-col gap-1.5">
@@ -403,7 +406,7 @@ export default function DisputePage() {
                                 <div className="flex flex-col gap-4 flex-1">
                                     {/* References */}
                                     <div className="flex-1 bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex flex-col max-h-[380px]">
-                                        <h5 className="font-bold text-gray-900 mb-2 text-[15px] font-['Satoshi'] tracking-wide">references</h5>
+                                        <h5 className="font-bold text-gray-900 mb-2 text-[15px] font-['Satoshi'] tracking-wide">Rimage.pngeferences</h5>
                                         <div className="w-full h-px bg-gray-200 mb-3"></div>
                                         <div className="flex flex-col gap-2 overflow-y-auto pr-2 pb-2">
                                             <div className="text-sm font-medium text-gray-600 hover:text-blue-600 cursor-pointer flex gap-1.5 items-center">
@@ -423,7 +426,7 @@ export default function DisputePage() {
 
                                     {/* Word Cloud */}
                                     <div className="flex-1 bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex flex-col">
-                                        <h5 className="font-bold text-gray-900 mb-2 text-[15px] font-['Satoshi'] tracking-wide">word cloud</h5>
+                                        <h5 className="font-bold text-gray-900 mb-2 text-[15px] font-['Satoshi'] tracking-wide">Word Cloud</h5>
                                         <div className="w-full h-px bg-gray-200 mb-3"></div>
                                         <div className="flex-1 flex flex-wrap items-center justify-center p-2 rounded-xl bg-gray-50/50 min-h-[160px] w-full overflow-hidden relative">
                                             <InteractiveWordCloud />
