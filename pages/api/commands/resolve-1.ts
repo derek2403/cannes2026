@@ -1,11 +1,11 @@
 /**
  * POST /api/commands/resolve-1
  *
- * Independent research + vote resolution.
- *   1. Fetch agents + reputation scores
- *   2. Select committee weighted by reputation
- *   3. Each selected agent researches independently, votes YES/NO
- *   4. If >=70% agree → resolve + update reputation
+ * Phase 1: Commit-Reveal independent vote (HCS-16 Flora pattern)
+ *   1. Select reputation-weighted committee
+ *   2. COMMIT — Each agent researches independently, votes sealed (hash)
+ *   3. REVEAL — All votes revealed & verified against hashes, tally
+ *   4. If >=70% agree → resolve market + update reputation
  *
  * Body: { "marketId": "...", "committeeSize": 3 }
  */
@@ -21,6 +21,11 @@ import {
   selectCommittee,
   updateReputation,
   recordDisputeVote,
+  generateSalt,
+  computeCommitHash,
+  verifyCommit,
+  type CommitEntry,
+  type RevealEntry,
 } from "@/lib/agent-helpers";
 
 const MARKETS_FILE = join(process.cwd(), "data", "markets.json");
@@ -79,16 +84,14 @@ export default async function handler(
     });
   }
 
-  // ── Each committee member researches independently ────────────
-  const agentResults: {
-    agent: string;
-    tokenId: number;
-    reputation: number;
-    vote: "YES" | "NO" | "UNSURE";
-    reasoning: string;
-  }[] = [];
+  const phases: Record<string, unknown>[] = [];
 
-  const researchPromises = committee.map(async (agent) => {
+  // ═══ PHASE 1 COMMIT ═══════════════════════════════════════════
+  // Each agent researches independently and submits a sealed vote.
+  // Votes are hashed with a random salt — no agent sees others' votes.
+  const commits: CommitEntry[] = [];
+
+  const commitPromises = committee.map(async (agent) => {
     const result = await callAgent(
       baseUrl,
       agent.inftTokenId!,
@@ -111,35 +114,65 @@ Be concise. End with "My vote: YES" or "My vote: NO".`,
     );
 
     const vote = extractVote(result.response);
-
-    // Record the vote in history
-    recordDisputeVote(
-      agent.displayName,
-      marketId,
-      market.resolution.question,
-      vote,
-      "resolve-1"
-    );
+    const salt = generateSalt();
+    const commitHash = computeCommitHash(vote, salt);
 
     return {
       agent: agent.displayName,
       tokenId: agent.inftTokenId!,
-      reputation: agent.reputation ?? 10,
+      commitHash,
+      salt,
       vote,
       reasoning: result.response,
     };
   });
 
-  const results = await Promise.all(researchPromises);
-  agentResults.push(...results);
+  const commitResults = await Promise.all(commitPromises);
+  commits.push(...commitResults);
+
+  // Phase output: only show commit hashes (votes are sealed)
+  phases.push({
+    phase: "phase_1_commit",
+    description: "Agents researched independently and submitted sealed votes",
+    commits: commits.map((c) => ({
+      agent: c.agent,
+      tokenId: c.tokenId,
+      commitHash: c.commitHash,
+    })),
+  });
+
+  // ═══ PHASE 1 REVEAL ═══════════════════════════════════════════
+  // All votes revealed simultaneously and verified against hashes.
+  const reveals: RevealEntry[] = commits.map((c) => {
+    const verified = verifyCommit(c.vote, c.salt, c.commitHash);
+
+    // Record the vote in history
+    recordDisputeVote(
+      c.agent,
+      marketId,
+      market.resolution.question,
+      c.vote,
+      "phase-1-reveal"
+    );
+
+    return {
+      agent: c.agent,
+      tokenId: c.tokenId,
+      vote: c.vote,
+      salt: c.salt,
+      commitHash: c.commitHash,
+      verified,
+      reasoning: c.reasoning,
+    };
+  });
 
   // ── Tally votes ───────────────────────────────────────────────
   const tally = { YES: 0, NO: 0, UNSURE: 0 };
-  for (const r of agentResults) {
+  for (const r of reveals) {
     tally[r.vote]++;
   }
 
-  const totalVoters = agentResults.length;
+  const totalVoters = reveals.length;
   const yesPercent = totalVoters > 0 ? tally.YES / totalVoters : 0;
   const noPercent = totalVoters > 0 ? tally.NO / totalVoters : 0;
 
@@ -153,6 +186,19 @@ Be concise. End with "My vote: YES" or "My vote: NO".`,
     consensus = "NO";
     resolved = true;
   }
+
+  phases.push({
+    phase: "phase_1_reveal",
+    description: "Votes revealed and verified against commit hashes",
+    reveals: reveals.map((r) => ({
+      agent: r.agent,
+      vote: r.vote,
+      commitHash: r.commitHash,
+      salt: r.salt,
+      verified: r.verified,
+    })),
+    tally,
+  });
 
   // ── If resolved: update market + update reputation ────────────
   let reputationUpdates: {
@@ -177,7 +223,7 @@ Be concise. End with "My vote: YES" or "My vote: NO".`,
       marketId,
       market.resolution.question,
       consensus,
-      agentResults.map((r) => ({ agent: r.agent, vote: r.vote }))
+      reveals.map((r) => ({ agent: r.agent, vote: r.vote }))
     );
   }
 
@@ -201,7 +247,7 @@ Be concise. End with "My vote: YES" or "My vote: NO".`,
     reputationUpdates: resolved ? reputationUpdates : undefined,
     message: resolved
       ? `Market resolved as ${consensus} with ${Math.round(Math.max(yesPercent, noPercent) * 100)}% consensus`
-      : `No consensus reached (need 70%). YES: ${(yesPercent * 100).toFixed(0)}%, NO: ${(noPercent * 100).toFixed(0)}%. Use /api/commands/resolve-2 for discussion round.`,
-    agents: agentResults,
+      : `No consensus reached (need 70%). YES: ${(yesPercent * 100).toFixed(0)}%, NO: ${(noPercent * 100).toFixed(0)}%. Use /api/commands/resolve-2 for discussion + Phase 2 commit-reveal.`,
+    phases,
   });
 }

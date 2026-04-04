@@ -110,6 +110,50 @@ export function extractVote(
 }
 
 // ═════════════════════════════════════════════════════════════════
+//  COMMIT-REVEAL HELPERS (HCS-16 Flora pattern)
+// ═════════════════════════════════════════════════════════════════
+
+import { createHash, randomBytes } from "crypto";
+
+/** Generate a random 32-byte hex salt */
+export function generateSalt(): string {
+  return randomBytes(32).toString("hex");
+}
+
+/** Compute SHA-256 commit hash from vote + salt */
+export function computeCommitHash(vote: string, salt: string): string {
+  return createHash("sha256").update(`${vote}:${salt}`).digest("hex");
+}
+
+/** Verify a revealed vote against its commit hash */
+export function verifyCommit(
+  vote: string,
+  salt: string,
+  commitHash: string
+): boolean {
+  return computeCommitHash(vote, salt) === commitHash;
+}
+
+export interface CommitEntry {
+  agent: string;
+  tokenId: number;
+  commitHash: string;
+  salt: string; // stored server-side, not exposed until reveal
+  vote: "YES" | "NO" | "UNSURE";
+  reasoning: string;
+}
+
+export interface RevealEntry {
+  agent: string;
+  tokenId: number;
+  vote: "YES" | "NO" | "UNSURE";
+  salt: string;
+  commitHash: string;
+  verified: boolean;
+  reasoning: string;
+}
+
+// ═════════════════════════════════════════════════════════════════
 //  HISTORY TRACKING
 // ═════════════════════════════════════════════════════════════════
 

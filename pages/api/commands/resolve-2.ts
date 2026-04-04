@@ -1,11 +1,14 @@
 /**
  * POST /api/commands/resolve-2
  *
- * Discussion-based resolution. Used when resolve-1 didn't reach 70%.
- *   1. Fetch agents + reputation, select committee
- *   2. Each agent presents their view
- *   3. Agents discuss and challenge each other
- *   4. Final vote → update reputation if resolved
+ * Phase 2: Discussion + Commit-Reveal (HCS-16 Flora pattern)
+ *   Used when Phase 1 didn't reach 70% consensus.
+ *
+ *   1. Select committee (same weighted selection)
+ *   2. DISCUSSION — Agents present views, then respond to each other
+ *   3. PHASE 2 COMMIT — Each agent submits a sealed vote (hash)
+ *   4. PHASE 2 REVEAL — All votes revealed & verified, tally
+ *   5. If >=70% agree → resolve market + update reputation
  *
  * Body: { "marketId": "...", "committeeSize": 3 }
  */
@@ -21,6 +24,11 @@ import {
   selectCommittee,
   updateReputation,
   recordDisputeVote,
+  generateSalt,
+  computeCommitHash,
+  verifyCommit,
+  type CommitEntry,
+  type RevealEntry,
 } from "@/lib/agent-helpers";
 
 const MARKETS_FILE = join(process.cwd(), "data", "markets.json");
@@ -78,9 +86,9 @@ export default async function handler(
     });
   }
 
-  const rounds: Record<string, unknown>[] = [];
+  const phases: Record<string, unknown>[] = [];
 
-  // ── Round 1: Each agent presents their initial view ───────────
+  // ═══ DISCUSSION ROUND 1: Initial views ════════════════════════
   const initialViews: { agent: string; tokenId: number; view: string }[] = [];
 
   for (const agent of committee) {
@@ -108,9 +116,13 @@ Be thorough but concise.`,
       view: result.response,
     });
   }
-  rounds.push({ round: 1, name: "initial_views", views: initialViews });
+  phases.push({
+    phase: "discussion_round_1",
+    description: "Each agent presents their initial analysis",
+    views: initialViews.map((v) => ({ agent: v.agent, view: v.view })),
+  });
 
-  // ── Round 2: Agents respond to each other ─────────────────────
+  // ═══ DISCUSSION ROUND 2: Agents respond to each other ════════
   const viewSummary = initialViews
     .map((v) => `[${v.agent}]: ${v.view}`)
     .join("\n\n---\n\n");
@@ -143,20 +155,21 @@ Be specific — reference other agents' points by name.`,
       response: result.response,
     });
   }
-  rounds.push({ round: 2, name: "discussion", responses });
+  phases.push({
+    phase: "discussion_round_2",
+    description: "Agents respond to each other's arguments",
+    responses: responses.map((r) => ({ agent: r.agent, response: r.response })),
+  });
 
-  // ── Round 3: Final vote ───────────────────────────────────────
+  // ═══ PHASE 2 COMMIT ═══════════════════════════════════════════
+  // After discussion, each agent votes independently with sealed commits.
   const discussionSummary = responses
     .map((r) => `[${r.agent}]: ${r.response}`)
     .join("\n\n---\n\n");
 
-  const finalVotes: {
-    agent: string;
-    vote: "YES" | "NO" | "UNSURE";
-    reasoning: string;
-  }[] = [];
+  const commits: CommitEntry[] = [];
 
-  for (const agent of committee) {
+  const commitPromises = committee.map(async (agent) => {
     const result = await callAgent(
       baseUrl,
       agent.inftTokenId!,
@@ -180,29 +193,62 @@ End your response with exactly one of these lines:
     );
 
     const vote = extractVote(result.response);
+    const salt = generateSalt();
+    const commitHash = computeCommitHash(vote, salt);
 
-    recordDisputeVote(
-      agent.displayName,
-      marketId,
-      market.resolution.question,
-      vote,
-      "resolve-2"
-    );
-
-    finalVotes.push({
+    return {
       agent: agent.displayName,
+      tokenId: agent.inftTokenId!,
+      commitHash,
+      salt,
       vote,
       reasoning: result.response,
-    });
-  }
+    };
+  });
+
+  const commitResults = await Promise.all(commitPromises);
+  commits.push(...commitResults);
+
+  phases.push({
+    phase: "phase_2_commit",
+    description: "Agents submitted sealed votes after discussion",
+    commits: commits.map((c) => ({
+      agent: c.agent,
+      tokenId: c.tokenId,
+      commitHash: c.commitHash,
+    })),
+  });
+
+  // ═══ PHASE 2 REVEAL ═══════════════════════════════════════════
+  const reveals: RevealEntry[] = commits.map((c) => {
+    const verified = verifyCommit(c.vote, c.salt, c.commitHash);
+
+    recordDisputeVote(
+      c.agent,
+      marketId,
+      market.resolution.question,
+      c.vote,
+      "phase-2-reveal"
+    );
+
+    return {
+      agent: c.agent,
+      tokenId: c.tokenId,
+      vote: c.vote,
+      salt: c.salt,
+      commitHash: c.commitHash,
+      verified,
+      reasoning: c.reasoning,
+    };
+  });
 
   // ── Tally ─────────────────────────────────────────────────────
   const tally = { YES: 0, NO: 0, UNSURE: 0 };
-  for (const v of finalVotes) {
+  for (const v of reveals) {
     tally[v.vote]++;
   }
 
-  const totalVoters = finalVotes.length;
+  const totalVoters = reveals.length;
   const yesPercent = totalVoters > 0 ? tally.YES / totalVoters : 0;
   const noPercent = totalVoters > 0 ? tally.NO / totalVoters : 0;
   const unsurePercent = totalVoters > 0 ? tally.UNSURE / totalVoters : 0;
@@ -220,10 +266,16 @@ End your response with exactly one of these lines:
     consensus = "UNSURE";
   }
 
-  rounds.push({
-    round: 3,
-    name: "final_vote",
-    votes: finalVotes.map((v) => ({ agent: v.agent, vote: v.vote })),
+  phases.push({
+    phase: "phase_2_reveal",
+    description: "Votes revealed and verified against commit hashes",
+    reveals: reveals.map((r) => ({
+      agent: r.agent,
+      vote: r.vote,
+      commitHash: r.commitHash,
+      salt: r.salt,
+      verified: r.verified,
+    })),
     tally,
   });
 
@@ -250,7 +302,7 @@ End your response with exactly one of these lines:
       marketId,
       market.resolution.question,
       consensus,
-      finalVotes.map((v) => ({ agent: v.agent, vote: v.vote }))
+      reveals.map((v) => ({ agent: v.agent, vote: v.vote }))
     );
   }
 
@@ -276,7 +328,7 @@ End your response with exactly one of these lines:
       ? consensus === "UNSURE"
         ? "Agents are UNSURE — resolution delayed."
         : `Market resolved as ${consensus} after discussion with ${Math.round(Math.max(yesPercent, noPercent) * 100)}% consensus`
-      : `Still no consensus. YES: ${(yesPercent * 100).toFixed(0)}%, NO: ${(noPercent * 100).toFixed(0)}%, UNSURE: ${(unsurePercent * 100).toFixed(0)}%.`,
-    rounds,
+      : `Still no consensus after Phase 2. YES: ${(yesPercent * 100).toFixed(0)}%, NO: ${(noPercent * 100).toFixed(0)}%, UNSURE: ${(unsurePercent * 100).toFixed(0)}%.`,
+    phases,
   });
 }
