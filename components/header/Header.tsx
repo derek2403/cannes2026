@@ -22,7 +22,7 @@ export default function Header() {
 
                 {/* Center: Logo */}
                 <div className="flex items-center justify-center">
-                    <img src="https://etherscan.io/assets/svg/logos/logo-etherscan.svg?v=0.0.5" alt="Etherscan Logo" className="h-[34px]" />
+                    <span className="font-[700] text-[22px] tracking-[0.15em] text-[#212529]">DIVE</span>
                 </div>
 
                 {/* Right: CTA */}
