@@ -111,27 +111,33 @@ export function extractVote(
 
 // ═════════════════════════════════════════════════════════════════
 //  COMMIT-REVEAL HELPERS (HCS-16 Flora pattern)
+//  Reuses canonical functions from hcs-standards.ts:
+//    generateSalt()  — randomBytes(16) per spec
+//    hashVote()      — sha256(vote|salt) with pipe separator per spec
+//    verifyVote()    — verify reveal against commit hash
 // ═════════════════════════════════════════════════════════════════
 
-import { createHash, randomBytes } from "crypto";
+export {
+  generateSalt,
+} from "@/lib/hcs-standards";
 
-/** Generate a random 32-byte hex salt */
-export function generateSalt(): string {
-  return randomBytes(32).toString("hex");
-}
+import {
+  hashVote,
+  verifyVote,
+} from "@/lib/hcs-standards";
 
-/** Compute SHA-256 commit hash from vote + salt */
+/** Compute SHA-256 commit hash from vote + salt (delegates to HCS-16 spec) */
 export function computeCommitHash(vote: string, salt: string): string {
-  return createHash("sha256").update(`${vote}:${salt}`).digest("hex");
+  return hashVote(vote as "YES" | "NO" | "UNSURE" | "NOT_ENOUGH_DATA", salt);
 }
 
-/** Verify a revealed vote against its commit hash */
+/** Verify a revealed vote against its commit hash (delegates to HCS-16 spec) */
 export function verifyCommit(
   vote: string,
   salt: string,
   commitHash: string
 ): boolean {
-  return computeCommitHash(vote, salt) === commitHash;
+  return verifyVote(vote, salt, commitHash);
 }
 
 export interface CommitEntry {
