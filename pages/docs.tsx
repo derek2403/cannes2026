@@ -7,7 +7,7 @@ import { Roboto, Figtree } from 'next/font/google';
 const roboto = Roboto({ weight: ['400', '500', '700'], subsets: ['latin'], variable: '--font-roboto' });
 const figtree = Figtree({ weight: ['400', '500', '600', '700'], subsets: ['latin'], variable: '--font-figtree' });
 
-// ── Curl block (fully light-themed) ───────────────────────────────────────────
+// ── Curl block (light theme, matches Request Body cards) ─────────────────────
 function CurlBlock() {
     const [copied, setCopied] = useState(false);
 
@@ -31,40 +31,38 @@ function CurlBlock() {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    // Light-mode colour tokens
     const c = {
-        muted:   'text-[#adb5bd]',   // $ prompt
-        default: 'text-[#212529]',   // plain text / punctuation
-        flag:    'text-slate-600',   // -X, -H, -d  (semibold)
-        url:     'text-[#066a9c]',   // URL
-        header:  'text-[#6c757d]',   // header value string
-        key:     'text-[#495057]',   // JSON keys (semibold)
-        str:     'text-[#2d6a4f]',   // JSON string values
-        num:     'text-[#066a9c]',   // JSON number values
+        muted: 'text-[#adb5bd]',
+        default: 'text-[#212529]',
+        flag: 'text-slate-600',
+        url: 'text-[#066a9c]',
+        key: 'text-[#495057]',
+        str: 'text-[#2d6a4f]',
+        num: 'text-[#066a9c]',
     };
 
     return (
         <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm">
-            {/* toolbar */}
             <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-gray-50">
                 <div className={`flex items-center gap-2 ${c.muted}`}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" />
                     </svg>
-                    <span className="text-xs font-mono font-semibold tracking-widest uppercase">curl Example</span>
+                    <span className="text-sm font-mono font-semibold tracking-widest uppercase text-[#6c757d]">curl Example</span>
                 </div>
                 <button
+                    type="button"
                     onClick={copy}
-                    className={`flex items-center gap-1.5 text-xs font-medium ${c.muted} hover:text-[#212529] transition-colors px-2 py-1 rounded-md hover:bg-gray-200`}
+                    className="flex items-center gap-1.5 text-sm font-medium text-[#adb5bd] hover:text-[#212529] transition-colors px-2 py-1 rounded-md hover:bg-gray-200"
                 >
                     {copied ? (
                         <>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                             <span className="text-green-600">Copied</span>
                         </>
                     ) : (
                         <>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
                             </svg>
                             Copy
@@ -72,12 +70,9 @@ function CurlBlock() {
                     )}
                 </button>
             </div>
-
-            {/* code body */}
-            <pre className="px-5 py-5 text-sm font-mono leading-[1.9] overflow-x-auto bg-[#f8f9fa] select-all">
-{/* line 1 */}<span className={c.muted}>$ </span><span className={c.default}>curl </span><span className={`${c.flag} font-semibold`}>-X POST</span><span className={c.default}> \{"\n"}  </span>
-<span className={c.url}>http://localhost:3000/api/inft/register-agent</span><span className={c.default}> \{"\n"}  </span>
-<span className={`${c.flag} font-semibold`}>-H </span><span className={c.header}>&quot;Content-Type: application/json&quot;</span><span className={c.default}> \{"\n"}  </span>
+            <pre className="px-5 py-6 text-base font-mono leading-[1.9] overflow-x-auto bg-[#f8f9fa] select-all">
+<span className={c.muted}>$ </span><span className={c.default}>curl </span><span className={`${c.flag} font-semibold`}>-X POST </span><span className={c.url}>http://localhost:3000/api/inft/register-agent</span><span className={c.default}> \{"\n"}  </span>
+<span className={`${c.flag} font-semibold`}>-H </span><span className={c.str}>&quot;Content-Type: application/json&quot;</span><span className={c.default}> \{"\n"}  </span>
 <span className={`${c.flag} font-semibold`}>-d </span><span className={c.default}>&apos;&#123;{"\n"}</span>
 <span className={c.default}>{"    "}</span><span className={`${c.key} font-semibold`}>&quot;agentName&quot;</span><span className={c.muted}>: </span><span className={c.str}>&quot;OracleAlpha&quot;</span><span className={c.default}>,{"\n"}</span>
 <span className={c.default}>{"    "}</span><span className={`${c.key} font-semibold`}>&quot;ownerAddress&quot;</span><span className={c.muted}>: </span><span className={c.str}>&quot;0x5B638972D1362701f298e9F02F67f8f485c3c52e&quot;</span><span className={c.default}>,{"\n"}</span>
@@ -92,29 +87,24 @@ function CurlBlock() {
     );
 }
 
-// ── Response block (fully light-themed) ───────────────────────────────────────
+// ── Response block (light theme) ─────────────────────────────────────────────
 function ResponseBlock() {
-    const c = {
-        default: 'text-[#212529]',
-        muted:   'text-[#adb5bd]',
-        key:     'text-[#495057]',
-        str:     'text-[#2d6a4f]',
-        bool:    'text-[#066a9c]',
-    };
+    const d = 'text-[#212529]';
+    const m = 'text-[#adb5bd]';
+    const k = 'text-[#495057] font-semibold';
+    const s = 'text-[#2d6a4f]';
 
     return (
         <div className="rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm">
             <div className="flex items-center gap-2.5 px-5 py-3 border-b border-gray-100 bg-gray-50">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-                <span className="text-xs font-mono font-semibold text-[#6c757d] tracking-widest uppercase">200 OK</span>
+                <span className="text-sm font-mono font-semibold text-[#6c757d] tracking-wide">Response</span>
             </div>
-            <pre className="px-5 py-5 text-sm font-mono leading-[1.9] bg-[#f8f9fa]">
-<span className={c.default}>&#123;{"\n"}</span>
-<span className={c.default}>{"  "}</span><span className={`${c.key} font-semibold`}>&quot;success&quot;</span><span className={c.muted}>: </span><span className={c.bool}>true</span><span className={c.default}>,{"\n"}</span>
-<span className={c.default}>{"  "}</span><span className={`${c.key} font-semibold`}>&quot;message&quot;</span><span className={c.muted}>: </span><span className={c.str}>&quot;Agent registered successfully&quot;</span><span className={c.default}>,{"\n"}</span>
-<span className={c.default}>{"  "}</span><span className={`${c.key} font-semibold`}>&quot;agentId&quot;</span><span className={c.muted}>: </span><span className={c.str}>&quot;agent_m3k7a_f2x9&quot;</span><span className={c.default}>,{"\n"}</span>
-<span className={c.default}>{"  "}</span><span className={`${c.key} font-semibold`}>&quot;data&quot;</span><span className={c.default}>&#123;</span><span className={c.muted}> ... </span><span className={c.default}>&#125;{"\n"}</span>
-<span className={c.default}>&#125;</span>
+            <pre className="px-5 py-6 text-base font-mono leading-[1.9] overflow-x-auto bg-[#f8f9fa]">
+<span className={d}>&#123;{"\n"}</span>
+<span className={d}>{"  "}</span><span className={k}>&quot;agent_id&quot;</span><span className={m}>: </span><span className={s}>&quot;ag_8f3k...&quot;</span><span className={d}>,{"\n"}</span>
+<span className={d}>{"  "}</span><span className={k}>&quot;status&quot;</span><span className={m}>: </span><span className={s}>&quot;registered&quot;</span><span className={d}>,{"\n"}</span>
+<span className={d}>{"  "}</span><span className={k}>&quot;skill_md_url&quot;</span><span className={m}>: </span><span className={s}>&quot;/skill.md&quot;</span><span className={d}>{"\n"}</span>
+<span className={d}>&#125;</span>
             </pre>
         </div>
     );
@@ -161,7 +151,6 @@ const navSections = [
     { id: 'request',  label: 'Request Body' },
     { id: 'curl',     label: 'curl Example' },
     { id: 'response', label: 'Response' },
-    { id: 'errors',   label: 'Error Codes' },
 ];
 
 export default function Docs() {
@@ -185,9 +174,9 @@ export default function Docs() {
             <div className="w-[96%] max-w-[1800px] mx-auto mt-8 pb-20 flex gap-8">
 
                 {/* ── Left Sidebar ─────────────────────────────────── */}
-                <aside className="hidden lg:flex flex-col w-56 shrink-0">
+                <aside className="hidden lg:flex flex-col w-64 shrink-0">
                     <div className="sticky top-8">
-                        <p className="font-[700] text-[#6c757d] text-[0.68rem] uppercase tracking-widest mb-3 px-3">
+                        <p className="font-[700] text-[#6c757d] text-xs uppercase tracking-widest mb-3 px-3">
                             inFT API
                         </p>
                         <nav className="flex flex-col gap-0.5">
@@ -195,7 +184,7 @@ export default function Docs() {
                                 <button
                                     key={s.id}
                                     onClick={() => scrollTo(s.id)}
-                                    className={`text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                    className={`text-left px-3 py-2 rounded-lg text-base font-medium transition-colors ${
                                         activeSection === s.id
                                             ? 'bg-white border border-gray-200 shadow-sm text-[#212529]'
                                             : 'text-[#6c757d] hover:text-[#212529] hover:bg-white/60'
@@ -209,17 +198,18 @@ export default function Docs() {
                         <div className="mt-8 h-px bg-gray-200" />
 
                         <div className="mt-6 px-3">
-                            <p className="font-[700] text-[#6c757d] text-[0.68rem] uppercase tracking-widest mb-3">
+                            <p className="font-[700] text-[#6c757d] text-xs uppercase tracking-widest mb-3">
                                 Quick Actions
                             </p>
                             <Link
                                 href="/register"
-                                className="flex items-center gap-2 text-sm font-medium text-[#212529] hover:text-slate-700 transition-colors group"
+                                className="flex items-center gap-2 text-base font-medium text-[#212529] hover:text-slate-700 transition-colors group"
                             >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6c757d] group-hover:text-slate-700">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6c757d] group-hover:text-slate-700 shrink-0">
                                     <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
                                 </svg>
-                                Register Agent UI
+                                Register Agent Form
+
                             </Link>
                         </div>
                     </div>
@@ -231,13 +221,13 @@ export default function Docs() {
                     {/* Overview */}
                     <div id="overview" className="scroll-mt-8">
                         <div className="flex items-center gap-3 mb-3">
-                            <span className="font-mono text-xs font-bold bg-[#212529] text-white px-2.5 py-1 rounded-md tracking-widest">POST</span>
-                            <code className="font-mono text-sm text-[#6c757d] font-medium">/api/inft/register-agent</code>
+                            <span className="font-mono text-sm font-bold bg-[#212529] text-white px-2.5 py-1 rounded-md tracking-widest">POST</span>
+                            <code className="font-mono text-base text-[#6c757d] font-medium">/api/inft/register-agent</code>
                         </div>
-                        <h1 className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-3xl lg:text-4xl tracking-tight mb-3">
+                        <h1 className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-4xl lg:text-5xl tracking-tight mb-3">
                             Register Agent
                         </h1>
-                        <p className="text-[#6c757d] text-base leading-relaxed max-w-2xl">
+                        <p className="text-[#6c757d] text-lg leading-relaxed max-w-3xl">
                             Deploys an AI agent identity on-chain, assigns a unique agent ID, and logs the full configuration
                             to the master ledger. Domain tags and service offerings are indexed for agent discovery within the network.
                         </p>
@@ -247,35 +237,24 @@ export default function Docs() {
 
                     {/* Endpoint */}
                     <section id="endpoint" className="scroll-mt-8 flex flex-col gap-4">
-                        <h2 className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-xl">Endpoint</h2>
+                        <h2 className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-2xl">Endpoint</h2>
                         <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-4 flex items-center gap-4">
-                            <span className="font-mono text-xs font-bold bg-[#212529] text-white px-2.5 py-1 rounded-md tracking-widest shrink-0">POST</span>
-                            <code className="font-mono text-sm text-[#066a9c] break-all">http://localhost:3000/api/inft/register-agent</code>
-                        </div>
-                        <div className="flex items-start gap-3 bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-                            <div className="w-7 h-7 rounded-lg bg-[#e7f1f8] border border-[#b8d4e7] flex items-center justify-center shrink-0 mt-0.5">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#066a9c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-                                </svg>
-                            </div>
-                            <p className="text-[0.8rem] text-[#6c757d] leading-relaxed">
-                                Set <code className="font-mono bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs text-[#212529]">Content-Type: application/json</code> on all requests.
-                                Set the <code className="font-mono bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-xs text-[#212529]">AGENT_REGISTRY_URL</code> environment variable to proxy to an upstream registry, or leave it unset to use the built-in mock response.
-                            </p>
+                            <span className="font-mono text-sm font-bold bg-[#212529] text-white px-2.5 py-1 rounded-md tracking-widest shrink-0">POST</span>
+                            <code className="font-mono text-base text-[#066a9c] break-all">http://localhost:3000/api/inft/register-agent</code>
                         </div>
                     </section>
 
                     {/* Request Body */}
                     <section id="request" className="scroll-mt-8 flex flex-col gap-4">
-                        <h2 className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-xl">Request Body</h2>
+                        <h2 className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-2xl">Request Body</h2>
                         <div className="rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm">
                             <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-100 bg-gray-50">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6c757d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6c757d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
                                 </svg>
-                                <span className="text-xs font-mono font-semibold text-[#6c757d] tracking-widest uppercase">application/json</span>
+                                <span className="text-sm font-mono font-semibold text-[#6c757d] tracking-widest uppercase">application/json</span>
                             </div>
-                            <pre className="px-5 py-5 text-sm font-mono leading-[1.9] bg-[#f8f9fa] overflow-x-auto">
+                            <pre className="px-5 py-6 text-base font-mono leading-[1.9] bg-[#f8f9fa] overflow-x-auto">
 <span className="text-[#212529]">&#123;{"\n"}</span>
 <span className="text-[#212529]">{"  "}</span><span className="text-[#495057] font-semibold">&quot;agentName&quot;</span><span className="text-[#6c757d]">: </span><span className="text-[#2d6a4f]">&quot;OracleAlpha&quot;</span><span className="text-[#212529]">,{"\n"}</span>
 <span className="text-[#212529]">{"  "}</span><span className="text-[#495057] font-semibold">&quot;ownerAddress&quot;</span><span className="text-[#6c757d]">: </span><span className="text-[#2d6a4f]">&quot;0x5B638972D1362701f298e9F02F67f8f485c3c52e&quot;</span><span className="text-[#212529]">,{"\n"}</span>
@@ -291,96 +270,44 @@ export default function Docs() {
 
                     {/* curl Example */}
                     <section id="curl" className="scroll-mt-8 flex flex-col gap-4">
-                        <h2 className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-xl">curl Example</h2>
+                        <h2 className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-2xl">curl Example</h2>
                         <CurlBlock />
                     </section>
 
                     {/* Response */}
                     <section id="response" className="scroll-mt-8 flex flex-col gap-4">
-                        <h2 className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-xl">Response</h2>
+                        <h2 className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-2xl">Response</h2>
                         <ResponseBlock />
-
-                        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="border-b border-gray-100 bg-gray-50/80">
-                                        <th className="py-3 pl-5 pr-3 text-[0.68rem] font-[700] text-[#6c757d] uppercase tracking-widest">Field</th>
-                                        <th className="py-3 px-3 text-[0.68rem] font-[700] text-[#6c757d] uppercase tracking-widest">Type</th>
-                                        <th className="py-3 pl-3 pr-5 text-[0.68rem] font-[700] text-[#6c757d] uppercase tracking-widest">Description</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {[
-                                        { name: 'success', type: 'boolean', desc: 'true when the agent was registered without error.' },
-                                        { name: 'message', type: 'string',  desc: 'Human-readable status message.' },
-                                        { name: 'agentId', type: 'string',  desc: 'Unique agent identifier assigned by the registry.' },
-                                        { name: 'data',    type: 'object',  desc: 'Full agent configuration object as stored on-chain.' },
-                                    ].map((f) => (
-                                        <tr key={f.name} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/60 transition-colors">
-                                            <td className="py-3.5 pl-5 pr-3"><code className="font-mono text-[0.82rem] text-[#212529] font-semibold">{f.name}</code></td>
-                                            <td className="py-3.5 px-3"><span className="font-mono text-xs text-[#066a9c] bg-[#e7f1f8] border border-[#b8d4e7] px-2 py-0.5 rounded-md">{f.type}</span></td>
-                                            <td className="py-3.5 pl-3 pr-5 text-sm text-[#6c757d] leading-relaxed">{f.desc}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
                     </section>
 
-                    {/* Error Codes */}
-                    <section id="errors" className="scroll-mt-8 flex flex-col gap-4">
-                        <h2 className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-xl">Error Codes</h2>
-                        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="border-b border-gray-100 bg-gray-50/80">
-                                        <th className="py-3 pl-5 pr-3 text-[0.68rem] font-[700] text-[#6c757d] uppercase tracking-widest">Status</th>
-                                        <th className="py-3 px-3 text-[0.68rem] font-[700] text-[#6c757d] uppercase tracking-widest">Code</th>
-                                        <th className="py-3 pl-3 pr-5 text-[0.68rem] font-[700] text-[#6c757d] uppercase tracking-widest">Cause</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {[
-                                        { status: '400', code: 'Missing required fields', cause: 'One or more required parameters were absent from the request body.', cls: 'text-orange-700 bg-orange-50 border-orange-200' },
-                                        { status: '405', code: 'Method not allowed',      cause: 'The request method was not POST.',                                    cls: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
-                                        { status: '500', code: 'Internal server error',   cause: 'An unexpected error occurred or the upstream registry was unreachable.', cls: 'text-red-700 bg-red-50 border-red-200' },
-                                    ].map((e) => (
-                                        <tr key={e.status} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/60 transition-colors">
-                                            <td className="py-3.5 pl-5 pr-3">
-                                                <span className={`font-mono text-xs font-bold px-2 py-0.5 rounded-md border ${e.cls}`}>{e.status}</span>
-                                            </td>
-                                            <td className="py-3.5 px-3"><code className="font-mono text-[0.8rem] text-[#212529]">{e.code}</code></td>
-                                            <td className="py-3.5 pl-3 pr-5 text-sm text-[#6c757d] leading-relaxed">{e.cause}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-
-                    {/* CTA Card */}
                     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5">
-                        <div className="w-11 h-11 rounded-xl bg-slate-700 flex items-center justify-center shadow-sm border border-slate-800 shrink-0">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                                <path d="M20 8h2M2 8h2" />
+                        <div className="w-12 h-12 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="8" y1="13" x2="16" y2="13" />
+                                <line x1="8" y1="17" x2="14" y2="17" />
                             </svg>
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-lg mb-0.5">Try the Registration UI</p>
-                            <p className="text-sm text-[#6c757d] leading-relaxed">
-                                Use the interactive form to register an agent without writing a single line of curl.
+                            <p className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-xl mb-0.5">SKILL.md</p>
+                            <p className="text-base text-[#6c757d] leading-relaxed">
+                                Full onboarding instructions and configuration reference for agents.
                             </p>
                         </div>
-                        <Link
-                            href="/register"
-                            className="flex items-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-6 py-2.5 rounded-full font-[500] text-sm shadow-[0_4px_12px_rgba(0,0,0,0.12)] transition-all duration-200 shrink-0 active:scale-[0.98]"
+                        <a
+                            href="/SKILL.md"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-[#374151] px-6 py-3 rounded-xl font-[500] text-base shadow-sm border border-gray-300/80 transition-colors duration-200 shrink-0 active:scale-[0.98]"
                         >
-                            Open Form
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M5 12h14M12 5l7 7-7 7" />
+                            View SKILL.md
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                                <polyline points="15 3 21 3 21 9" />
+                                <line x1="10" y1="14" x2="21" y2="3" />
                             </svg>
-                        </Link>
+                        </a>
                     </div>
 
                 </main>
