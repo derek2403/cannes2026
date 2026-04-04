@@ -14,9 +14,9 @@ import { Geist } from "next/font/google";
 import {
   PREDICTION_MARKET_ABI,
   ERC20_ABI,
-  WLD_ADDRESS,
   Outcome,
 } from "@/lib/prediction-market";
+import { CONTRACTS } from "@/lib/contracts";
 import fs from "fs";
 import path from "path";
 
@@ -24,7 +24,8 @@ const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
 const APP_ID = process.env.NEXT_PUBLIC_APP_ID as `app_${string}`;
 const RP_ID = process.env.NEXT_PUBLIC_RP_ID!;
-const PM_ADDRESS = "0xeb57f9a1BA627aa7Aa68B6c927D1a28aab1eac8b" as `0x${string}`;
+const PM_ADDRESS = CONTRACTS.predictionMarket;
+const WLD_ADDRESS = CONTRACTS.wld;
 
 // World Chain Mainnet
 const WORLD_CHAIN_ID = 480;
@@ -110,7 +111,7 @@ export default function MiniKitPage({ markets }: { markets: MarketData[] }) {
   }, [wallet]);
 
   useEffect(() => {
-    MiniKit.install();
+    MiniKit.install(APP_ID);
     setIsMiniKit(MiniKit.isInstalled());
     markets.forEach((m) => refreshPool(m.id));
   }, [markets, refreshPool]);

@@ -82,14 +82,7 @@ export const PREDICTION_MARKET_ABI = [
   },
 ] as const;
 
-export const PREDICTION_MARKET_ADDRESS = process.env
-  .NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as `0x${string}`;
-
 export const Outcome = { UNRESOLVED: 0, YES: 1, NO: 2 } as const;
-
-// WLD token on World Chain Mainnet
-export const WLD_ADDRESS =
-  "0x2cFc85d8E48F8EAB294be644d9E25C3030863003" as `0x${string}`;
 
 export const ERC20_ABI = [
   {

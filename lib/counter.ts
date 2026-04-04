@@ -28,5 +28,5 @@ export const COUNTER_ABI = [
   },
 ] as const;
 
-export const COUNTER_ADDRESS = process.env
-  .NEXT_PUBLIC_COUNTER_ADDRESS as `0x${string}`;
+export { CONTRACTS } from "./contracts";
+

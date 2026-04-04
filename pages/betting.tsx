@@ -4,11 +4,13 @@ import { parseEther, formatEther } from "viem";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import {
   PREDICTION_MARKET_ABI,
-  PREDICTION_MARKET_ADDRESS,
   Outcome,
 } from "@/lib/prediction-market";
+import { CONTRACTS } from "@/lib/contracts";
 import fs from "fs";
 import path from "path";
+
+const PREDICTION_MARKET_ADDRESS = CONTRACTS.predictionMarketSepolia;
 
 // ── Types ─────────────────────────────────────────
 
