@@ -1,20 +1,22 @@
-# 🐟 [Project Name]
+# DIVE — Decentralized Intelligence Verification Engine
 
-## 🧠 One-liner
+> *Dive deep into the truth.*
 
-**A human-verified AI-native prediction market where AI swarms research, verify, and resolve outcomes through reputation-weighted consensus and autonomous on-chain payouts.**
+## One-liner
+
+**A decentralized verification engine where AI swarms determine real-world truth and trigger on-chain outcomes — powering prediction markets and autonomous settlement.**
 
 ---
 
 # 💡 Idea
 
-[Project Name] is a **decentralized AI oracle + prediction market**, where outcomes are resolved by a **swarm of independent AI agents**, each backed by a verified human.
+DIVE is a **decentralized intelligence verification engine**, where outcomes are resolved by a **swarm of independent AI agents**, each backed by a verified human.
 
 Instead of relying on:
 - token-weighted voting (whales)  
 - or a single AI model (centralized)  
 
-[Project Name] transforms oracle resolution into a:
+DIVE transforms oracle resolution into a:
 
 > **human-backed, AI-powered ensemble intelligence system**
 
@@ -242,7 +244,7 @@ Reputation affects:
 
 # 🔥 Closing Line
 
-> **”[Project Name] is not just a prediction market — it’s a decentralized, human-backed AI system that verifies reality and moves value without centralized trust.”**
+> **”DIVE is a decentralized intelligence verification engine where AI swarms determine real-world truth and trigger on-chain outcomes.”**
 
 ---
 
@@ -258,7 +260,7 @@ graph TB
         U --> WA
     end
 
-    subgraph SWARM[“Project Name SWARM - 0G Network”]
+    subgraph SWARM[“DIVE SWARM - 0G Network”]
         direction TB
         subgraph AGENTS[“OpenClaw Agent Nodes - each is iNFT ERC-7857”]
             N1[“Node 1<br/>Human A, Rep 92%”]
@@ -530,6 +532,62 @@ graph LR
 
 ---
 
+## Hedera HCS Standards Used
+
+All implemented via Hedera SDK only (no Solidity). Each standard has its own API route and shared logic in `lib/hcs-standards.ts`.
+
+| Standard | What it does | How we use it |
+|---|---|---|
+| **HCS-20** (Auditable Points) | On-chain reputation points — deploy, mint, burn, transfer | Each oracle agent has a reputation score. Correct votes = mint points, wrong votes = burn. Affects selection probability and vote weight |
+| **HCS-2** (Topic Registry) | Indexed directory of topics with register/update/delete | Single combined registry for both prediction markets and oracle agents. Each entry links to its HCS-11 profile or market details |
+| **HCS-11** (Profile Metadata) | Agent identity stored as JSON on HCS topic | Every oracle agent gets a profile with capabilities, model info, and linked HCS-20 reputation topic + HCS-16 Flora topics |
+| **HCS-16** (Flora Coordination) | Multi-agent group coordination with 3 topics (communication, transaction, state) | Oracle committees use Flora for 3-phase blind voting: Phase 1 commit-reveal vote → Phase 2 evidence discussion → Phase 3 final commit-reveal vote. Uses `sha256(vote+salt)` so results stay hidden until reveal deadline (like Polymarket) |
+
+### HCS Data Flow
+
+```
+Agent registers → HCS-11 profile created (links to HCS-20 + HCS-16)
+                → HCS-2 registry entry added
+                → HCS-20 reputation topic deployed
+
+Market needs resolution:
+  → HCS-16 Flora CTopic: agents commit sha256(YES|NO|UNSURE + salt)
+  → HCS-16 Flora CTopic: agents reveal vote + salt (verified on-chain)
+  → HCS-16 Flora CTopic: agents submit evidence + discussion
+  → HCS-16 Flora CTopic: final commit-reveal vote
+  → HCS-20: mint/burn reputation based on correctness
+  → HCS-2: market entry updated with result
+```
+
+### API Routes
+
+| Route | Standard | Actions |
+|---|---|---|
+| `pages/api/hcs/hcs20.ts` | HCS-20 | deploy, mint, burn, transfer, balance |
+| `pages/api/hcs/hcs2.ts` | HCS-2 | create, register, update, delete, read |
+| `pages/api/hcs/hcs11.ts` | HCS-11 | create, read |
+| `pages/api/hcs/hcs16.ts` | HCS-16 | create, commit, reveal, discussion, tally, message, vote, state, read |
+| `pages/api/hcs/register-agent.ts` | All | Full agent registration (profile + registry + links) |
+| `pages/api/hcs/discover-agents.ts` | HCS-2 + HCS-11 | Read registry → fetch each agent's profile |
+
+### World Agent Kit + World ID Routes
+
+| Route | What it does |
+|---|---|
+| `pages/api/world/rp-context.ts` | Generate signed RP context for IDKit widget |
+| `pages/api/world/verify-human.ts` | Forward World ID proof to World's verification API |
+| `pages/api/world/check-agent.ts` | AgentBook lookup — check if wallet is human-backed |
+| `pages/api/world/protected-vote.ts` | Full verification flow with step-by-step events |
+
+**How Agent Kit works:**
+1. Human verifies via World ID (zero-knowledge proof, no personal data)
+2. Agent wallet registered on AgentBook contract (World Chain)
+3. Backend calls `lookupHuman(address)` → returns anonymous `humanId` if registered
+4. Same human always maps to same `humanId` → enforces 1-human-1-vote in oracle consensus
+5. Unregistered wallets are blocked from voting — prevents bot swarms
+
+---
+
 ## Track Qualification Checklist
 
 ### World — $20,000
@@ -565,4 +623,5 @@ graph LR
 ```mermaid
 graph LR
     P1[“PHASE 1<br/>0G Core<br/>OpenClaw agents<br/>Basic inference<br/>iNFT identity”] --> P2[“PHASE 2<br/>Hedera Layer<br/>HTS tokens<br/>HCS voting<br/>Agent Kit payouts”] --> P3[“PHASE 3<br/>World Layer<br/>World ID verify<br/>MiniKit frontend<br/>AgentKit agents”] --> P4[“PHASE 4<br/>Polish<br/>Reputation system<br/>Demo flow<br/>README + video”]
+    
 ```

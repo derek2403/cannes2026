@@ -1,0 +1,131 @@
+{
+  "network": "testnet",
+  "operatorId": "0.0.7946371",
+  "registryTopicId": "0.0.8500662",
+  "reputationTopicId": "0.0.8500664",
+  "agents": [
+    {
+      "displayName": "ResearchBot",
+      "accountId": "0.0.7946371",
+      "profileTopicId": "0.0.8502605",
+      "reputationTopicId": "0.0.8500664",
+      "registryTopicId": "0.0.8500662",
+      "floraTopicIds": null,
+      "capabilities": [
+        2,
+        11,
+        16,
+        20
+      ],
+      "model": "openai",
+      "createdAt": "2026-04-04T05:00:46.216Z",
+      "inftTokenId": 12,
+      "modelProvider": "openai",
+      "reputation": 20,
+      "domainTags": "oracle,research",
+      "serviceOfferings": "evidence-analysis,voting",
+      "ownerAddress": "0x41Db99b9A098Af28A06C0af238799c08076Af2f7"
+    },
+    {
+      "displayName": "CritiqueBot",
+      "accountId": "0.0.7946371",
+      "profileTopicId": "0.0.8502607",
+      "reputationTopicId": "0.0.8500664",
+      "registryTopicId": "0.0.8500662",
+      "floraTopicIds": null,
+      "capabilities": [
+        2,
+        11,
+        16,
+        20
+      ],
+      "model": "openai",
+      "createdAt": "2026-04-04T05:01:32.561Z",
+      "inftTokenId": 13,
+      "modelProvider": "openai",
+      "reputation": 10,
+      "domainTags": "oracle,critique",
+      "serviceOfferings": "evidence-analysis,voting",
+      "ownerAddress": "0x41Db99b9A098Af28A06C0af238799c08076Af2f7"
+    },
+    {
+      "displayName": "MarketBot",
+      "accountId": "0.0.7946371",
+      "profileTopicId": "0.0.8502608",
+      "reputationTopicId": "0.0.8500664",
+      "registryTopicId": "0.0.8500662",
+      "floraTopicIds": null,
+      "capabilities": [
+        2,
+        11,
+        16,
+        20
+      ],
+      "model": "openai",
+      "createdAt": "2026-04-04T05:02:16.091Z",
+      "inftTokenId": 14,
+      "modelProvider": "openai",
+      "reputation": 10,
+      "domainTags": "oracle,markets",
+      "serviceOfferings": "evidence-analysis,voting",
+      "ownerAddress": "0x41Db99b9A098Af28A06C0af238799c08076Af2f7"
+    },
+    {
+      "displayName": "DataBot",
+      "accountId": "0.0.7946371",
+      "profileTopicId": "0.0.8502438",
+      "reputationTopicId": "0.0.8500664",
+      "registryTopicId": "0.0.8500662",
+      "floraTopicIds": null,
+      "capabilities": [
+        2,
+        11,
+        16,
+        20
+      ],
+      "inftTokenId": 10,
+      "modelProvider": "0g-compute",
+      "model": "0g-compute",
+      "reputation": 10,
+      "domainTags": "oracle,data,analytics",
+      "serviceOfferings": "data-analysis,statistical-modeling",
+      "createdAt": "2026-04-04T04:34:04.609Z"
+    },
+    {
+      "displayName": "SentinelBot",
+      "accountId": "0.0.7946371",
+      "profileTopicId": "0.0.8502446",
+      "reputationTopicId": "0.0.8500664",
+      "registryTopicId": "0.0.8500662",
+      "floraTopicIds": null,
+      "capabilities": [
+        2,
+        11,
+        16,
+        20
+      ],
+      "inftTokenId": 11,
+      "modelProvider": "0g-compute",
+      "model": "0g-compute",
+      "reputation": 10,
+      "domainTags": "oracle,regulation,geopolitics",
+      "serviceOfferings": "regulatory-tracking,policy-analysis",
+      "createdAt": "2026-04-04T04:34:57.543Z"
+    }
+  ],
+  "floras": [],
+  "hcsStandards": {
+    "HCS-2": "Topic Registry — combined market + agent directory",
+    "HCS-11": "Agent Identity — profile with linked reputation/flora/registry",
+    "HCS-16": "Flora Coordination — 3-phase commit-reveal blind voting",
+    "HCS-20": "Auditable Points — reputation deploy/mint/burn/transfer"
+  },
+  "topicMemoFormats": {
+    "HCS-2": "hcs-2:0:300",
+    "HCS-11": "hcs-11:profile:<accountId>",
+    "HCS-16-communication": "hcs-16:<floraId>:0",
+    "HCS-16-transaction": "hcs-16:<floraId>:1",
+    "HCS-16-state": "hcs-16:<floraId>:2",
+    "HCS-20": "hcs-20"
+  }
+}

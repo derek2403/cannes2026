@@ -1,0 +1,93 @@
+[
+  {
+    "id": "debate-mkt-1775259549-1870",
+    "flora_id": "debate-mkt-1775259549-1870",
+    "flora_topics": {
+      "communication": "0.0.8500673",
+      "transaction": "0.0.8500674",
+      "state": "0.0.8500675"
+    },
+    "started_at": "2026-04-03T23:40:00Z",
+    "ended_at": "2026-04-03T23:40:00Z",
+    "messages": [
+      {
+        "agent": "ResearchBot",
+        "role": "news_analyst",
+        "phase": "research",
+        "content": "{\n  \"analysis\": \"The news articles cover significant developments in AI regulation, cryptocurrency investments, space exploration, potential economic policy changes, and tech partnerships.\",\n  \"proposals\": [\n    {\n      \"question\": \"Will the Federal Reserve announce a rate cut in the September 2023 meeting?\",\n      \"resolution_criteria\": \"Official announcement of a rate cut by the Federal Reserve on or before the September 2023 meeting, as reported by CNBC or the Federal Reserve's official website.\",\n      \"resolution_date\": \"2023-09-30\",\n      \"reasoning\": \"Interest rate decisions by the Federal Reserve have wide-reaching impacts on the economy and markets, making it a topic of high public interest.\",\n      \"confidence_score\": 80,\n      \"suggested_categories\": [\"Economics\", \"Monetary Policy\"]\n    },\n    {\n      \"question\": \"Will SpaceX's Starship conduct another successful orbital flight by December 2023?\",\n      \"resolution_criteria\": \"Successful completion of an orbital flight and landing by SpaceX Starship, reported by SpaceX, NASA, or major news outlets like BBC News.\",\n      \"resolution_date\": \"2023-12-31\",\n      \"reasoning\": \"SpaceX's advancements in reusable space technology attract significant public and scientific interest, particularly with potential implications for future space travel.\",\n      \"confidence_score\": 75,\n      \"suggested_categories\": [\"Space\", \"Technology\"]\n    },\n    {\n      \"question\": \"Will Bitcoin ETF daily inflows exceed $1 billion again by December 2023?\",\n      \"resolution_criteria\": \"Reported daily inflows of over $1 billion into spot Bitcoin ETFs by Bloomberg or another major financial news outlet.\",\n      \"resolution_date\": \"2023-12-31\",\n      \"reasoning\": \"The cryptocurrency market is highly volatile and attracts investor interest, with ETF inflows being a key indicator of institutional demand.\",\n      \"confidence_score\": 70,\n      \"suggested_categories\": [\"Cryptocurrency\", \"Finance\"]\n    }\n  ]\n}"
+      },
+      {
+        "agent": "CritiqueBot",
+        "role": "contrarian",
+        "phase": "critique",
+        "content": "{\n  \"critiques\": [\n    {\n      \"question\": \"Will the Federal Reserve announce a rate cut in the September 2023 meeting?\",\n      \"issues\": [\n        \"TIMING - The resolution date is past the proposed September meeting date and should be updated accordingly.\"\n      ],\n      \"refined_question\": \"Will the Federal Reserve announce a rate cut in the September 2023 meeting?\",\n      \"refined_criteria\": \"Official announcement of a rate cut by the Federal Reserve during the September 2023 meeting, as reported by CNBC or the Federal Reserve's official website.\",\n      \"tradability_score\": 85\n    },\n    {\n      \"question\": \"Will SpaceX's Starship conduct another successful orbital flight by December 2023?\",\n      \"issues\": [\n        \"AMBIGUITY - 'Successful' is subjective and should be defined clearly, e.g., completing a specified number of orbits and landing safely.\"\n      ],\n      \"refined_question\": \"Will SpaceX's Starship conduct a successful orbital flight, completing at least one full orbit and landing safely, by December 2023?\",\n      \"refined_criteria\": \"Completion of at least one full orbit and landing safely by SpaceX Starship, reported by SpaceX, NASA, or major news outlets like BBC News.\",\n      \"tradability_score\": 80\n    },\n    {\n      \"question\": \"Will Bitcoin ETF daily inflows exceed $1 billion again by December 2023?\",\n      \"issues\": [\n        \"AMBIGUITY - 'Daily inflows' should be specified whether it refers to a single day or multiple days.\",\n        \"RESOLVABILITY - Ensure consistent data sources are available for verification.\"\n      ],\n      \"refined_question\": \"Will the daily inflow to any single Bitcoin ETF exceed $1 billion on any day by December 2023?\",\n      \"refined_criteria\": \"Reported inflow of over $1 billion to a single Bitcoin ETF on any day, verified by Bloomberg or another major financial news outlet.\",\n      \"tradability_score\": 75\n    }\n  ],\n  \"recommended_index\": 0\n}"
+      },
+      {
+        "agent": "MarketBot",
+        "role": "market_designer",
+        "phase": "consensus",
+        "content": "{\n  \"question\": \"Will the Federal Reserve announce a rate cut in the September 2023 meeting?\",\n  \"resolution_criteria\": \"A 'YES' outcome is determined if the Federal Reserve announces a reduction in the federal funds rate during the September 2023 meeting, as reported by CNBC or the Federal Reserve's official website. A 'NO' outcome occurs if the rate is not cut, or if no decision is announced during this meeting.\",\n  \"resolution_date\": \"2023-09-21\",\n  \"market_thesis\": \"Interest rate decisions by the Federal Reserve significantly influence the economy and financial markets, making this a crucial topic for investors and policymakers.\",\n  \"confidence_score\": 85,\n  \"suggested_categories\": [\"Economics\", \"Monetary Policy\"],\n  \"null_clause\": \"The market resolves as INVALID if the September 2023 meeting is canceled or if the Federal Reserve ceases to publicly announce rate changes.\",\n  \"ancillary_data\": \"The Federal Reserve's schedule and announcements can be verified through their official communications and major financial news outlets.\"\n}"
+      }
+    ],
+    "news_context": [
+      {
+        "title": "EU passes landmark AI regulation bill",
+        "source": "Reuters",
+        "url": "https://example.com/1",
+        "published_at": "2026-04-03T23:39:09Z",
+        "summary": "EU approved comprehensive AI Act mandating transparency for foundation models.",
+        "relevance_score": 0
+      },
+      {
+        "title": "Bitcoin ETF daily inflows surpass $1 billion",
+        "source": "Bloomberg",
+        "url": "https://example.com/2",
+        "published_at": "2026-04-03T23:39:09Z",
+        "summary": "Spot Bitcoin ETFs saw record daily inflows exceeding $1 billion.",
+        "relevance_score": 0
+      },
+      {
+        "title": "SpaceX Starship completes orbital flight",
+        "source": "BBC News",
+        "url": "https://example.com/3",
+        "published_at": "2026-04-03T23:39:09Z",
+        "summary": "SpaceX Starship completed full orbital flight and landing.",
+        "relevance_score": 0
+      },
+      {
+        "title": "Federal Reserve signals rate cut",
+        "source": "CNBC",
+        "url": "https://example.com/4",
+        "published_at": "2026-04-03T23:39:09Z",
+        "summary": "Fed Chair indicated conditions may warrant rate reduction.",
+        "relevance_score": 0
+      },
+      {
+        "title": "Apple partners with OpenAI for Siri",
+        "source": "The Verge",
+        "url": "https://example.com/5",
+        "published_at": "2026-04-03T23:39:09Z",
+        "summary": "Apple integrating OpenAI models into Siri for multi-modal conversations.",
+        "relevance_score": 0
+      }
+    ],
+    "votes": [
+      {
+        "agent": "ResearchBot",
+        "vote": "YES",
+        "verified": true
+      },
+      {
+        "agent": "CritiqueBot",
+        "vote": "YES",
+        "verified": true
+      },
+      {
+        "agent": "MarketBot",
+        "vote": "YES",
+        "verified": true
+      }
+    ],
+    "final_consensus": "Market approved: Will the Federal Reserve announce a rate cut in the September 2023 meeting?"
+  }
+]

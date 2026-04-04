@@ -1,5 +1,5 @@
 import Head from 'next/head';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Header from '../components/header/Header';
 import { Roboto, Figtree } from "next/font/google";
 
@@ -19,6 +19,22 @@ export default function Event() {
     const [activeTab, setActiveTab] = useState("Buy");
     const [selectedOutcome, setSelectedOutcome] = useState("↑ $200");
     const [orderSide, setOrderSide] = useState<"Yes" | "No">("Yes");
+    const [disputeStep, setDisputeStep] = useState(1); // how many steps are "done" (1=proposed only)
+    const [animating, setAnimating] = useState(false);
+
+    const startDispute = useCallback(() => {
+        setAnimating(true);
+        setDisputeStep(2);
+        let step = 2;
+        const interval = setInterval(() => {
+            step++;
+            setDisputeStep(step);
+            if (step >= 6) {
+                clearInterval(interval);
+                setAnimating(false);
+            }
+        }, 5000);
+    }, []);
 
     const outcomes = [
         { price: "↑ $200", vol: "$592,809", percent: "3%", yes: "2.6¢", no: "97.6¢", trend: null },
@@ -33,7 +49,7 @@ export default function Event() {
     return (
         <div className={`min-h-screen bg-[#f8f9fa] ${roboto.variable} ${figtree.variable} font-[family-name:var(--font-roboto)]`}>
             <Head>
-                <title>Event | Ethereum Explorer</title>
+                <title>Event | Dive</title>
                 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400,300&display=swap" rel="stylesheet" />
             </Head>
 
@@ -220,8 +236,8 @@ export default function Event() {
                             </div>
                         </div>
 
-                        <button className="w-full py-4 rounded-xl bg-gray-100 text-gray-400 font-bold flex items-center justify-center gap-2 cursor-not-allowed border border-gray-200 text-lg transition-colors">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg> Restricted region
+                        <button className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold flex items-center justify-center gap-2 border border-blue-700 text-lg transition-colors cursor-pointer active:scale-[0.98]">
+                            Bet
                         </button>
 
                         <p className="mt-5 text-center text-xs text-gray-500 font-medium">
@@ -230,6 +246,134 @@ export default function Event() {
                     </div>
                 </div>
             </main>
+
+            {/* Dispute Resolution Tracker — Horizontal */}
+            <section className="w-[96%] max-w-[1800px] mx-auto pb-16">
+                <div className="bg-[#F0F2F5] rounded-2xl border border-gray-200 p-6 md:p-8">
+                    <h2 className="font-['Satoshi'] text-xl md:text-2xl font-bold text-gray-900 mb-8">Resolution</h2>
+
+                    {(() => {
+                        const gavelIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 4.5L11 2l5 5-2.5 2.5"/><path d="M6 7l5 5"/><path d="M4 14l3.5-3.5 5 5L9 19"/><line x1="5" y1="21" x2="19" y2="21"/></svg>;
+                        const chatIcon = <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>;
+
+                        const allSteps = [
+                            { label: "Outcome proposed: Yes", sub: null, icon: null },
+                            { label: "Dispute window", sub: "Bond: 750 USDC", icon: gavelIcon },
+                            { label: "First round voting", sub: "Result: Unsure", icon: null },
+                            { label: "Discussion", sub: "3 agents debated", icon: chatIcon },
+                            { label: "Second round voting", sub: "Result: Yes", icon: null },
+                            { label: "Final outcome", sub: null, icon: null },
+                        ];
+
+                        return (
+                            <div className="flex items-start overflow-x-auto pb-4">
+                                {allSteps.map((s, i, arr) => {
+                                    const isDone = i < disputeStep;
+                                    const isActive = i === disputeStep;
+
+                                    return (
+                                        <div key={i} className="flex items-start flex-1 min-w-[110px]">
+                                            <div className="flex flex-col items-center w-full">
+                                                {/* Dot + connector lines */}
+                                                <div className="flex items-center w-full">
+                                                    <div className={`flex-1 h-[3px] transition-colors duration-700 ${
+                                                        i === 0 ? 'bg-transparent' :
+                                                        isDone || isActive ? 'bg-[#0066FF]' : 'bg-gray-200'
+                                                    }`} />
+                                                    <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all duration-700 ${
+                                                        s.icon
+                                                            ? isActive
+                                                                ? 'bg-[#D8DBE0] text-gray-700 ring-[3px] ring-inset ring-[#0066FF]'
+                                                                : 'bg-[#D8DBE0] text-gray-700'
+                                                            : isDone
+                                                                ? 'bg-[#0066FF] text-white'
+                                                                : isActive
+                                                                ? 'border-[3px] border-[#0066FF] bg-white text-[#0066FF]'
+                                                                : 'border-[3px] border-gray-200 bg-white text-gray-300'
+                                                    }`}>
+                                                        {s.icon ? s.icon : isDone ? (
+                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                                                        ) : null}
+                                                    </div>
+                                                    <div className={`flex-1 h-[3px] transition-colors duration-700 ${
+                                                        i === arr.length - 1 ? 'bg-transparent' :
+                                                        isDone ? 'bg-[#0066FF]' : 'bg-gray-200'
+                                                    }`} />
+                                                </div>
+                                                {/* Label */}
+                                                <div className="mt-3 text-center px-1">
+                                                    <div className={`text-xs font-semibold transition-colors duration-700 ${
+                                                        isDone ? 'text-gray-900' :
+                                                        isActive ? 'text-[#0066FF]' :
+                                                        'text-gray-400'
+                                                    }`}>{s.label}</div>
+                                                    {s.sub && isDone && (
+                                                        <div className="text-[11px] text-gray-400 mt-0.5">{s.sub}</div>
+                                                    )}
+                                                    {isActive && i === 1 && disputeStep === 1 && (
+                                                        <div className="text-[11px] text-[#0066FF] font-semibold mt-0.5">1h 47m remaining</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        );
+                    })()}
+
+                    {/* Dispute button — show when step 1 is active (dispute window) */}
+                    {disputeStep === 1 && (
+                        <div className="mt-6 pt-5 border-t border-gray-100 flex items-center justify-between">
+                            <div className="flex items-center gap-3 text-sm text-gray-500">
+                                <span>Bond required:</span>
+                                <span className="font-bold text-gray-900">750 USDC</span>
+                            </div>
+                            <button
+                                onClick={startDispute}
+                                className="px-8 py-3 rounded-xl bg-[#0066FF] hover:bg-[#0052CC] text-white font-bold text-sm transition-colors cursor-pointer active:scale-[0.98]"
+                            >
+                                Dispute &amp; Submit Bond
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Bond status — changes with each step */}
+                    {disputeStep >= 2 && (
+                        <div className="mt-6 pt-5 border-t border-gray-100">
+                            {/* During process */}
+                            {disputeStep < 6 && (
+                                <div className="flex items-start gap-3">
+                                    <div className="w-4 h-4 mt-0.5 border-2 border-[#0066FF] border-t-transparent rounded-full animate-spin shrink-0" />
+                                    <div>
+                                        <span className="text-sm text-[#0066FF] font-semibold">Processing dispute flow...</span>
+                                        <p className="text-sm text-gray-500 mt-1">
+                                            {disputeStep === 2 && "Your bond of 750 USDC has been locked."}
+                                            {disputeStep >= 3 && disputeStep < 6 && "Your bond cannot be taken back after the final result is determined."}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Final result — outcome didn't change, bond slashed */}
+                            {disputeStep >= 6 && !animating && (
+                                <div className="flex flex-col gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-6 h-6 rounded-full bg-[#0066FF] flex items-center justify-center shrink-0">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                                        </div>
+                                        <span className="text-sm font-bold text-gray-900">Market resolved: <span className="text-[#0066FF]">Yes</span></span>
+                                    </div>
+                                    <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                                        <div className="text-sm font-bold text-red-700 mb-1">Bond slashed</div>
+                                        <p className="text-sm text-red-600">The result didn&apos;t change from the original proposal. Your bond of <span className="font-bold">750 USDC</span> has been slashed.</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </section>
         </div>
     );
 }
