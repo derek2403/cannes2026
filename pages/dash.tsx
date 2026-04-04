@@ -21,14 +21,17 @@ const typography = {
   pageTitle: "font-['Satoshi',sans-serif] font-[800] !text-[#000000] text-2xl",
   sectionHeader: "font-['Satoshi',sans-serif] font-[700] text-[#212529] text-2xl",
   smallLabel: "font-[family-name:var(--font-roboto)] font-[700] text-[#6c757d] text-[0.75rem] uppercase tracking-wide",
-  /** Stats strip labels (REPUTATION, Balance, …) — navy; ! avoids body --foreground override */
+  /** Top reputation row label — navy */
   statCardLabel:
     "font-[family-name:var(--font-roboto)] font-[700] !text-[#0a2540] text-[0.75rem] uppercase tracking-wide",
+  /** Balance / Accuracy / Disputes card headers — black */
+  statCardHeadingBlack:
+    "font-[family-name:var(--font-roboto)] font-[700] !text-[#000000] text-[0.75rem] uppercase tracking-wide",
   bodyText: "font-[family-name:var(--font-roboto)] font-[400] text-[#212529] text-[clamp(0.875rem,1vw,1rem)]",
   muted: "font-[family-name:var(--font-roboto)] font-[400] text-[#6c757d] text-sm",
   /** Pale blue pill — matches activity “vote” tags */
   statusBadge:
-    "font-[family-name:var(--font-roboto)] font-[600] text-[#2E6692] bg-[#EBF3F9] border border-[#BDD1E2] text-[0.7rem] px-2 py-1 rounded-md",
+    "font-[family-name:var(--font-roboto)] font-[600] text-[#5c6d7a] bg-[#e8eef2] border border-[#b8c5d0] text-[0.7rem] px-2 py-1 rounded-md",
   monoText: "font-mono font-[500] text-[#212529]",
 };
 
@@ -123,7 +126,7 @@ function useCounter(target: number, duration = 1200) {
 
 function badge(type: string) {
   const map: Record<string, string> = {
-    vote: "font-[family-name:var(--font-roboto)] font-[600] text-[#2E6692] bg-[#EBF3F9] border border-[#BDD1E2]",
+    vote: "font-[family-name:var(--font-roboto)] font-[600] text-[#5c6d7a] bg-[#e8eef2] border border-[#b8c5d0]",
     reward: "font-[family-name:var(--font-roboto)] font-[600] text-[#495057] bg-gray-100 border border-gray-200",
     dispute: "font-[family-name:var(--font-roboto)] font-[600] text-[#c2410c] bg-[#fef3f0] border border-[#f8c7b5]",
   };
@@ -139,7 +142,7 @@ function resultColor(r: string) {
 function disputeStatusBadge(s: string) {
   const map: Record<string, string> = {
     resolved: "font-[600] text-[#495057] bg-gray-100 border border-gray-200",
-    active: "font-[600] text-[#2E6692] bg-[#EBF3F9] border border-[#BDD1E2]",
+    active: "font-[600] text-[#5c6d7a] bg-[#e8eef2] border border-[#b8c5d0]",
     rejected: "font-[600] text-[#6c757d] bg-gray-100 border border-gray-200",
   };
   return map[s] ?? map.resolved;
@@ -229,11 +232,11 @@ export default function Dash() {
               </span>
             </div>
             <p
-              className="mt-1 flex items-center gap-2 font-[family-name:var(--font-roboto)] text-sm font-[400] !text-[#0a2540]"
+              className="mt-1 flex items-center gap-2 font-[family-name:var(--font-roboto)] text-sm font-[400] !text-[#5c6d7a]"
             >
-              <span className="inline-block w-2 h-2 shrink-0 rounded-full bg-[#0a2540]" />
+              <span className="inline-block w-2 h-2 shrink-0 rounded-full bg-[#5c6d7a]" />
               {myAgent.name} &middot;{" "}
-              <span className="font-mono text-[13px] !text-[#0a2540]">{myAgent.accountId}</span>
+              <span className="font-mono text-[13px] !text-[#5c6d7a]">{myAgent.accountId}</span>
             </p>
           </div>
           <div className="hidden sm:flex items-center gap-2">
@@ -253,7 +256,7 @@ export default function Dash() {
           <div className="px-6 pt-5 pb-4 border-b border-gray-100">
             <div className="flex items-center gap-3 mb-3">
               <span className={typography.statCardLabel}>Reputation</span>
-              <span className="font-['Satoshi'] text-[22px] font-[800] text-[#212529] leading-none">{repCount}</span>
+              <span className="font-['Satoshi'] text-[22px] font-[800] leading-none !text-[#343a40]">{repCount}</span>
               <span className="text-[12px] mt-0.5 font-[500] !text-[#0a2540]">of {myAgent.reputationMax}</span>
               <span className="ml-auto text-[12px] font-[600] text-[#212529] bg-gray-100 px-2.5 py-1 rounded-lg">Rank #{myAgent.rank}</span>
             </div>
@@ -262,9 +265,9 @@ export default function Dash() {
                 className="h-full min-h-[12px] rounded-full"
                 style={{
                   width: mounted ? `${(myAgent.reputationScore / myAgent.reputationMax) * 100}%` : "0%",
-                  /* Lighter front → mid greys; last ~1/4 to black */
+                  /* Horizontal sweep: same blue-grey family as Reputation chart bars */
                   background:
-                    "linear-gradient(90deg, #ebebeb 0%, #dcdcdc 20%, #c4c4c4 40%, #949494 62%, #6e6e6e 75%, #3d3d3d 85%, #171717 93%, #000000 100%)",
+                    "linear-gradient(90deg, #dde5eb 0%, #c8d4de 22%, #aab9c4 48%, #8fa1ae 72%, #7a8f9f 100%)",
                   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)",
                   transition: "width 1.4s cubic-bezier(0.22,1,0.36,1) 0.2s",
                 }}
@@ -272,38 +275,59 @@ export default function Dash() {
             </div>
           </div>
 
-          {/* Bottom row — 3 stats */}
+          {/* Bottom row — 3 stats (slate grey gradient card) */}
           <div className="grid grid-cols-3 gap-3 p-3">
-            <div className="bg-[#f8f9fa] rounded-xl px-5 py-4 border border-gray-100">
-              <span className={`${typography.statCardLabel} block mb-1`}>Balance</span>
-              <span className="font-['Satoshi'] text-[20px] font-[800] text-[#212529]">${balCount.toLocaleString()}</span>
+            <div
+              className="rounded-[18px] px-5 py-4 border border-white/20 shadow-sm"
+              style={{
+                background: "linear-gradient(180deg, #8FA0AB 0%, #4D5D6A 100%)",
+              }}
+            >
+              <span className="block mb-1 font-[family-name:var(--font-roboto)] font-[700] text-[0.75rem] uppercase tracking-wide !text-[#f0f4f6]">
+                Balance
+              </span>
+              <span className="font-['Satoshi'] text-[20px] font-[800] !text-white">
+                ${balCount.toLocaleString()}
+              </span>
               <div className="flex gap-2 mt-1 text-[11px] font-[family-name:var(--font-roboto)]">
-                <span className="text-[#6c757d]">${myAgent.stakedBalance.toLocaleString()} staked</span>
-                <span className="font-[600] text-[#28a745]">+${myAgent.pendingRewards}</span>
+                <span className="font-[600] !text-[#dfe6ea]">${myAgent.stakedBalance.toLocaleString()} staked</span>
+                <span className="font-[600] text-[#b8f2c9]">+${myAgent.pendingRewards}</span>
               </div>
             </div>
 
-            <div className="bg-[#f8f9fa] rounded-xl px-5 py-4 border border-gray-100">
-              <span className={`${typography.statCardLabel} block mb-1`}>Accuracy</span>
+            <div
+              className="rounded-[18px] px-5 py-4 border border-white/20 shadow-sm"
+              style={{
+                background: "linear-gradient(180deg, #8FA0AB 0%, #4D5D6A 100%)",
+              }}
+            >
+              <span className="block mb-1 font-[family-name:var(--font-roboto)] font-[700] text-[0.75rem] uppercase tracking-wide !text-[#f0f4f6]">
+                Accuracy
+              </span>
               <div className="flex items-baseline gap-0.5">
-                <span className="font-['Satoshi'] text-[20px] font-[800] text-[#212529]">{(accCount / 10).toFixed(1)}</span>
-                <span className="text-[13px] font-[600] !text-[#000000]">%</span>
+                <span className="font-['Satoshi'] text-[20px] font-[800] !text-white">{(accCount / 10).toFixed(1)}</span>
+                <span className="text-[13px] font-[600] !text-white">%</span>
               </div>
-              <span
-                className={`${typography.smallLabel} mt-1 block normal-case tracking-normal font-[400]`}
-              >
-                <span className="font-[600] text-[#28a745]">
+              <span className="mt-1 block font-[family-name:var(--font-roboto)] text-sm font-[400] normal-case tracking-normal">
+                <span className="font-[600] !text-[#dfe6ea]">
                   {myAgent.correctVotes}/{myAgent.totalVotes} correct
                 </span>
               </span>
             </div>
 
-            <div className="bg-[#f8f9fa] rounded-xl px-5 py-4 border border-gray-100">
-              <span className={`${typography.statCardLabel} block mb-1`}>Disputes</span>
-              <span className="font-['Satoshi'] text-[20px] font-[800] text-[#212529]">{disputes.length}</span>
+            <div
+              className="rounded-[18px] px-5 py-4 border border-white/20 shadow-sm"
+              style={{
+                background: "linear-gradient(180deg, #8FA0AB 0%, #4D5D6A 100%)",
+              }}
+            >
+              <span className="block mb-1 font-[family-name:var(--font-roboto)] font-[700] text-[0.75rem] uppercase tracking-wide !text-[#f0f4f6]">
+                Disputes
+              </span>
+              <span className="font-['Satoshi'] text-[20px] font-[800] !text-white">{disputes.length}</span>
               <div className="flex gap-2 mt-1 text-[11px] font-[family-name:var(--font-roboto)]">
-                <span className="font-[600] text-[#c62828]">{disputes.filter((d) => d.status === "resolved").length} won</span>
-                <span className="font-[600] text-[#28a745]">{disputes.filter((d) => d.status === "active").length} open</span>
+                <span className="font-[600] !text-[#dfe6ea]">{disputes.filter((d) => d.status === "resolved").length} won</span>
+                <span className="font-[600] !text-[#dfe6ea]">{disputes.filter((d) => d.status === "active").length} open</span>
               </div>
             </div>
           </div>
@@ -334,14 +358,14 @@ export default function Dash() {
                     <div key={h.month} className="flex-1 flex flex-col items-center gap-1.5 group">
                       <span
                         className={`text-[11px] font-bold font-[family-name:var(--font-roboto)] transition-colors ${
-                          isLast ? "text-[#171717]" : "text-[#525252] group-hover:text-[#171717]"
+                          isLast ? "text-[#5c6d7a]" : "text-[#5c6570] group-hover:text-[#5c6d7a]"
                         }`}
                       >
                         {h.score}
                       </span>
                       <div
                         className="w-full rounded-lg overflow-hidden border border-gray-200"
-                        style={{ height: "110px", background: "#e5e5e5" }}
+                        style={{ height: "110px", background: "#f4f4f4" }}
                       >
                         <div
                           className="w-full rounded-lg transition-all bar-chart-fill"
@@ -350,14 +374,14 @@ export default function Dash() {
                             marginTop: mounted ? `${100 - pct}%` : "100%",
                             transition: `all 0.8s cubic-bezier(0.16,1,0.3,1) ${0.5 + i * 0.1}s`,
                             background: isLast
-                              ? "linear-gradient(to top, #0a0a0a, #262626, #525252)"
-                              : "linear-gradient(to top, #404040, #737373, #a3a3a3)",
+                              ? "linear-gradient(to top, #9aabba, #b5c4cf, #dce4ea)"
+                              : "linear-gradient(to top, #8fa1ae, #aab9c4, #d0d9e1)",
                           }}
                         />
                       </div>
                       <span
                         className={`text-[11px] font-medium font-[family-name:var(--font-roboto)] ${
-                          isLast ? "text-[#171717] font-bold" : "text-[#525252]"
+                          isLast ? "font-bold text-[#5c6d7a]" : "text-[#5c6570]"
                         }`}
                       >
                         {h.month}
@@ -409,7 +433,7 @@ export default function Dash() {
                     <span className={`flex-1 text-[13px] text-[#212529] font-medium font-[family-name:var(--font-roboto)] truncate`}>{row.market}</span>
                     <span className="font-mono text-[12px] text-[#6c757d] w-8 text-center">{row.vote}</span>
                     <span className={`text-[12px] font-bold capitalize w-16 text-center font-[family-name:var(--font-roboto)] ${resultColor(row.result)}`}>{row.result}</span>
-                    <span className={`font-mono text-[12px] font-bold w-10 text-right ${row.rep.startsWith("+") ? "text-[#495057]" : row.rep.startsWith("-") ? "text-red-500" : "text-gray-300"}`}>
+                    <span className={`font-mono text-[12px] font-bold w-10 text-right ${row.rep.startsWith("+") ? "text-[#28a745]" : row.rep.startsWith("-") ? "text-red-500" : "text-gray-300"}`}>
                       {row.rep}
                     </span>
                     <span className="text-[11px] text-[#6c757d] w-12 text-right font-[family-name:var(--font-roboto)]">{row.time}</span>
@@ -448,7 +472,7 @@ export default function Dash() {
                         <span className="text-gray-300">|</span>
                         <span className="text-[#6c757d]">{d.outcome}</span>
                       </div>
-                      <span className={`font-mono text-[13px] font-bold ${d.repEffect.startsWith("+") ? "text-[#495057]" : d.repEffect === "0" ? "text-gray-300" : "text-[#6c757d]"}`}>
+                      <span className={`font-mono text-[13px] font-bold ${d.repEffect.startsWith("+") ? "text-[#28a745]" : d.repEffect === "0" ? "text-gray-300" : "text-[#6c757d]"}`}>
                         {d.repEffect !== "—" ? `${d.repEffect} rep` : "—"}
                       </span>
                     </div>
@@ -538,7 +562,7 @@ export default function Dash() {
                     </div>
                     <div className="text-right">
                       <span className="text-[15px] font-bold font-['Satoshi'] text-[#212529]">{a.score}</span>
-                      <div className={`text-[11px] font-bold font-[family-name:var(--font-roboto)] ${a.change.startsWith("+") ? "text-[#495057]" : "text-red-500"}`}>
+                      <div className={`text-[11px] font-bold font-[family-name:var(--font-roboto)] ${a.change.startsWith("+") ? "text-[#28a745]" : "text-red-500"}`}>
                         {a.change}
                       </div>
                     </div>
