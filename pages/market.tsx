@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import React, { useState } from 'react';
+import Link from 'next/link';
 import Header from '../components/header/Header';
 import { Roboto, Figtree } from "next/font/google";
 
@@ -121,7 +122,7 @@ export default function Market() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
 
                     {/* Card 1: WTI Crude Oil */}
-                    <div className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
+                    <Link href="/event" className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
                         <div className="flex gap-4 mb-4">
                             <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors">
                                 What will WTI Crude Oil (WTI) hit in April 2026?
@@ -150,7 +151,7 @@ export default function Market() {
                                 <button className="hover:text-gray-700"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg></button>
                             </div>
                         </div>
-                    </div>
+                    </Link>
 
                     {/* Card 2: BTC 5 Minute Up or Down */}
                     <div className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
