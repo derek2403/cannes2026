@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+interface IERC20 {
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+    function transfer(address to, uint256 amount) external returns (bool);
+}
+
 contract PredictionMarket {
     enum Outcome { UNRESOLVED, YES, NO }
 
@@ -11,6 +16,8 @@ contract PredictionMarket {
         bool resolved;
     }
 
+    IERC20 public constant WLD = IERC20(0x2cFc85d8E48F8EAB294be644d9E25C3030863003);
+
     mapping(bytes32 => MarketPool) public pools;
     mapping(bytes32 => mapping(address => uint256)) public yesBets;
     mapping(bytes32 => mapping(address => uint256)) public noBets;
@@ -20,20 +27,22 @@ contract PredictionMarket {
     event MarketResolved(string marketId, Outcome outcome);
     event Claimed(string marketId, address indexed bettor, uint256 payout);
 
-    function bet(string calldata marketId, bool yes) external payable {
-        require(msg.value > 0, "no value");
+    function bet(string calldata marketId, bool yes, uint256 amount) external {
+        require(amount > 0, "no amount");
+        require(WLD.transferFrom(msg.sender, address(this), amount), "transfer failed");
+
         bytes32 id = keccak256(abi.encodePacked(marketId));
         MarketPool storage p = pools[id];
         require(!p.resolved, "resolved");
 
         if (yes) {
-            p.yesPool += msg.value;
-            yesBets[id][msg.sender] += msg.value;
+            p.yesPool += amount;
+            yesBets[id][msg.sender] += amount;
         } else {
-            p.noPool += msg.value;
-            noBets[id][msg.sender] += msg.value;
+            p.noPool += amount;
+            noBets[id][msg.sender] += amount;
         }
-        emit BetPlaced(marketId, msg.sender, yes, msg.value);
+        emit BetPlaced(marketId, msg.sender, yes, amount);
     }
 
     function resolve(string calldata marketId, Outcome outcome) external {
@@ -59,8 +68,7 @@ contract PredictionMarket {
         uint256 winPool = p.outcome == Outcome.YES ? p.yesPool : p.noPool;
         uint256 payout = (shares * (p.yesPool + p.noPool)) / winPool;
 
-        (bool sent, ) = payable(msg.sender).call{value: payout}("");
-        require(sent, "transfer failed");
+        require(WLD.transfer(msg.sender, payout), "transfer failed");
         emit Claimed(marketId, msg.sender, payout);
     }
 

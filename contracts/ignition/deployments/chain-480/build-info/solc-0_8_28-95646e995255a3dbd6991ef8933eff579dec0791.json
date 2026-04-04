@@ -1,0 +1,41 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-95646e995255a3dbd6991ef8933eff579dec0791",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "compilerType": "solc",
+  "userSourceNameMap": {
+    "contracts/PredictionMarket.sol": "project/contracts/PredictionMarket.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": [],
+      "viaIR": true
+    },
+    "sources": {
+      "project/contracts/PredictionMarket.sol": {
+        "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.28;\n\ninterface IERC20 {\n    function transferFrom(address from, address to, uint256 amount) external returns (bool);\n    function transfer(address to, uint256 amount) external returns (bool);\n}\n\ncontract PredictionMarket {\n    enum Outcome { UNRESOLVED, YES, NO }\n\n    struct MarketPool {\n        uint256 yesPool;\n        uint256 noPool;\n        Outcome outcome;\n        bool resolved;\n    }\n\n    IERC20 public constant WLD = IERC20(0x2cFc85d8E48F8EAB294be644d9E25C3030863003);\n\n    mapping(bytes32 => MarketPool) public pools;\n    mapping(bytes32 => mapping(address => uint256)) public yesBets;\n    mapping(bytes32 => mapping(address => uint256)) public noBets;\n    mapping(bytes32 => mapping(address => bool)) public claimed;\n\n    event BetPlaced(string marketId, address indexed bettor, bool yes, uint256 amount);\n    event MarketResolved(string marketId, Outcome outcome);\n    event Claimed(string marketId, address indexed bettor, uint256 payout);\n\n    function bet(string calldata marketId, bool yes, uint256 amount) external {\n        require(amount > 0, \"no amount\");\n        require(WLD.transferFrom(msg.sender, address(this), amount), \"transfer failed\");\n\n        bytes32 id = keccak256(abi.encodePacked(marketId));\n        MarketPool storage p = pools[id];\n        require(!p.resolved, \"resolved\");\n\n        if (yes) {\n            p.yesPool += amount;\n            yesBets[id][msg.sender] += amount;\n        } else {\n            p.noPool += amount;\n            noBets[id][msg.sender] += amount;\n        }\n        emit BetPlaced(marketId, msg.sender, yes, amount);\n    }\n\n    function resolve(string calldata marketId, Outcome outcome) external {\n        bytes32 id = keccak256(abi.encodePacked(marketId));\n        MarketPool storage p = pools[id];\n        require(!p.resolved, \"already resolved\");\n        require(outcome == Outcome.YES || outcome == Outcome.NO, \"invalid\");\n        p.outcome = outcome;\n        p.resolved = true;\n        emit MarketResolved(marketId, outcome);\n    }\n\n    function claim(string calldata marketId) external {\n        bytes32 id = keccak256(abi.encodePacked(marketId));\n        MarketPool storage p = pools[id];\n        require(p.resolved, \"not resolved\");\n        require(!claimed[id][msg.sender], \"claimed\");\n        claimed[id][msg.sender] = true;\n\n        uint256 shares = p.outcome == Outcome.YES ? yesBets[id][msg.sender] : noBets[id][msg.sender];\n        require(shares > 0, \"nothing to claim\");\n\n        uint256 winPool = p.outcome == Outcome.YES ? p.yesPool : p.noPool;\n        uint256 payout = (shares * (p.yesPool + p.noPool)) / winPool;\n\n        require(WLD.transfer(msg.sender, payout), \"transfer failed\");\n        emit Claimed(marketId, msg.sender, payout);\n    }\n\n    function getPool(string calldata marketId) external view returns (uint256 yesPool, uint256 noPool, bool resolved, Outcome outcome) {\n        bytes32 id = keccak256(abi.encodePacked(marketId));\n        MarketPool storage p = pools[id];\n        return (p.yesPool, p.noPool, p.resolved, p.outcome);\n    }\n\n    function getPosition(string calldata marketId, address bettor) external view returns (uint256 yesAmt, uint256 noAmt, bool hasClaimed) {\n        bytes32 id = keccak256(abi.encodePacked(marketId));\n        return (yesBets[id][bettor], noBets[id][bettor], claimed[id][bettor]);\n    }\n}\n"
+      }
+    }
+  }
+}
