@@ -287,6 +287,22 @@ Pick the BEST proposal. Ensure the resolution date is in 2026 or later. Reply wi
   return result;
 }
 
+// ── On-chain dispute invocation ─────────────────────────────────
+async function invokeOnChainDispute(marketId, outcome) {
+  try {
+    const result = await api("/api/commands/dispute-market", { marketId, outcome });
+    if (result.success) {
+      log("system", `On-chain dispute executed: ${marketId} → ${outcome}`);
+    } else {
+      log("system", `On-chain dispute failed: ${result.error || "unknown"}`);
+    }
+    return result;
+  } catch (err) {
+    log("system", `On-chain dispute error: ${err.message}`);
+    return { error: err.message };
+  }
+}
+
 // ═════════════════════════════════════════════════════════════════
 //  DISPUTE RESOLUTION — Commit-Reveal (HCS-16 Flora pattern)
 //
@@ -323,6 +339,7 @@ async function runDispute(marketId) {
 
   if (r1.resolved) {
     log("system", `═══ RESOLVED at Phase 1 Reveal: ${r1.consensus} (${r1.percentages?.[r1.consensus]}) ═══`);
+    await invokeOnChainDispute(marketId, r1.consensus);
     if (r1.reputationUpdates) {
       for (const u of r1.reputationUpdates) {
         log(u.agent, `REP ${u.change >= 0 ? "+" : ""}${u.change} → ${u.newRep} (${u.correct ? "correct" : "wrong"})`);
@@ -378,6 +395,7 @@ async function runDispute(marketId) {
 
   if (r2.resolved) {
     log("system", `═══ RESOLVED at Phase 2 Reveal: ${r2.consensus} (${r2.percentages?.[r2.consensus]}) ═══`);
+    await invokeOnChainDispute(marketId, r2.consensus);
     if (r2.reputationUpdates) {
       for (const u of r2.reputationUpdates) {
         log(u.agent, `REP ${u.change >= 0 ? "+" : ""}${u.change} → ${u.newRep} (${u.correct ? "correct" : "wrong"})`);
