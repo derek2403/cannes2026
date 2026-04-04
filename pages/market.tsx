@@ -123,7 +123,10 @@ export default function Market() {
 
                     {/* Card 1: WTI Crude Oil */}
                     <Link href="/event" className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
-                        <div className="flex gap-4 mb-4">
+                        <div className="flex items-start gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-xl bg-slate-500 flex items-center justify-center shrink-0 shadow-sm border border-slate-600 mt-0.5">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 22C7.58172 22 4 18.4183 4 14C4 9.58172 12 2 12 2C12 2 20 9.58172 20 14C20 18.4183 16.4183 22 12 22Z" /></svg>
+                            </div>
                             <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors">
                                 What will WTI Crude Oil (WTI) hit in April 2026?
                             </h3>
@@ -156,7 +159,10 @@ export default function Market() {
                     {/* Card 2: BTC 5 Minute Up or Down */}
                     <div className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
                         <div className="flex justify-between items-start mb-2">
-                            <div className="flex gap-4">
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-slate-500 flex items-center justify-center shrink-0 shadow-sm border border-slate-600 mt-0.5 text-white">
+                                    <span className="text-[18px]">₿</span>
+                                </div>
                                 <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors">
                                     BTC 5 Minute Up or Down
                                 </h3>
@@ -219,7 +225,10 @@ export default function Market() {
 
                     {/* Card: Fed Decision */}
                     <div className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
-                        <div className="flex gap-4 mb-4">
+                        <div className="flex items-start gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-xl bg-slate-500 flex items-center justify-center shrink-0 shadow-sm border border-slate-600 mt-0.5">
+                                <span className="text-[18px]">🏦</span>
+                            </div>
                             <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors">
                                 Fed decision in April?
                             </h3>
@@ -251,7 +260,10 @@ export default function Market() {
 
                     {/* Card: Attorney General */}
                     <div className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
-                        <div className="flex flex-col gap-4 mb-4">
+                        <div className="flex items-start gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-xl bg-slate-500 flex items-center justify-center shrink-0 shadow-sm border border-slate-600 mt-0.5">
+                                <span className="text-[18px]">🏛️</span>
+                            </div>
                             <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors">
                                 Who will Trump announce as next Attorney General?
                             </h3>
@@ -286,7 +298,10 @@ export default function Market() {
 
                     {/* Card: Trump Admin Leaves */}
                     <div className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
-                        <div className="flex flex-col gap-4 mb-4">
+                        <div className="flex items-start gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-xl bg-slate-500 flex items-center justify-center shrink-0 shadow-sm border border-slate-600 mt-0.5">
+                                <span className="text-[18px]">👔</span>
+                            </div>
                             <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors">
                                 Who will leave Trump Administration before 2027?
                             </h3>
@@ -318,7 +333,10 @@ export default function Market() {
 
                     {/* Card 4: 2026 NCAA Tournament Winner */}
                     <div className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
-                        <div className="flex flex-col gap-4 mb-4">
+                        <div className="flex items-start gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-xl bg-slate-500 flex items-center justify-center shrink-0 shadow-sm border border-slate-600 mt-0.5">
+                                <span className="text-[18px]">🏀</span>
+                            </div>
                             <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors">
                                 2026 NCAA Tournament Winner
                             </h3>
@@ -350,7 +368,10 @@ export default function Market() {
 
                     {/* Card 5: US x Iran ceasefire */}
                     <div className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
-                        <div className="flex gap-4 mb-4">
+                        <div className="flex items-start gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-xl bg-slate-500 flex items-center justify-center shrink-0 shadow-sm border border-slate-600 mt-0.5">
+                                <span className="text-[18px]">🕊️</span>
+                            </div>
                             <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors">
                                 US x Iran ceasefire by...?
                             </h3>
@@ -383,7 +404,10 @@ export default function Market() {
                     {/* Card 6: Strait of Hormuz */}
                     <div className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
                         <div className="flex justify-between items-start mb-2">
-                            <div className="flex gap-4">
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-slate-500 flex items-center justify-center shrink-0 shadow-sm border border-slate-600 mt-0.5">
+                                    <span className="text-[18px]">🚢</span>
+                                </div>
                                 <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors pr-2">
                                     Strait of Hormuz traffic returns to normal by end of April?
                                 </h3>
