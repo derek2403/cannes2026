@@ -29,7 +29,7 @@ export { sepolia };
 
 export const wagmiConfig = createConfig({
   chains: [zgTestnet, sepolia],
-  connectors: [injected()],
+  connectors: typeof window !== "undefined" ? [injected()] : [],
   transports: {
     [zgTestnet.id]: http(),
     [sepolia.id]: http(),
