@@ -287,7 +287,7 @@ export default function Dash() {
               <span className={`${typography.statCardLabel} block mb-1`}>Accuracy</span>
               <div className="flex items-baseline gap-0.5">
                 <span className="font-['Satoshi'] text-[20px] font-[800] text-[#212529]">{(accCount / 10).toFixed(1)}</span>
-                <span className="text-[13px] text-gray-300 font-[600]">%</span>
+                <span className="text-[13px] font-[600] !text-[#000000]">%</span>
               </div>
               <span
                 className={`${typography.smallLabel} mt-1 block normal-case tracking-normal font-[400]`}
