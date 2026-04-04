@@ -101,7 +101,7 @@ function MarketRow({
     setLoading(yes ? "yes" : "no");
     setStatus("");
     try {
-      const hash = await walletClient.writeContract({
+      const hash = await (walletClient as any).writeContract({
         address: PREDICTION_MARKET_ADDRESS,
         abi: PREDICTION_MARKET_ABI,
         functionName: "bet",
@@ -123,7 +123,7 @@ function MarketRow({
     setLoading("resolve");
     setStatus("");
     try {
-      const hash = await walletClient.writeContract({
+      const hash = await (walletClient as any).writeContract({
         address: PREDICTION_MARKET_ADDRESS,
         abi: PREDICTION_MARKET_ABI,
         functionName: "resolve",
@@ -144,7 +144,7 @@ function MarketRow({
     setLoading("claim");
     setStatus("");
     try {
-      const hash = await walletClient.writeContract({
+      const hash = await (walletClient as any).writeContract({
         address: PREDICTION_MARKET_ADDRESS,
         abi: PREDICTION_MARKET_ABI,
         functionName: "claim",
