@@ -7,7 +7,7 @@ const roboto = Roboto({ weight: ['400', '500', '700'], subsets: ['latin'], varia
 const figtree = Figtree({ weight: ['400', '500', '600', '700'], subsets: ['latin'], variable: '--font-figtree' });
 
 // ── Curl block (light theme, matches Request Body cards) ─────────────────────
-function CurlBlock() {
+function CurlBlock({ className = '' }: { className?: string }) {
     const [copied, setCopied] = useState(false);
 
     const curlText = [
@@ -41,8 +41,10 @@ function CurlBlock() {
     };
 
     return (
-        <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-gray-50">
+        <div
+            className={`relative flex min-h-0 flex-col rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm lg:h-full ${className}`.trim()}
+        >
+            <div className="flex shrink-0 items-center justify-between px-5 py-3 border-b border-gray-100 bg-gray-50">
                 <div className={`flex items-center gap-2 ${c.muted}`}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" />
@@ -69,7 +71,7 @@ function CurlBlock() {
                     )}
                 </button>
             </div>
-            <pre className="px-5 py-6 text-base font-mono leading-[1.9] overflow-x-auto bg-[#f8f9fa] select-all">
+            <pre className="min-h-0 flex-1 px-5 py-6 text-base font-mono leading-[1.9] overflow-x-auto overflow-y-auto bg-[#f8f9fa] select-all">
 <span className={c.muted}>$ </span><span className={c.default}>curl </span><span className={`${c.flag} font-semibold`}>-X POST </span><span className={c.url}>http://localhost:3000/api/inft/register-agent</span><span className={c.default}> \{"\n"}  </span>
 <span className={`${c.flag} font-semibold`}>-H </span><span className={c.str}>&quot;Content-Type: application/json&quot;</span><span className={c.default}> \{"\n"}  </span>
 <span className={`${c.flag} font-semibold`}>-d </span><span className={c.default}>&apos;&#123;{"\n"}</span>
@@ -81,29 +83,6 @@ function CurlBlock() {
 <span className={c.default}>{"    "}</span><span className={`${c.key} font-semibold`}>&quot;systemPrompt&quot;</span><span className={c.muted}>: </span><span className={c.str}>&quot;You are an oracle agent&quot;</span><span className={c.default}>,{"\n"}</span>
 <span className={c.default}>{"    "}</span><span className={`${c.key} font-semibold`}>&quot;reputation&quot;</span><span className={c.muted}>: </span><span className={c.num}>10</span><span className={c.default}>{"\n"}</span>
 <span className={c.default}>{"  "}&apos;&#125;</span>
-            </pre>
-        </div>
-    );
-}
-
-// ── Response block (light theme) ─────────────────────────────────────────────
-function ResponseBlock() {
-    const d = 'text-[#212529]';
-    const m = 'text-[#adb5bd]';
-    const k = 'text-[#495057] font-semibold';
-    const s = 'text-[#2d6a4f]';
-
-    return (
-        <div className="rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm">
-            <div className="flex items-center gap-2.5 px-5 py-3 border-b border-gray-100 bg-gray-50">
-                <span className="text-sm font-mono font-semibold text-[#6c757d] tracking-wide">Response</span>
-            </div>
-            <pre className="px-5 py-6 text-base font-mono leading-[1.9] overflow-x-auto bg-[#f8f9fa]">
-<span className={d}>&#123;{"\n"}</span>
-<span className={d}>{"  "}</span><span className={k}>&quot;agent_id&quot;</span><span className={m}>: </span><span className={s}>&quot;ag_8f3k...&quot;</span><span className={d}>,{"\n"}</span>
-<span className={d}>{"  "}</span><span className={k}>&quot;status&quot;</span><span className={m}>: </span><span className={s}>&quot;registered&quot;</span><span className={d}>,{"\n"}</span>
-<span className={d}>{"  "}</span><span className={k}>&quot;skill_md_url&quot;</span><span className={m}>: </span><span className={s}>&quot;/skill.md&quot;</span><span className={d}>{"\n"}</span>
-<span className={d}>&#125;</span>
             </pre>
         </div>
     );
@@ -184,17 +163,23 @@ export default function Docs() {
                         </div>
                     </section>
 
-                    {/* Request Body */}
-                    <section id="request" className="scroll-mt-8 flex flex-col gap-4">
-                        <h2 className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-2xl">Request Body</h2>
-                        <div className="rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm">
-                            <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-100 bg-gray-50">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6c757d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
-                                </svg>
-                                <span className="text-sm font-mono font-semibold text-[#6c757d] tracking-widest uppercase">application/json</span>
-                            </div>
-                            <pre className="px-5 py-6 text-base font-mono leading-[1.9] bg-[#f8f9fa] overflow-x-auto">
+                    {/* Request Body + curl Example (side by side on lg+) */}
+                    <div className="flex flex-col gap-10 lg:grid lg:grid-cols-2 lg:items-stretch lg:gap-8 xl:gap-10 scroll-mt-8">
+                        <section
+                            id="request"
+                            className="flex min-h-0 flex-col gap-4 min-w-0 scroll-mt-8 lg:h-full lg:min-h-0"
+                        >
+                            <h2 className="shrink-0 font-['Satoshi',sans-serif] font-[700] text-[#212529] text-2xl">
+                                Request Body
+                            </h2>
+                            <div className="flex min-h-0 flex-1 flex-col rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm">
+                                <div className="flex shrink-0 items-center gap-2 px-5 py-3 border-b border-gray-100 bg-gray-50">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6c757d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                                    </svg>
+                                    <span className="text-sm font-mono font-semibold text-[#6c757d] tracking-widest uppercase">application/json</span>
+                                </div>
+                                <pre className="min-h-0 flex-1 px-5 py-6 text-base font-mono leading-[1.9] bg-[#f8f9fa] overflow-x-auto overflow-y-auto">
 <span className="text-[#212529]">&#123;{"\n"}</span>
 <span className="text-[#212529]">{"  "}</span><span className="text-[#495057] font-semibold">&quot;agentName&quot;</span><span className="text-[#6c757d]">: </span><span className="text-[#2d6a4f]">&quot;OracleAlpha&quot;</span><span className="text-[#212529]">,{"\n"}</span>
 <span className="text-[#212529]">{"  "}</span><span className="text-[#495057] font-semibold">&quot;ownerAddress&quot;</span><span className="text-[#6c757d]">: </span><span className="text-[#2d6a4f]">&quot;0x5B638972D1362701f298e9F02F67f8f485c3c52e&quot;</span><span className="text-[#212529]">,{"\n"}</span>
@@ -204,21 +189,22 @@ export default function Docs() {
 <span className="text-[#212529]">{"  "}</span><span className="text-[#495057] font-semibold">&quot;systemPrompt&quot;</span><span className="text-[#6c757d]">: </span><span className="text-[#2d6a4f]">&quot;You are an oracle agent&quot;</span><span className="text-[#212529]">,{"\n"}</span>
 <span className="text-[#212529]">{"  "}</span><span className="text-[#495057] font-semibold">&quot;reputation&quot;</span><span className="text-[#6c757d]">: </span><span className="text-[#066a9c]">10</span><span className="text-[#212529]">{"\n"}</span>
 <span className="text-[#212529]">&#125;</span>
-                            </pre>
-                        </div>
-                    </section>
+                                </pre>
+                            </div>
+                        </section>
 
-                    {/* curl Example */}
-                    <section id="curl" className="scroll-mt-8 flex flex-col gap-4">
-                        <h2 className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-2xl">curl Example</h2>
-                        <CurlBlock />
-                    </section>
-
-                    {/* Response */}
-                    <section id="response" className="scroll-mt-8 flex flex-col gap-4">
-                        <h2 className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-2xl">Response</h2>
-                        <ResponseBlock />
-                    </section>
+                        <section
+                            id="curl"
+                            className="flex min-h-0 flex-col gap-4 min-w-0 scroll-mt-8 lg:h-full lg:min-h-0"
+                        >
+                            <h2 className="shrink-0 font-['Satoshi',sans-serif] font-[700] text-[#212529] text-2xl">
+                                curl Example
+                            </h2>
+                            <div className="flex min-h-0 flex-1 flex-col">
+                                <CurlBlock />
+                            </div>
+                        </section>
+                    </div>
 
                     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5">
                         <div className="w-12 h-12 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
