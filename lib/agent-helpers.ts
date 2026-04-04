@@ -8,14 +8,24 @@ const HISTORY_FILE = join(process.cwd(), "data", "agent-history.json");
 export interface AgentEntry {
   displayName: string;
   accountId?: string;
+  privateKeyEncrypted?: string;
+  evmAddress?: string;
+  ownerAddress?: string;
   profileTopicId?: string;
   reputationTopicId?: string;
   registryTopicId?: string;
+  floraTopicIds?: { communication?: string; transaction?: string; state?: string } | null;
   inftTokenId?: number;
   modelProvider?: string;
   reputation?: number;
   capabilities?: number[];
   model?: string;
+  domainTags?: string;
+  serviceOfferings?: string;
+  worldVerified?: boolean;
+  humanId?: string | null;
+  zgRootHash?: string;
+  createdAt?: string;
 }
 
 export interface HederaState {
