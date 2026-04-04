@@ -1,0 +1,98 @@
+{
+  "events": [
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T07:32:12.000Z",
+      "agentName": "ResearchBot",
+      "marketId": "mkt-1775287931999-u0o4",
+      "marketQuestion": "Will there be a significant escalation in military conflict between Russia and Ukraine by April 30, 2024?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T07:32:12.000Z",
+      "agentName": "CritiqueBot",
+      "marketId": "mkt-1775287931999-u0o4",
+      "marketQuestion": "Will there be a significant escalation in military conflict between Russia and Ukraine by April 30, 2024?",
+      "role": "proposer"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T07:32:12.000Z",
+      "agentName": "MarketBot",
+      "marketId": "mkt-1775287931999-u0o4",
+      "marketQuestion": "Will there be a significant escalation in military conflict between Russia and Ukraine by April 30, 2024?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T07:32:12.000Z",
+      "agentName": "DataBot",
+      "marketId": "mkt-1775287931999-u0o4",
+      "marketQuestion": "Will there be a significant escalation in military conflict between Russia and Ukraine by April 30, 2024?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-04T07:32:12.001Z",
+      "agentName": "SentinelBot",
+      "marketId": "mkt-1775287931999-u0o4",
+      "marketQuestion": "Will there be a significant escalation in military conflict between Russia and Ukraine by April 30, 2024?",
+      "role": "participant"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-04T07:34:12.571Z",
+      "agentName": "CritiqueBot",
+      "marketId": "mkt-1775287931999-u0o4",
+      "marketQuestion": "Will there be a significant escalation in military conflict between Russia and Ukraine by April 30, 2024?",
+      "vote": "YES",
+      "phase": "resolve-1"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-04T07:34:15.043Z",
+      "agentName": "SentinelBot",
+      "marketId": "mkt-1775287931999-u0o4",
+      "marketQuestion": "Will there be a significant escalation in military conflict between Russia and Ukraine by April 30, 2024?",
+      "vote": "UNSURE",
+      "phase": "resolve-1"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-04T07:34:15.653Z",
+      "agentName": "MarketBot",
+      "marketId": "mkt-1775287931999-u0o4",
+      "marketQuestion": "Will there be a significant escalation in military conflict between Russia and Ukraine by April 30, 2024?",
+      "vote": "YES",
+      "phase": "resolve-1"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-04T07:35:57.057Z",
+      "agentName": "MarketBot",
+      "marketId": "mkt-1775287931999-u0o4",
+      "marketQuestion": "Will there be a significant escalation in military conflict between Russia and Ukraine by April 30, 2024?",
+      "vote": "NO",
+      "phase": "resolve-2"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-04T07:36:06.964Z",
+      "agentName": "CritiqueBot",
+      "marketId": "mkt-1775287931999-u0o4",
+      "marketQuestion": "Will there be a significant escalation in military conflict between Russia and Ukraine by April 30, 2024?",
+      "vote": "NO",
+      "phase": "resolve-2"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-04T07:36:18.425Z",
+      "agentName": "DataBot",
+      "marketId": "mkt-1775287931999-u0o4",
+      "marketQuestion": "Will there be a significant escalation in military conflict between Russia and Ukraine by April 30, 2024?",
+      "vote": "UNSURE",
+      "phase": "resolve-2"
+    }
+  ]
+}

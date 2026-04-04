@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "orchestrator": "node scripts/orchestrator.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

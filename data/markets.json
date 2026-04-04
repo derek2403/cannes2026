@@ -1,71 +1,74 @@
 [
   {
-    "id": "mkt-1775259549-1870",
-    "created_at": "2026-04-03T23:40:00Z",
+    "id": "mkt-1775279117077-pv7i",
+    "created_at": "2026-04-04T05:05:17.077Z",
     "ai_insight": {
-      "agent_id": "0.0.8500671",
-      "debate_log_id": "debate-mkt-1775259549-1870",
-      "market_thesis": "Interest rate decisions by the Federal Reserve significantly influence the economy and financial markets, making this a crucial topic for investors and policymakers.",
-      "confidence_score": 85,
+      "agent_id": "ResearchBot",
+      "debate_log_id": "debate-mkt-1775279117077-pv7i",
+      "market_thesis": "Market proposed by ResearchBot during AI swarm creation process on theme: climate policy and energy markets",
+      "confidence_score": 60,
       "suggested_categories": [
-        "Economics",
-        "Monetary Policy"
+        "climate"
       ],
-      "news_sources": [
-        {
-          "title": "EU passes landmark AI regulation bill",
-          "source": "Reuters",
-          "url": "https://example.com/1",
-          "published_at": "2026-04-03T23:39:09Z",
-          "summary": "EU approved comprehensive AI Act mandating transparency for foundation models.",
-          "relevance_score": 0
-        },
-        {
-          "title": "Bitcoin ETF daily inflows surpass $1 billion",
-          "source": "Bloomberg",
-          "url": "https://example.com/2",
-          "published_at": "2026-04-03T23:39:09Z",
-          "summary": "Spot Bitcoin ETFs saw record daily inflows exceeding $1 billion.",
-          "relevance_score": 0
-        },
-        {
-          "title": "SpaceX Starship completes orbital flight",
-          "source": "BBC News",
-          "url": "https://example.com/3",
-          "published_at": "2026-04-03T23:39:09Z",
-          "summary": "SpaceX Starship completed full orbital flight and landing.",
-          "relevance_score": 0
-        },
-        {
-          "title": "Federal Reserve signals rate cut",
-          "source": "CNBC",
-          "url": "https://example.com/4",
-          "published_at": "2026-04-03T23:39:09Z",
-          "summary": "Fed Chair indicated conditions may warrant rate reduction.",
-          "relevance_score": 0
-        },
-        {
-          "title": "Apple partners with OpenAI for Siri",
-          "source": "The Verge",
-          "url": "https://example.com/5",
-          "published_at": "2026-04-03T23:39:09Z",
-          "summary": "Apple integrating OpenAI models into Siri for multi-modal conversations.",
-          "relevance_score": 0
-        }
-      ]
+      "news_sources": []
     },
     "resolution": {
-      "question": "Will the Federal Reserve announce a rate cut in the September 2023 meeting?",
-      "resolution_criteria": "A 'YES' outcome is determined if the Federal Reserve announces a reduction in the federal funds rate during the September 2023 meeting, as reported by CNBC or the Federal Reserve's official website. A 'NO' outcome occurs if the rate is not cut, or if no decision is announced during this meeting.\nNull clause: The market resolves as INVALID if the September 2023 meeting is canceled or if the Federal Reserve ceases to publicly announce rate changes.",
-      "resolution_date": "2023-09-21",
+      "question": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2024?",
+      "resolution_criteria": "The prediction will resolve to 'YES' if the European Union officially adopts and publishes a carbon border adjustment mechanism in its official legislative documents by the specified date. It will resolve to 'NO' if such legislation is not adopted by that date.",
+      "resolution_date": "2024-04-30",
       "oracle_type": "ai_swarm",
-      "ancillary_data": "The Federal Reserve's schedule and announcements can be verified through their official communications and major financial news outlets."
+      "ancillary_data": "Created via /api/commands/create-market with 5 agents"
     },
     "amm": {
       "lp_pool_address": null,
       "initial_seed_amount": 1000,
-      "yes_token_id": "0.0.8500681",
-      "no_token_id": "0.0.8500683",
+      "yes_token_id": null,
+      "no_token_id": null,
+      "yes_token_balance": 1000,
+      "no_token_balance": 1000,
+      "current_odds_yes": 0.5,
+      "total_liquidity_usd": 0,
+      "trading_fee": 0.02
+    },
+    "ux": {
+      "status": "PROPOSED",
+      "volume_24h": 0,
+      "total_volume": 0,
+      "unique_bettors": 0,
+      "top_bet_size": 0,
+      "is_trending": false
+    },
+    "settlement": {
+      "winning_outcome": null,
+      "settlement_price": null,
+      "dispute_tx_hash": null
+    }
+  },
+  {
+    "id": "mkt-1775287931999-u0o4",
+    "created_at": "2026-04-04T07:32:11.999Z",
+    "ai_insight": {
+      "agent_id": "CritiqueBot",
+      "debate_log_id": "debate-mkt-1775287931999-u0o4",
+      "market_thesis": "Market proposed by CritiqueBot during AI swarm creation process on theme: geopolitical events and their market impact",
+      "confidence_score": 40,
+      "suggested_categories": [
+        "geopolitical"
+      ],
+      "news_sources": []
+    },
+    "resolution": {
+      "question": "Will there be a significant escalation in military conflict between Russia and Ukraine by April 30, 2024?",
+      "resolution_criteria": "Resolution will occur if there is an official declaration of war, a significant increase in military engagements resulting in casualties exceeding 100 in a single month, or any formal announcement by either government regarding an escalation of military actions.",
+      "resolution_date": "2024-04-30",
+      "oracle_type": "ai_swarm",
+      "ancillary_data": "Created via /api/commands/create-market with 5 agents"
+    },
+    "amm": {
+      "lp_pool_address": null,
+      "initial_seed_amount": 1000,
+      "yes_token_id": null,
+      "no_token_id": null,
       "yes_token_balance": 1000,
       "no_token_balance": 1000,
       "current_odds_yes": 0.5,
