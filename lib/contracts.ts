@@ -2,7 +2,7 @@
 
 export const CONTRACTS = {
   // World Chain Mainnet (480)
-  predictionMarket: "0xeb57f9a1BA627aa7Aa68B6c927D1a28aab1eac8b" as `0x${string}`,
+  predictionMarket: "0x69c605C145581734c02628aAcb1f4B1607f20D63" as `0x${string}`,
   wld: "0x2cFc85d8E48F8EAB294be644d9E25C3030863003" as `0x${string}`,
 
   // World Chain Sepolia (4801)
