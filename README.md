@@ -621,4 +621,5 @@ Market needs resolution:
 ```mermaid
 graph LR
     P1[“PHASE 1<br/>0G Core<br/>OpenClaw agents<br/>Basic inference<br/>iNFT identity”] --> P2[“PHASE 2<br/>Hedera Layer<br/>HTS tokens<br/>HCS voting<br/>Agent Kit payouts”] --> P3[“PHASE 3<br/>World Layer<br/>World ID verify<br/>MiniKit frontend<br/>AgentKit agents”] --> P4[“PHASE 4<br/>Polish<br/>Reputation system<br/>Demo flow<br/>README + video”]
+    
 ```
