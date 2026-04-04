@@ -7,6 +7,7 @@ import { CONTRACTS } from "@/lib/contracts";
 import WorldIdVerification from "@/components/WorldIdVerification";
 import WalletAuth from "@/components/WalletAuth";
 import PredictionMarket from "@/components/PredictionMarket";
+import MyPositions from "@/components/MyPositions";
 import fs from "fs";
 import path from "path";
 
@@ -164,6 +165,18 @@ export default function MiniKitPage({ markets }: { markets: MarketData[] }) {
           refreshPool={refreshPool}
           refreshBalance={refreshBalance}
         />
+
+        {/* My Positions */}
+        {wallet && (
+          <MyPositions
+            markets={markets}
+            pools={pools}
+            wallet={wallet}
+            setStatus={setStatus}
+            refreshPool={refreshPool}
+            refreshBalance={refreshBalance}
+          />
+        )}
 
         {/* Status */}
         {status && (
