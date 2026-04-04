@@ -211,12 +211,12 @@ export default function DisputePage() {
                     {/* Left Column */}
                     <div className="flex flex-col gap-6">
 
-                        {/* Outcome Box (Dark theme to match reference Image 2) */}
-                        <div className="bg-[#13161c] rounded-3xl p-8 flex flex-col items-center justify-center text-center shadow-lg h-[280px]">
-                            <div className="w-20 h-20 bg-[#1da1f2] rounded-full flex items-center justify-center mb-6 shadow-[0_0_24px_rgba(29,161,242,0.5)]">
+                        {/* Outcome hero — red-leaning accent (less pink than coral) */}
+                        <div className="bg-[#13161c] rounded-3xl p-8 flex flex-col items-center justify-center text-center shadow-lg h-[280px] border border-[#EF5A5A]/32">
+                            <div className="w-20 h-20 bg-[#EF5A5A] rounded-full flex items-center justify-center mb-6 shadow-[0_0_32px_rgba(239,90,90,0.58)]">
                                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                             </div>
-                            <h2 className="text-[#1da1f2] font-['Satoshi'] font-bold text-3xl mb-2 tracking-wide">Outcome: No</h2>
+                            <h2 className="text-[#EF5A5A] font-['Satoshi'] font-bold text-3xl mb-2 tracking-wide">Outcome: No</h2>
                             <p className="text-gray-400 font-medium text-lg">March 15</p>
                         </div>
 
