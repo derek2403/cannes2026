@@ -26,7 +26,7 @@ export const zgTestnet = defineChain({
 
 export const wagmiConfig = createConfig({
   chains: [zgTestnet],
-  connectors: [injected()],
+  connectors: typeof window !== "undefined" ? [injected()] : [],
   transports: {
     [zgTestnet.id]: http(),
   },

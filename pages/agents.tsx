@@ -1,7 +1,4 @@
 import { useState, useEffect } from "react";
-import type { GetServerSideProps } from "next";
-import { readFileSync, existsSync } from "fs";
-import { join } from "path";
 
 // ── Types ───────────────────────────────────────────────────────
 interface AgentData {
@@ -34,13 +31,6 @@ interface HistoryEvent {
   role?: string;
 }
 
-interface PageProps {
-  agents: AgentData[];
-  registryTopicId: string | null;
-  reputationTopicId: string | null;
-  history: HistoryEvent[];
-}
-
 // ── Colors ──────────────────────────────────────────────────────
 const C = {
   bg: "#f5f0e8",
@@ -54,44 +44,12 @@ const C = {
   btnPrimary: "#483519",
 };
 
-export const getServerSideProps: GetServerSideProps<PageProps> = async () => {
-  try {
-    const statePath = join(process.cwd(), "hedera-state.json");
-    const historyPath = join(process.cwd(), "data", "agent-history.json");
-    const state = JSON.parse(readFileSync(statePath, "utf-8"));
-    let history: { events: HistoryEvent[] } = { events: [] };
-    if (existsSync(historyPath)) {
-      history = JSON.parse(readFileSync(historyPath, "utf-8"));
-    }
-    return {
-      props: {
-        agents: state.agents || [],
-        registryTopicId: state.registryTopicId || null,
-        reputationTopicId: state.reputationTopicId || null,
-        history: history.events || [],
-      },
-    };
-  } catch {
-    return {
-      props: {
-        agents: [],
-        registryTopicId: null,
-        reputationTopicId: null,
-        history: [],
-      },
-    };
-  }
-};
-
 // ═════════════════════════════════════════════════════════════════
-export default function AgentsPage({
-  agents: initialAgents,
-  registryTopicId,
-  reputationTopicId,
-  history: initialHistory,
-}: PageProps) {
-  const [agents, setAgents] = useState<AgentData[]>(initialAgents);
-  const [history, setHistory] = useState<HistoryEvent[]>(initialHistory);
+export default function AgentsPage() {
+  const [agents, setAgents] = useState<AgentData[]>([]);
+  const [history, setHistory] = useState<HistoryEvent[]>([]);
+  const [registryTopicId, setRegistryTopicId] = useState<string | null>(null);
+  const [reputationTopicId, setReputationTopicId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
 
@@ -105,6 +63,8 @@ export default function AgentsPage({
       if (stateRes.ok) {
         const data = await stateRes.json();
         setAgents(data.agents || []);
+        setRegistryTopicId(data.registryTopicId || null);
+        setReputationTopicId(data.reputationTopicId || null);
       }
       if (histRes.ok) {
         const data = await histRes.json();
@@ -118,6 +78,7 @@ export default function AgentsPage({
   }
 
   useEffect(() => {
+    refresh();
     const interval = setInterval(refresh, 10000);
     return () => clearInterval(interval);
   }, []);
