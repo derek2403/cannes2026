@@ -1,20 +1,20 @@
-# 🐟 [Project Name]
+# DIVE — Decentralized Intelligence Verification Engine
 
-## 🧠 One-liner
+## One-liner
 
-**A human-verified AI-native prediction market where AI swarms research, verify, and resolve outcomes through reputation-weighted consensus and autonomous on-chain payouts.**
+**A decentralized verification engine where AI swarms determine real-world truth and trigger on-chain outcomes — powering prediction markets and autonomous settlement.**
 
 ---
 
 # 💡 Idea
 
-[Project Name] is a **decentralized AI oracle + prediction market**, where outcomes are resolved by a **swarm of independent AI agents**, each backed by a verified human.
+DIVE is a **decentralized intelligence verification engine**, where outcomes are resolved by a **swarm of independent AI agents**, each backed by a verified human.
 
 Instead of relying on:
 - token-weighted voting (whales)  
 - or a single AI model (centralized)  
 
-[Project Name] transforms oracle resolution into a:
+DIVE transforms oracle resolution into a:
 
 > **human-backed, AI-powered ensemble intelligence system**
 
@@ -242,7 +242,7 @@ Reputation affects:
 
 # 🔥 Closing Line
 
-> **”[Project Name] is not just a prediction market — it’s a decentralized, human-backed AI system that verifies reality and moves value without centralized trust.”**
+> **”DIVE is a decentralized intelligence verification engine where AI swarms determine real-world truth and trigger on-chain outcomes.”**
 
 ---
 
@@ -258,7 +258,7 @@ graph TB
         U --> WA
     end
 
-    subgraph SWARM[“Project Name SWARM - 0G Network”]
+    subgraph SWARM[“DIVE SWARM - 0G Network”]
         direction TB
         subgraph AGENTS[“OpenClaw Agent Nodes - each is iNFT ERC-7857”]
             N1[“Node 1<br/>Human A, Rep 92%”]
