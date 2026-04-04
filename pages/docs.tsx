@@ -1,6 +1,5 @@
 import Head from 'next/head';
 import React, { useState } from 'react';
-import Link from 'next/link';
 import Header from '../components/header/Header';
 import { Roboto, Figtree } from 'next/font/google';
 
@@ -145,22 +144,7 @@ const params = [
     { name: 'reputation',       type: 'number', required: false, description: 'Initial reputation score (0–100). Defaults to 0 if omitted.',                       example: '10' },
 ];
 
-const navSections = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'endpoint', label: 'Endpoint' },
-    { id: 'request',  label: 'Request Body' },
-    { id: 'curl',     label: 'curl Example' },
-    { id: 'response', label: 'Response' },
-];
-
 export default function Docs() {
-    const [activeSection, setActiveSection] = useState('overview');
-
-    const scrollTo = (id: string) => {
-        setActiveSection(id);
-        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
-
     return (
         <div className={`min-h-screen bg-[#f8f9fa] ${roboto.variable} ${figtree.variable} font-[family-name:var(--font-roboto)]`}>
             <Head>
@@ -171,52 +155,8 @@ export default function Docs() {
 
             <Header />
 
-            <div className="w-[96%] max-w-[1800px] mx-auto mt-8 pb-20 flex gap-8">
-
-                {/* ── Left Sidebar ─────────────────────────────────── */}
-                <aside className="hidden lg:flex flex-col w-64 shrink-0">
-                    <div className="sticky top-8">
-                        <p className="font-[700] text-[#6c757d] text-xs uppercase tracking-widest mb-3 px-3">
-                            inFT API
-                        </p>
-                        <nav className="flex flex-col gap-0.5">
-                            {navSections.map((s) => (
-                                <button
-                                    key={s.id}
-                                    onClick={() => scrollTo(s.id)}
-                                    className={`text-left px-3 py-2 rounded-lg text-base font-medium transition-colors ${
-                                        activeSection === s.id
-                                            ? 'bg-white border border-gray-200 shadow-sm text-[#212529]'
-                                            : 'text-[#6c757d] hover:text-[#212529] hover:bg-white/60'
-                                    }`}
-                                >
-                                    {s.label}
-                                </button>
-                            ))}
-                        </nav>
-
-                        <div className="mt-8 h-px bg-gray-200" />
-
-                        <div className="mt-6 px-3">
-                            <p className="font-[700] text-[#6c757d] text-xs uppercase tracking-widest mb-3">
-                                Quick Actions
-                            </p>
-                            <Link
-                                href="/register"
-                                className="flex items-center gap-2 text-base font-medium text-[#212529] hover:text-slate-700 transition-colors group"
-                            >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6c757d] group-hover:text-slate-700 shrink-0">
-                                    <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                                </svg>
-                                Register Agent Form
-
-                            </Link>
-                        </div>
-                    </div>
-                </aside>
-
-                {/* ── Main Content ──────────────────────────────────── */}
-                <main className="flex-1 min-w-0 flex flex-col gap-10">
+            <div className="w-full flex justify-center px-2 md:px-0 pt-4 sm:pt-5 pb-16">
+                <main className="w-[96%] max-w-[1800px] flex flex-col gap-10 pl-[calc(1.5rem-0.5cm)] lg:pl-[calc(2.5rem-0.5cm)] pr-3 lg:pr-4 box-border">
 
                     {/* Overview */}
                     <div id="overview" className="scroll-mt-8">
@@ -315,3 +255,4 @@ export default function Docs() {
         </div>
     );
 }
+
