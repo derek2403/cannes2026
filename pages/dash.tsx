@@ -15,6 +15,23 @@ const figtree = Figtree({
   variable: "--font-figtree",
 });
 
+// Typography tokens matching home/market/dispute pages
+const typography = {
+  /** Main page title — true black (overrides body --foreground) */
+  pageTitle: "font-['Satoshi',sans-serif] font-[800] !text-[#000000] text-2xl",
+  sectionHeader: "font-['Satoshi',sans-serif] font-[700] text-[#212529] text-2xl",
+  smallLabel: "font-[family-name:var(--font-roboto)] font-[700] text-[#6c757d] text-[0.75rem] uppercase tracking-wide",
+  /** Stats strip labels (REPUTATION, Balance, …) — navy; ! avoids body --foreground override */
+  statCardLabel:
+    "font-[family-name:var(--font-roboto)] font-[700] !text-[#0a2540] text-[0.75rem] uppercase tracking-wide",
+  bodyText: "font-[family-name:var(--font-roboto)] font-[400] text-[#212529] text-[clamp(0.875rem,1vw,1rem)]",
+  muted: "font-[family-name:var(--font-roboto)] font-[400] text-[#6c757d] text-sm",
+  /** Pale blue pill — matches activity “vote” tags */
+  statusBadge:
+    "font-[family-name:var(--font-roboto)] font-[600] text-[#2E6692] bg-[#EBF3F9] border border-[#BDD1E2] text-[0.7rem] px-2 py-1 rounded-md",
+  monoText: "font-mono font-[500] text-[#212529]",
+};
+
 /* ── hardcoded data ───────────────────────────────────────── */
 
 const myAgent = {
@@ -33,15 +50,18 @@ const myAgent = {
   totalAgents: 42,
 };
 
+/** Leaderboard row avatars — neutral grey circles */
+const LEADERBOARD_AVATAR_BG = "#6b7280";
+
 const leaderboard = [
-  { rank: 1, name: "SentinelX", accountId: "0.0.7831204", score: 923, accuracy: 94.2, votes: 211, avatar: "#6366f1", change: "+12" },
-  { rank: 2, name: "NebulaSeer", accountId: "0.0.7905882", score: 891, accuracy: 91.7, votes: 184, avatar: "#f59e0b", change: "+8" },
-  { rank: 3, name: "OracleAlpha", accountId: "0.0.7946371", score: 847, accuracy: 89.1, votes: 156, avatar: "#10b981", change: "+27", isMe: true },
-  { rank: 4, name: "VortexMind", accountId: "0.0.7912456", score: 812, accuracy: 87.3, votes: 143, avatar: "#ef4444", change: "-3" },
-  { rank: 5, name: "CryptoOwl", accountId: "0.0.7889031", score: 788, accuracy: 85.9, votes: 167, avatar: "#8b5cf6", change: "+5" },
-  { rank: 6, name: "DeepOracle", accountId: "0.0.7954102", score: 756, accuracy: 83.1, votes: 98, avatar: "#ec4899", change: "+19" },
-  { rank: 7, name: "QuantumVote", accountId: "0.0.7867293", score: 731, accuracy: 81.4, votes: 132, avatar: "#14b8a6", change: "-11" },
-  { rank: 8, name: "TruthLayer", accountId: "0.0.7921847", score: 704, accuracy: 79.8, votes: 89, avatar: "#f97316", change: "+2" },
+  { rank: 1, name: "SentinelX", accountId: "0.0.7831204", score: 923, accuracy: 94.2, votes: 211, change: "+12" },
+  { rank: 2, name: "NebulaSeer", accountId: "0.0.7905882", score: 891, accuracy: 91.7, votes: 184, change: "+8" },
+  { rank: 3, name: "OracleAlpha", accountId: "0.0.7946371", score: 847, accuracy: 89.1, votes: 156, change: "+27", isMe: true },
+  { rank: 4, name: "VortexMind", accountId: "0.0.7912456", score: 812, accuracy: 87.3, votes: 143, change: "-3" },
+  { rank: 5, name: "CryptoOwl", accountId: "0.0.7889031", score: 788, accuracy: 85.9, votes: 167, change: "+5" },
+  { rank: 6, name: "DeepOracle", accountId: "0.0.7954102", score: 756, accuracy: 83.1, votes: 98, change: "+19" },
+  { rank: 7, name: "QuantumVote", accountId: "0.0.7867293", score: 731, accuracy: 81.4, votes: 132, change: "-11" },
+  { rank: 8, name: "TruthLayer", accountId: "0.0.7921847", score: 704, accuracy: 79.8, votes: 89, change: "+2" },
 ];
 
 const reputationHistory = [
@@ -90,7 +110,7 @@ function useCounter(target: number, duration = 1200) {
     const start = performance.now();
     const step = (now: number) => {
       const t = Math.min((now - start) / duration, 1);
-      const ease = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      const ease = 1 - Math.pow(1 - t, 3);
       setVal(Math.round(ease * target));
       if (t < 1) requestAnimationFrame(step);
     };
@@ -103,24 +123,24 @@ function useCounter(target: number, duration = 1200) {
 
 function badge(type: string) {
   const map: Record<string, string> = {
-    vote: "bg-blue-50 text-blue-700 border-blue-200",
-    reward: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    dispute: "bg-amber-50 text-amber-700 border-amber-200",
+    vote: "font-[family-name:var(--font-roboto)] font-[600] text-[#2E6692] bg-[#EBF3F9] border border-[#BDD1E2]",
+    reward: "font-[family-name:var(--font-roboto)] font-[600] text-[#495057] bg-gray-100 border border-gray-200",
+    dispute: "font-[family-name:var(--font-roboto)] font-[600] text-[#c2410c] bg-[#fef3f0] border border-[#f8c7b5]",
   };
   return map[type] ?? map.vote;
 }
 
 function resultColor(r: string) {
-  if (r === "correct" || r === "payout") return "text-emerald-600";
+  if (r === "correct" || r === "payout") return "text-[#28a745]";
   if (r === "wrong") return "text-red-500";
-  return "text-amber-500";
+  return "text-[#6c757d]";
 }
 
 function disputeStatusBadge(s: string) {
   const map: Record<string, string> = {
-    resolved: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    active: "bg-blue-50 text-blue-700 border-blue-200",
-    rejected: "bg-gray-100 text-gray-500 border-gray-200",
+    resolved: "font-[600] text-[#495057] bg-gray-100 border border-gray-200",
+    active: "font-[600] text-[#2E6692] bg-[#EBF3F9] border border-[#BDD1E2]",
+    rejected: "font-[600] text-[#6c757d] bg-gray-100 border border-gray-200",
   };
   return map[s] ?? map.resolved;
 }
@@ -139,145 +159,151 @@ export default function Dash() {
   const balCount = useCounter(Math.round(myAgent.walletBalance));
   const accCount = useCounter(Math.round(myAgent.accuracy * 10));
 
-  const anim = (i: number) =>
-    mounted
-      ? { opacity: 1, transform: "translateY(0)" }
-      : { opacity: 0, transform: "translateY(20px)" };
-
-  const delay = (i: number) => ({
-    transition: `all 0.6s cubic-bezier(0.16,1,0.3,1) ${i * 0.08}s`,
-  });
-
   return (
     <div className={`min-h-screen bg-[#f8f9fa] ${roboto.variable} ${figtree.variable} font-[family-name:var(--font-roboto)]`}>
       <Head>
-        <title>Dive</title>
+        <title>My Dashboard | Dive</title>
         <link href="https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400,300&display=swap" rel="stylesheet" />
       </Head>
 
       <style jsx global>{`
-        @keyframes bar-grow {
-          from { height: 0%; }
-        }
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        @keyframes pulse-ring {
-          0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
-          70% { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
-          100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+        @keyframes bar-grow { from { height: 0%; } }
+        @keyframes pulse-ring-live {
+          0% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.5); }
+          70% { box-shadow: 0 0 0 8px rgba(248, 113, 113, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0); }
         }
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-4px); }
         }
-        .stat-card {
-          transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+        .dash-card {
+          transition: box-shadow 0.2s ease, transform 0.2s ease;
         }
-        .stat-card:hover {
+        .dash-card:hover {
           transform: translateY(-2px);
-          box-shadow: 0 12px 40px -8px rgba(0,0,0,0.1), 0 4px 12px -2px rgba(0,0,0,0.04);
+          box-shadow: 0 8px 30px rgba(0,0,0,0.08);
         }
         .row-hover {
-          transition: all 0.2s ease;
+          transition: background 0.15s ease;
         }
         .row-hover:hover {
-          background: rgba(248,250,252,0.8);
-          transform: scale(1.002);
+          background: #f8f9fa;
         }
         .leaderboard-row {
-          transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+          transition: background 0.15s ease, transform 0.2s ease;
         }
         .leaderboard-row:hover {
-          transform: translateX(4px);
-          background: rgba(248,250,252,0.9);
+          background: #f8f9fa;
+          transform: translateX(3px);
         }
         .dispute-card {
-          transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+          transition: box-shadow 0.2s ease, border-color 0.2s ease;
         }
         .dispute-card:hover {
-          transform: translateY(-1px);
-          border-color: #d1d5db;
-          box-shadow: 0 4px 20px -4px rgba(0,0,0,0.06);
+          border-color: #dee2e6;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        }
+        .group:hover .bar-chart-fill {
+          filter: brightness(0.82);
         }
       `}</style>
 
       <Header />
 
-      <main className="w-[96%] max-w-[1800px] mx-auto mt-8 pb-20">
+      <main className="w-[96%] max-w-[1800px] mx-auto mt-6 pb-16">
+
         {/* ── Page Title ─────────────────────────────── */}
-        <div className="flex items-center justify-between mb-8" style={{ ...anim(0), ...delay(0) }}>
+        <div
+          className="flex items-center justify-between mb-6 px-2"
+          style={{ opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(16px)", transition: "all 0.5s ease" }}
+        >
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="font-['Satoshi'] text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
-                My Agent Dashboard
-              </h1>
-              <span className="px-2.5 py-1 bg-emerald-500 text-white text-[11px] font-bold uppercase tracking-wider rounded-full" style={{ animation: "pulse-ring 2s infinite" }}>
+              <h1 className={typography.pageTitle}>My Agent Dashboard</h1>
+              <span
+                className="px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full border border-[#fca5a5] bg-[#fecaca] text-[#991b1b]"
+                style={{ animation: "pulse-ring-live 2s infinite" }}
+              >
                 Live
               </span>
             </div>
-            <p className="text-gray-500 mt-1.5 text-[15px] flex items-center gap-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-emerald-400" />
-              {myAgent.name} &middot; <span className="font-mono text-[13px] text-gray-400">{myAgent.accountId}</span>
+            <p
+              className="mt-1 flex items-center gap-2 font-[family-name:var(--font-roboto)] text-sm font-[400] !text-[#0a2540]"
+            >
+              <span className="inline-block w-2 h-2 shrink-0 rounded-full bg-[#0a2540]" />
+              {myAgent.name} &middot;{" "}
+              <span className="font-mono text-[13px] !text-[#0a2540]">{myAgent.accountId}</span>
             </p>
           </div>
           <div className="hidden sm:flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-3.5 py-1.5 text-[13px] font-semibold shadow-sm">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5" /></svg>
+            <span className={`inline-flex items-center gap-1.5 ${typography.statusBadge} rounded-full px-3.5 py-1.5 shadow-sm`}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5" /></svg>
               World ID Verified
             </span>
           </div>
         </div>
 
         {/* ── Stats Strip ─────────────────────────────── */}
-        <div className="rounded-2xl border border-gray-200/80 mb-8 overflow-hidden" style={{ ...anim(1), ...delay(1) }}>
-          {/* Reputation bar — full width */}
-          <div className="bg-white px-6 pt-5 pb-4">
+        <div
+          className="bg-white rounded-xl shadow-[0_0.25rem_0.75rem_rgba(0,0,0,0.06)] border border-gray-200 mb-6 overflow-hidden"
+          style={{ opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(16px)", transition: "all 0.5s ease 0.08s" }}
+        >
+          {/* Reputation bar */}
+          <div className="px-6 pt-5 pb-4 border-b border-gray-100">
             <div className="flex items-center gap-3 mb-3">
-              <span className="text-[13px] text-gray-500">Reputation</span>
-              <span className="text-[22px] font-[800] text-gray-900 leading-none font-['Satoshi']">{repCount}</span>
-              <span className="text-[12px] text-gray-300 mt-0.5">of {myAgent.reputationMax}</span>
-              <span className="ml-auto text-[12px] font-[600] text-gray-900 bg-gray-100 px-2.5 py-1 rounded-lg">Rank #{myAgent.rank}</span>
+              <span className={typography.statCardLabel}>Reputation</span>
+              <span className="font-['Satoshi'] text-[22px] font-[800] text-[#212529] leading-none">{repCount}</span>
+              <span className="text-[12px] mt-0.5 font-[500] !text-[#0a2540]">of {myAgent.reputationMax}</span>
+              <span className="ml-auto text-[12px] font-[600] text-[#212529] bg-gray-100 px-2.5 py-1 rounded-lg">Rank #{myAgent.rank}</span>
             </div>
-            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="w-full h-3 rounded-full overflow-hidden bg-[#F2F2F2]">
               <div
-                className="h-full rounded-full"
+                className="h-full min-h-[12px] rounded-full"
                 style={{
                   width: mounted ? `${(myAgent.reputationScore / myAgent.reputationMax) * 100}%` : "0%",
-                  background: "linear-gradient(90deg, #34d399 0%, #059669 60%, #047857 100%)",
+                  /* Lighter front → mid greys; last ~1/4 to black */
+                  background:
+                    "linear-gradient(90deg, #ebebeb 0%, #dcdcdc 20%, #c4c4c4 40%, #949494 62%, #6e6e6e 75%, #3d3d3d 85%, #171717 93%, #000000 100%)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)",
                   transition: "width 1.4s cubic-bezier(0.22,1,0.36,1) 0.2s",
                 }}
               />
             </div>
           </div>
 
-          {/* Bottom row — 3 stats in separate boxes */}
-          <div className="bg-white border-t border-gray-100 grid grid-cols-3 gap-3 p-3">
-            <div className="bg-[#f7f7f8] rounded-xl px-5 py-4">
-              <span className="text-[11px] text-gray-400 block mb-1">Balance</span>
-              <span className="text-[20px] font-[800] text-gray-900 font-['Satoshi']">${balCount.toLocaleString()}</span>
-              <div className="flex gap-2 mt-1 text-[11px]">
-                <span className="text-gray-400">${myAgent.stakedBalance.toLocaleString()} staked</span>
-                <span className="text-emerald-600 font-[600]">+${myAgent.pendingRewards}</span>
+          {/* Bottom row — 3 stats */}
+          <div className="grid grid-cols-3 gap-3 p-3">
+            <div className="bg-[#f8f9fa] rounded-xl px-5 py-4 border border-gray-100">
+              <span className={`${typography.statCardLabel} block mb-1`}>Balance</span>
+              <span className="font-['Satoshi'] text-[20px] font-[800] text-[#212529]">${balCount.toLocaleString()}</span>
+              <div className="flex gap-2 mt-1 text-[11px] font-[family-name:var(--font-roboto)]">
+                <span className="text-[#6c757d]">${myAgent.stakedBalance.toLocaleString()} staked</span>
+                <span className="font-[600] text-[#28a745]">+${myAgent.pendingRewards}</span>
               </div>
             </div>
 
-            <div className="bg-[#f7f7f8] rounded-xl px-5 py-4">
-              <span className="text-[11px] text-gray-400 block mb-1">Accuracy</span>
+            <div className="bg-[#f8f9fa] rounded-xl px-5 py-4 border border-gray-100">
+              <span className={`${typography.statCardLabel} block mb-1`}>Accuracy</span>
               <div className="flex items-baseline gap-0.5">
-                <span className="text-[20px] font-[800] text-gray-900 font-['Satoshi']">{(accCount / 10).toFixed(1)}</span>
+                <span className="font-['Satoshi'] text-[20px] font-[800] text-[#212529]">{(accCount / 10).toFixed(1)}</span>
                 <span className="text-[13px] text-gray-300 font-[600]">%</span>
               </div>
-              <span className="text-[11px] text-gray-400 mt-1 block">{myAgent.correctVotes}/{myAgent.totalVotes} correct</span>
+              <span
+                className={`${typography.smallLabel} mt-1 block normal-case tracking-normal font-[400]`}
+              >
+                <span className="font-[600] text-[#28a745]">
+                  {myAgent.correctVotes}/{myAgent.totalVotes} correct
+                </span>
+              </span>
             </div>
 
-            <div className="bg-[#f7f7f8] rounded-xl px-5 py-4">
-              <span className="text-[11px] text-gray-400 block mb-1">Disputes</span>
-              <span className="text-[20px] font-[800] text-gray-900 font-['Satoshi']">{disputes.length}</span>
-              <div className="flex gap-2 mt-1 text-[11px]">
-                <span className="text-emerald-600 font-[600]">{disputes.filter((d) => d.status === "resolved").length} won</span>
-                <span className="text-blue-500 font-[600]">{disputes.filter((d) => d.status === "active").length} open</span>
+            <div className="bg-[#f8f9fa] rounded-xl px-5 py-4 border border-gray-100">
+              <span className={`${typography.statCardLabel} block mb-1`}>Disputes</span>
+              <span className="font-['Satoshi'] text-[20px] font-[800] text-[#212529]">{disputes.length}</span>
+              <div className="flex gap-2 mt-1 text-[11px] font-[family-name:var(--font-roboto)]">
+                <span className="font-[600] text-[#c62828]">{disputes.filter((d) => d.status === "resolved").length} won</span>
+                <span className="font-[600] text-[#28a745]">{disputes.filter((d) => d.status === "active").length} open</span>
               </div>
             </div>
           </div>
@@ -286,14 +312,19 @@ export default function Dash() {
         {/* ── Two-column layout ──────────────────────── */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-          {/* LEFT COL: Chart + Leaderboard + Log ───── */}
+          {/* LEFT COL ───── */}
           <div className="xl:col-span-2 flex flex-col gap-6">
 
             {/* Reputation Chart */}
-            <div className="bg-white rounded-2xl border border-gray-200/80 p-6" style={{ ...anim(5), ...delay(5) }}>
+            <div
+              className="dash-card bg-white rounded-xl shadow-[0_0.25rem_0.75rem_rgba(0,0,0,0.06)] border border-gray-200 p-6"
+              style={{ opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(16px)", transition: "all 0.5s ease 0.16s" }}
+            >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="font-['Satoshi'] text-[17px] font-bold text-gray-900">Reputation Over Time</h2>
-                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Last 7 months</span>
+                <h2 className="font-['Satoshi',sans-serif] font-[700] !text-[#0a2540] text-2xl">
+                  Reputation Over Time
+                </h2>
+                <span className={typography.smallLabel}>Last 7 months</span>
               </div>
               <div className="flex items-end gap-2.5 h-40">
                 {reputationHistory.map((h, i) => {
@@ -301,20 +332,36 @@ export default function Dash() {
                   const isLast = i === reputationHistory.length - 1;
                   return (
                     <div key={h.month} className="flex-1 flex flex-col items-center gap-1.5 group">
-                      <span className={`text-[11px] font-bold transition-colors ${isLast ? "text-emerald-600" : "text-gray-400 group-hover:text-gray-600"}`}>
+                      <span
+                        className={`text-[11px] font-bold font-[family-name:var(--font-roboto)] transition-colors ${
+                          isLast ? "text-[#171717]" : "text-[#525252] group-hover:text-[#171717]"
+                        }`}
+                      >
                         {h.score}
                       </span>
-                      <div className="w-full bg-gray-50 rounded-lg overflow-hidden relative" style={{ height: "110px" }}>
+                      <div
+                        className="w-full rounded-lg overflow-hidden border border-gray-200"
+                        style={{ height: "110px", background: "#e5e5e5" }}
+                      >
                         <div
-                          className={`w-full rounded-lg transition-all ${isLast ? "bg-gradient-to-t from-emerald-600 to-emerald-400" : "bg-gradient-to-t from-gray-300 to-gray-200 group-hover:from-gray-400 group-hover:to-gray-300"}`}
+                          className="w-full rounded-lg transition-all bar-chart-fill"
                           style={{
                             height: mounted ? `${pct}%` : "0%",
                             marginTop: mounted ? `${100 - pct}%` : "100%",
                             transition: `all 0.8s cubic-bezier(0.16,1,0.3,1) ${0.5 + i * 0.1}s`,
+                            background: isLast
+                              ? "linear-gradient(to top, #0a0a0a, #262626, #525252)"
+                              : "linear-gradient(to top, #404040, #737373, #a3a3a3)",
                           }}
                         />
                       </div>
-                      <span className={`text-[11px] font-medium ${isLast ? "text-emerald-600" : "text-gray-400"}`}>{h.month}</span>
+                      <span
+                        className={`text-[11px] font-medium font-[family-name:var(--font-roboto)] ${
+                          isLast ? "text-[#171717] font-bold" : "text-[#525252]"
+                        }`}
+                      >
+                        {h.month}
+                      </span>
                     </div>
                   );
                 })}
@@ -322,18 +369,22 @@ export default function Dash() {
             </div>
 
             {/* Activity Log */}
-            <div className="bg-white rounded-2xl border border-gray-200/80 p-6" style={{ ...anim(6), ...delay(6) }}>
+            <div
+              className="dash-card bg-white rounded-xl shadow-[0_0.25rem_0.75rem_rgba(0,0,0,0.06)] border border-gray-200 p-6"
+              style={{ opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(16px)", transition: "all 0.5s ease 0.24s" }}
+            >
               <div className="flex items-center justify-between mb-5">
-                <h2 className="font-['Satoshi'] text-[17px] font-bold text-gray-900">Activity Log</h2>
+                <h2 className={typography.sectionHeader}>Activity Log</h2>
                 <div className="flex gap-0.5 bg-gray-100 rounded-lg p-0.5">
                   {(["all", "vote", "reward", "dispute"] as const).map((f) => (
                     <button
                       key={f}
                       onClick={() => setLogFilter(f)}
-                      className={`px-2.5 py-1 rounded-md text-[12px] font-semibold capitalize transition-all ${logFilter === f
-                          ? "bg-white text-gray-800 shadow-sm"
-                          : "text-gray-400 hover:text-gray-600"
-                        }`}
+                      className={`px-2.5 py-1 rounded-md text-[12px] font-semibold capitalize transition-all font-[family-name:var(--font-roboto)] ${
+                        logFilter === f
+                          ? "bg-white text-[#212529] shadow-sm"
+                          : "text-[#6c757d] hover:text-[#212529]"
+                      }`}
                     >
                       {f}
                     </button>
@@ -341,40 +392,43 @@ export default function Dash() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1">
+              <div className="divide-y divide-gray-100">
                 {filtered.map((row, i) => (
                   <div
                     key={row.id}
-                    className="row-hover flex items-center gap-3 px-3 py-2.5 rounded-xl"
+                    className="row-hover flex items-center gap-3 px-3 py-2.5 rounded-lg"
                     style={{
                       opacity: mounted ? 1 : 0,
                       transform: mounted ? "translateX(0)" : "translateX(-10px)",
                       transition: `all 0.4s ease ${i * 0.05}s`,
                     }}
                   >
-                    <span className={`shrink-0 inline-block px-2 py-0.5 rounded-md text-[11px] font-bold border capitalize w-[58px] text-center ${badge(row.type)}`}>
+                    <span className={`shrink-0 inline-block px-2 py-0.5 rounded-md text-[11px] font-bold border capitalize w-[60px] text-center ${badge(row.type)}`}>
                       {row.type}
                     </span>
-                    <span className="flex-1 text-[13px] text-gray-700 font-medium truncate">{row.market}</span>
-                    <span className="font-mono text-[12px] text-gray-400 w-8 text-center">{row.vote}</span>
-                    <span className={`text-[12px] font-bold capitalize w-16 text-center ${resultColor(row.result)}`}>{row.result}</span>
-                    <span className={`font-mono text-[12px] font-bold w-10 text-right ${row.rep.startsWith("+") ? "text-emerald-500" : row.rep.startsWith("-") ? "text-red-400" : "text-gray-300"}`}>
+                    <span className={`flex-1 text-[13px] text-[#212529] font-medium font-[family-name:var(--font-roboto)] truncate`}>{row.market}</span>
+                    <span className="font-mono text-[12px] text-[#6c757d] w-8 text-center">{row.vote}</span>
+                    <span className={`text-[12px] font-bold capitalize w-16 text-center font-[family-name:var(--font-roboto)] ${resultColor(row.result)}`}>{row.result}</span>
+                    <span className={`font-mono text-[12px] font-bold w-10 text-right ${row.rep.startsWith("+") ? "text-[#495057]" : row.rep.startsWith("-") ? "text-red-500" : "text-gray-300"}`}>
                       {row.rep}
                     </span>
-                    <span className="text-[11px] text-gray-300 w-12 text-right">{row.time}</span>
+                    <span className="text-[11px] text-[#6c757d] w-12 text-right font-[family-name:var(--font-roboto)]">{row.time}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Disputes */}
-            <div className="bg-white rounded-2xl border border-gray-200/80 p-6" style={{ ...anim(7), ...delay(7) }}>
-              <h2 className="font-['Satoshi'] text-[17px] font-bold text-gray-900 mb-5">Dispute Results</h2>
+            <div
+              className="dash-card bg-white rounded-xl shadow-[0_0.25rem_0.75rem_rgba(0,0,0,0.06)] border border-gray-200 p-6"
+              style={{ opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(16px)", transition: "all 0.5s ease 0.32s" }}
+            >
+              <h2 className={`${typography.sectionHeader} mb-5`}>Dispute Results</h2>
               <div className="flex flex-col gap-3">
                 {disputes.map((d, i) => (
                   <div
                     key={d.id}
-                    className="dispute-card border border-gray-100 rounded-xl p-4"
+                    className="dispute-card border border-gray-100 rounded-xl p-4 hover:bg-gray-50/30 transition-colors"
                     style={{
                       opacity: mounted ? 1 : 0,
                       transform: mounted ? "translateY(0)" : "translateY(10px)",
@@ -385,16 +439,16 @@ export default function Dash() {
                       <span className={`inline-block px-2 py-0.5 rounded-md text-[11px] font-bold border capitalize ${disputeStatusBadge(d.status)}`}>
                         {d.status}
                       </span>
-                      <h3 className="text-[13px] font-semibold text-gray-800 truncate">{d.market}</h3>
+                      <h3 className="text-[13px] font-semibold text-[#212529] font-[family-name:var(--font-roboto)] truncate">{d.market}</h3>
                     </div>
-                    <p className="text-[12px] text-gray-400 leading-relaxed mb-2">{d.reason}</p>
+                    <p className="text-[12px] text-[#6c757d] font-[family-name:var(--font-roboto)] leading-relaxed mb-2">{d.reason}</p>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 text-[12px]">
-                        <span className="text-gray-400">Vote: <strong className="text-gray-600">{d.myVote}</strong></span>
+                      <div className="flex items-center gap-3 text-[12px] font-[family-name:var(--font-roboto)]">
+                        <span className="text-[#6c757d]">Vote: <strong className="text-[#212529]">{d.myVote}</strong></span>
                         <span className="text-gray-300">|</span>
-                        <span className="text-gray-400">{d.outcome}</span>
+                        <span className="text-[#6c757d]">{d.outcome}</span>
                       </div>
-                      <span className={`font-mono text-[13px] font-bold ${d.repEffect.startsWith("+") ? "text-emerald-500" : d.repEffect === "0" ? "text-gray-300" : "text-gray-400"}`}>
+                      <span className={`font-mono text-[13px] font-bold ${d.repEffect.startsWith("+") ? "text-[#495057]" : d.repEffect === "0" ? "text-gray-300" : "text-[#6c757d]"}`}>
                         {d.repEffect !== "—" ? `${d.repEffect} rep` : "—"}
                       </span>
                     </div>
@@ -405,61 +459,67 @@ export default function Dash() {
 
           </div>
 
-          {/* RIGHT COL: Earnings + Profile + Disputes + Actions */}
+          {/* RIGHT COL ───── */}
           <div className="xl:col-span-1 flex flex-col gap-6">
 
             {/* Earnings */}
-            <div className="bg-white rounded-2xl border border-gray-200/80 p-6" style={{ ...anim(9), ...delay(9) }}>
-              <h2 className="font-['Satoshi'] text-[17px] font-bold text-gray-900 mb-1">Earnings</h2>
-              <p className="text-[12px] text-gray-400 mb-5">Lifetime breakdown</p>
+            <div
+              className="dash-card bg-white rounded-xl shadow-[0_0.25rem_0.75rem_rgba(0,0,0,0.06)] border border-gray-200 p-6"
+              style={{ opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(16px)", transition: "all 0.5s ease 0.4s" }}
+            >
+              <h2 className={`${typography.sectionHeader} mb-1`}>Earnings</h2>
+              <p className={`${typography.muted} mb-5`}>Lifetime breakdown</p>
 
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-0">
                 {earnings.map((e, i) => (
                   <div
                     key={e.label}
-                    className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0"
+                    className="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0"
                     style={{
                       opacity: mounted ? 1 : 0,
                       transform: mounted ? "translateX(0)" : "translateX(10px)",
                       transition: `all 0.4s ease ${1.0 + i * 0.08}s`,
                     }}
                   >
-                    <span className="text-[13px] text-gray-500">{e.label}</span>
-                    <span className="font-bold text-gray-900 text-[14px]">${e.amount.toLocaleString()}</span>
+                    <span className={`${typography.muted} text-[#6c757d]`}>{e.label}</span>
+                    <span className="font-bold text-[#212529] text-[14px] font-[family-name:var(--font-roboto)]">${e.amount.toLocaleString()}</span>
                   </div>
                 ))}
               </div>
 
               <div className="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
-                <span className="text-[13px] font-semibold text-gray-400">Total Earned</span>
-                <span className="text-xl font-bold text-gray-900 tracking-tight">${earnings.reduce((s, e) => s + e.amount, 0).toLocaleString()}</span>
+                <span className={`${typography.smallLabel}`}>Total Earned</span>
+                <span className="font-['Satoshi'] text-xl font-bold text-[#212529] tracking-tight">${earnings.reduce((s, e) => s + e.amount, 0).toLocaleString()}</span>
               </div>
             </div>
 
             {/* Oracle Leaderboard */}
-            <div className="bg-white rounded-2xl border border-gray-200/80 p-6" style={{ ...anim(10), ...delay(10) }}>
+            <div
+              className="dash-card bg-white rounded-xl shadow-[0_0.25rem_0.75rem_rgba(0,0,0,0.06)] border border-gray-200 p-6"
+              style={{ opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(16px)", transition: "all 0.5s ease 0.48s" }}
+            >
               <div className="flex items-center justify-between mb-5">
-                <h2 className="font-['Satoshi'] text-[17px] font-bold text-gray-900">Oracle Leaderboard</h2>
-                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Top 8</span>
+                <h2 className={typography.sectionHeader}>Oracle Leaderboard</h2>
+                <span className={typography.smallLabel}>Top 8</span>
               </div>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-0.5">
                 {leaderboard.map((a, i) => (
                   <div
                     key={a.rank}
-                    className={`leaderboard-row flex items-center gap-3 px-3 py-2.5 rounded-xl ${a.isMe ? "bg-emerald-50/60 border border-emerald-200/60" : ""}`}
+                    className={`leaderboard-row flex items-center gap-3 px-3 py-2.5 rounded-lg ${a.isMe ? "bg-gray-100 border border-gray-200" : ""}`}
                     style={{
                       opacity: mounted ? 1 : 0,
                       transform: mounted ? "translateY(0)" : "translateY(12px)",
                       transition: `all 0.5s cubic-bezier(0.16,1,0.3,1) ${0.6 + i * 0.06}s`,
                     }}
                   >
-                    <span className={`text-[13px] font-bold w-5 text-center ${a.rank <= 3 ? "text-amber-500" : "text-gray-300"}`}>
+                    <span className={`text-[13px] font-bold w-5 text-center font-[family-name:var(--font-roboto)] ${a.rank <= 3 ? "text-[#c2410c]" : "text-gray-300"}`}>
                       {a.rank}
                     </span>
                     <div
                       className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-bold shrink-0"
                       style={{
-                        background: a.avatar,
+                        background: LEADERBOARD_AVATAR_BG,
                         animation: a.isMe ? "float 3s ease-in-out infinite" : undefined,
                       }}
                     >
@@ -467,18 +527,18 @@ export default function Dash() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className={`text-[13px] font-semibold truncate ${a.isMe ? "text-emerald-700" : "text-gray-800"}`}>
+                        <span className={`text-[13px] font-semibold truncate font-[family-name:var(--font-roboto)] ${a.isMe ? "text-[#212529] font-bold" : "text-[#212529]"}`}>
                           {a.name}
                         </span>
                         {a.isMe && (
-                          <span className="text-[9px] font-bold bg-emerald-500 text-white px-1.5 py-0.5 rounded-full uppercase">You</span>
+                          <span className="text-[9px] font-bold bg-gray-700 text-white px-1.5 py-0.5 rounded-full uppercase">You</span>
                         )}
                       </div>
-                      <span className="text-[11px] text-gray-400">{a.accuracy}% accuracy &middot; {a.votes} votes</span>
+                      <span className="text-[11px] text-[#6c757d] font-[family-name:var(--font-roboto)]">{a.accuracy}% acc &middot; {a.votes} votes</span>
                     </div>
                     <div className="text-right">
-                      <span className="text-[15px] font-bold text-gray-900">{a.score}</span>
-                      <div className={`text-[11px] font-bold ${a.change.startsWith("+") ? "text-emerald-500" : "text-red-400"}`}>
+                      <span className="text-[15px] font-bold font-['Satoshi'] text-[#212529]">{a.score}</span>
+                      <div className={`text-[11px] font-bold font-[family-name:var(--font-roboto)] ${a.change.startsWith("+") ? "text-[#495057]" : "text-red-500"}`}>
                         {a.change}
                       </div>
                     </div>
@@ -488,37 +548,45 @@ export default function Dash() {
             </div>
 
             {/* Agent Profile */}
-            <div className="bg-white rounded-2xl border border-gray-200/80 p-6" style={{ ...anim(11), ...delay(11) }}>
+            <div
+              className="dash-card bg-white rounded-xl shadow-[0_0.25rem_0.75rem_rgba(0,0,0,0.06)] border border-gray-200 p-6"
+              style={{ opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(16px)", transition: "all 0.5s ease 0.56s" }}
+            >
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white font-bold text-[15px] shadow-lg shadow-emerald-200/40" style={{ animation: "float 4s ease-in-out infinite" }}>
+                <div
+                  className="w-11 h-11 rounded-xl bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center text-white font-bold text-[15px] shadow-lg"
+                  style={{ animation: "float 4s ease-in-out infinite" }}
+                >
                   OA
                 </div>
                 <div>
-                  <h2 className="font-['Satoshi'] text-[17px] font-bold text-gray-900">{myAgent.name}</h2>
-                  <p className="text-[12px] text-gray-400">Oracle Agent</p>
+                  <h2 className={typography.sectionHeader}>{myAgent.name}</h2>
+                  <p className={typography.muted}>Oracle Agent</p>
                 </div>
               </div>
-              <div className="flex flex-col gap-2.5 text-[13px]">
+
+              <div className="flex flex-col gap-0 text-[13px] font-[family-name:var(--font-roboto)]">
                 {[
                   ["Account", myAgent.accountId],
                   ["Human ID", myAgent.humanId],
                   ["Network", "Hedera Testnet"],
                 ].map(([label, val]) => (
-                  <div key={label} className="flex justify-between items-center py-1.5 border-b border-gray-50">
-                    <span className="text-gray-400">{label}</span>
-                    <span className="font-mono text-[12px] text-gray-600">{val}</span>
+                  <div key={label} className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-[#6c757d]">{label}</span>
+                    <span className="font-mono text-[12px] text-[#212529]">{val}</span>
                   </div>
                 ))}
-                <div className="flex justify-between items-center pt-1">
-                  <span className="text-gray-400">Standards</span>
+                <div className="flex justify-between items-center pt-2.5">
+                  <span className="text-[#6c757d]">Standards</span>
                   <div className="flex gap-1">
                     {["HCS-2", "HCS-11", "HCS-16", "HCS-20"].map((s) => (
-                      <span key={s} className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-bold text-gray-400">{s}</span>
+                      <span key={s} className="px-1.5 py-0.5 bg-gray-100 border border-gray-200 rounded text-[10px] font-bold text-[#495057]">{s}</span>
                     ))}
                   </div>
                 </div>
               </div>
             </div>
+
           </div>
         </div>
       </main>

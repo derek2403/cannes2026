@@ -51,6 +51,8 @@ const C = {
   btnHover: "#5a4520",
   inputBorder: "#d4c4a8",
   inputBg: "#faf8f4",
+  /** Footer contract link — brown, matches primary text family */
+  linkContract: "#483519",
 };
 
 const MODEL_OPTIONS = [
@@ -305,12 +307,13 @@ export default function DashboardPage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          gap: 16,
           padding: "16px 32px",
           borderBottom: `1px solid ${C.cardBorder}`,
-          background: C.card,
+          background: `linear-gradient(180deg, ${C.card} 0%, ${C.inputBg} 100%)`,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
           <span
             style={{
               fontSize: 20,
@@ -324,16 +327,18 @@ export default function DashboardPage() {
           <span
             style={{
               fontSize: 11,
-              color: C.muted,
+              fontWeight: 600,
+              color: C.text,
               background: C.bg,
-              padding: "2px 8px",
-              borderRadius: 4,
+              padding: "4px 10px",
+              borderRadius: 6,
+              border: `1px solid ${C.cardBorder}`,
             }}
           >
             ERC-7857 iNFT
           </span>
         </div>
-        <ConnectWallet />
+        <ConnectWallet appearance="warm" />
       </nav>
 
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 24px" }}>
@@ -634,13 +639,15 @@ export default function DashboardPage() {
                   onClick={loadAgents}
                   disabled={loadingAgents}
                   style={{
-                    background: "none",
-                    border: `1px solid ${C.cardBorder}`,
+                    background: loadingAgents ? C.inputBg : C.card,
+                    border: `1px solid ${C.inputBorder}`,
                     padding: "6px 14px",
-                    borderRadius: 6,
+                    borderRadius: 8,
                     fontSize: 13,
-                    color: C.muted,
+                    fontWeight: 600,
+                    color: C.text,
                     cursor: loadingAgents ? "wait" : "pointer",
+                    opacity: loadingAgents ? 0.75 : 1,
                   }}
                 >
                   {loadingAgents ? "Loading..." : "Refresh"}
@@ -999,19 +1006,27 @@ export default function DashboardPage() {
             <div
               style={{
                 marginTop: 40,
-                padding: "12px 0",
+                padding: "16px 0 8px",
                 borderTop: `1px solid ${C.cardBorder}`,
                 fontSize: 12,
-                color: C.muted,
                 textAlign: "center",
               }}
             >
-              SparkINFT:{" "}
+              <span style={{ color: C.text, fontWeight: 600 }}>SparkINFT</span>
+              <span style={{ color: C.muted, margin: "0 6px" }}>·</span>
               <a
                 href={`https://chainscan-galileo.0g.ai/address/${SPARKINFT_ADDRESS}`}
                 target="_blank"
                 rel="noreferrer"
-                style={{ color: C.green }}
+                style={{
+                  color: C.linkContract,
+                  fontFamily:
+                    'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
+                  fontSize: 11,
+                  textDecoration: "underline",
+                  textDecorationColor: C.inputBorder,
+                  textUnderlineOffset: 3,
+                }}
               >
                 {SPARKINFT_ADDRESS}
               </a>
