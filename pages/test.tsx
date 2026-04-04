@@ -35,20 +35,20 @@ const AGENTS: Agent[] = [
     { label: "Bloomberg Data", type: "source" }, { label: "Statistical Model", type: "proof" },
     { label: "Academic Paper", type: "reference" }, { label: "Satellite Imagery", type: "proof" },
   ]},
-  { id: 3, name: "Watcher Delta", reputation: 65, vote: "NO", evidence: [
+  { id: 3, name: "Watcher Delta", reputation: 65, vote: "YES", evidence: [
     { label: "Skeptic Report", type: "reference" }, { label: "Historical Precedent", type: "source" },
   ]},
   { id: 4, name: "Veritas Epsilon", reputation: 82, vote: "YES", evidence: [
     { label: "AP News Wire", type: "source" }, { label: "Gov Database", type: "proof" }, { label: "Witness Testimony", type: "reference" },
   ]},
-  { id: 5, name: "Cipher Zeta", reputation: 71, vote: "NO", evidence: [
-    { label: "Anomaly Detection", type: "proof" }, { label: "Dissenting Analysis", type: "reference" },
+  { id: 5, name: "Cipher Zeta", reputation: 71, vote: "YES", evidence: [
+    { label: "Anomaly Detection", type: "proof" }, { label: "Supporting Analysis", type: "reference" },
   ]},
   { id: 6, name: "Nexus Eta", reputation: 90, vote: "YES", evidence: [
     { label: "Consensus Data", type: "proof" }, { label: "Market Signals", type: "source" }, { label: "Cross-validation", type: "proof" },
   ]},
-  { id: 7, name: "Prism Theta", reputation: 60, vote: "NO", evidence: [
-    { label: "Alternative Source", type: "source" }, { label: "Minority Report", type: "reference" }, { label: "Edge Case Proof", type: "proof" },
+  { id: 7, name: "Prism Theta", reputation: 60, vote: "YES", evidence: [
+    { label: "Alternative Source", type: "source" }, { label: "Confirming Report", type: "reference" }, { label: "Edge Case Proof", type: "proof" },
   ]},
   { id: 8, name: "Echo Iota", reputation: 85, vote: "YES", evidence: [
     { label: "Corroborating Source", type: "source" }, { label: "Network Analysis", type: "proof" },
@@ -431,7 +431,8 @@ function CurvedFlowParticle({
    ═══════════════════════════════════════════════════════════ */
 
 // Which color-reveal wave each agent belongs to (0=first, 1=second, 2=stays grey)
-const VOTE_WAVE: number[] = [0, 0, 1, 2, 1, 0, 2, 2, 1, 2];
+// Agent 1 (Sentinel Beta) is the only NO — reveal it alone in wave 1
+const VOTE_WAVE: number[] = [0, 1, 0, 2, 1, 0, 2, 2, 1, 2];
 
 function VotingNode({
   position, agent, agentIndex, refs,
