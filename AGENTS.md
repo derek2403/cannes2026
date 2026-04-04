@@ -439,3 +439,395 @@ Messages are base64-encoded JSON. Decoded via `Buffer.from(msg.message, "base64"
 6. HCS-20 Reputation Points
 7. HCS-2 Registry
 8. HCS-11 Agent Profile + HCS-16 Flora
+
+---
+
+# 0G Network Integration (INFT + Compute + Storage)
+
+## Chain Config
+
+- **Network:** 0G-Galileo-Testnet
+- **Chain ID:** 16602
+- **RPC:** `https://evmrpc-testnet.0g.ai`
+- **Explorer:** `https://chainscan-galileo.0g.ai`
+- **Native Token:** 0G (18 decimals)
+- **Wagmi Config:** `lib/wagmi.ts` — injected connector, SSR enabled
+
+## Architecture
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                       UI LAYER                           │
+├──────────────────┬───────────────────┬───────────────────┤
+│  pages/inft.tsx  │ pages/compute.tsx │ pages/storage.tsx │
+│  (Agent Mgmt)    │ (GPU Marketplace) │ (File Storage)    │
+└──────┬───────────┴────────┬──────────┴────────┬──────────┘
+       │                    │                   │
+┌──────v────────────────────v───────────────────v──────────┐
+│                   API LAYER (pages/api/)                  │
+│  /inft/*           /compute/*           /storage/*        │
+│  upload-config     list-services        upload            │
+│  infer             setup-account        download          │
+│  chat-fallback     inference            kv-write          │
+│                    ft-create-task                         │
+│                    ft-get-task                            │
+│                    ft-list-services                       │
+│                    ft-list-models                         │
+└──────┬────────────────────┬───────────────────┬──────────┘
+       │                    │                   │
+┌──────v──────────┐  ┌──────v───────────┐ ┌─────v──────────┐
+│  0G Chain       │  │  0G Compute      │ │  0G Storage    │
+│  ZeroGClaw      │  │  GPU inference   │ │  Content-      │
+│  ERC-7857 iNFT  │  │  Fine-tuning     │ │  addressed     │
+│  Contract       │  │  Ledger system   │ │  Merkle trees  │
+└─────────────────┘  └──────────────────┘ └────────────────┘
+```
+
+## Env vars (in `.env.local`)
+
+```
+ZG_STORAGE_PRIVATE_KEY=<hex private key>
+```
+
+Used for: signing 0G Storage uploads, creating ethers Wallet for Compute broker, deriving AES-256 encryption key (SHA-256 hash of key).
+
+---
+
+## 1. INFT — Intelligent NFT (ERC-7857)
+
+### What it does
+
+ERC-7857 agent NFTs with on-chain profiles, cron scheduling, delegated authorization, and LLM inference via 0G Compute. Each iNFT stores its agent config on 0G Storage and uses decentralized GPU inference.
+
+### Contract
+
+- **Name:** ZeroGClaw (symbol: 0GCLAW)
+- **Address:** `0x82cBeaD6D47468d6e8Ff6C3f49A25DD06C619507`
+- **Network:** 0G Galileo Testnet (16602)
+- **Source:** `contracts/contracts/0g/ZeroGClaw.sol`
+- **ABI:** `lib/sparkinft-abi.ts` — exports `SPARKINFT_ABI` and `SPARKINFT_ADDRESS`
+
+### Contract Functions
+
+| Function | What it does |
+|----------|-------------|
+| `mintAgent(to, botId, domainTags, serviceOfferings, iDatas)` | Mint agent NFT with ERC-7857 IntelligentData |
+| `ownerOf(tokenId)` | Returns token owner address |
+| `authorizeUsage(tokenId, user)` | Delegate agent usage to another wallet |
+| `isAuthorized(tokenId, user)` | Check if user can use the agent |
+| `revokeAuthorization(tokenId, user)` | Revoke delegated access |
+| `setCronConfig(tokenId, schedule, prompt)` | Set cron schedule + prompt |
+| `toggleCron(tokenId, enabled)` | Enable/disable cron |
+| `recordExecution(tokenId)` | Record cron execution (increments count) |
+| `setX402Wallet(tokenId, wallet)` | Set x402 payment wallet |
+| `setX402Endpoints(tokenId, endpoints[])` | Set x402 endpoint URLs |
+| `getAgentProfile(tokenId)` | Returns full AgentProfile struct |
+| `getIntelligentDatas(tokenId)` | Returns IntelligentData[] (dataDescription, dataHash) |
+
+### IntelligentData (ERC-7857)
+
+Each iNFT stores `IntelligentData[]`:
+- `dataDescription`: URI pointer, e.g. `0g://storage/0x<rootHash>`
+- `dataHash`: keccak256 of the agent config JSON
+
+The config stored on 0G Storage contains: botId, domainTags, serviceOfferings, systemPrompt, modelProvider, optional encrypted apiKey.
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `pages/inft.tsx` | UI: mint agents, view profiles, chat, cron config, live executor |
+| `pages/api/inft/upload-config.ts` | Upload agent config to 0G Storage, returns rootHash + dataHash |
+| `pages/api/inft/infer.ts` | LLM inference: auth check → fetch config from storage → route to 0G Compute or API |
+| `pages/api/inft/chat-fallback.ts` | Fallback inference using OpenAI-compatible endpoint |
+| `lib/sparkinft-abi.ts` | Contract ABI + address constant |
+| `contracts/contracts/0g/ZeroGClaw.sol` | Solidity source |
+| `contracts/contracts/0g/interfaces/IERC7857.sol` | ERC-7857 interface |
+| `contracts/contracts/0g/interfaces/IERC7857Authorize.sol` | Authorization extension |
+| `contracts/contracts/0g/interfaces/IERC7857Metadata.sol` | Metadata extension |
+| `contracts/contracts/0g/interfaces/IERC7857DataVerifier.sol` | Data verification extension |
+
+### API: Upload Config
+
+**POST** `/api/inft/upload-config`
+
+```json
+// Request
+{
+  "botId": "agent-001",
+  "domainTags": "defi,analytics",
+  "serviceOfferings": "scraping,analysis",
+  "systemPrompt": "You are a helpful AI...",
+  "modelProvider": "0g-compute",
+  "apiKey": "sk-..." // optional — encrypted with AES-256-GCM if provided
+}
+
+// Response
+{
+  "success": true,
+  "dataDescription": "0g://storage/0x...",
+  "dataHash": "0x...",
+  "rootHash": "0x...",
+  "txHash": "0x..."
+}
+```
+
+### API: Infer (Chat with Agent)
+
+**POST** `/api/inft/infer`
+
+```json
+// Request
+{ "tokenId": 4, "message": "Hello", "userAddress": "0x...", "maxTokens": 500 }
+
+// Response
+{
+  "success": true,
+  "tokenId": 4,
+  "agent": "agent-001",
+  "response": "Hello! How can I help?",
+  "source": "0g-compute",
+  "model": "qwen/qwen-2.5-7b-instruct",
+  "provider": "0x...",
+  "configOnStorage": true
+}
+```
+
+**Inference flow:**
+1. Check `ownerOf(tokenId)` or `isAuthorized(tokenId, userAddress)` — 403 if neither
+2. Fetch `IntelligentData` from contract
+3. Download agent config from 0G Storage (if `dataDescription` starts with `0g://storage/`)
+4. Route inference:
+   - `modelProvider = "0g-compute"` → `callVia0GCompute()` (decentralized GPU, no API key)
+   - `modelProvider = "openai|groq|deepseek"` → decrypt stored API key, call OpenAI-compatible endpoint
+5. Fallback: use 0G Compute if no config found
+
+### Key code pattern: 0G Compute inference
+
+```typescript
+import { callVia0GCompute } from "@/lib/0g-compute";
+
+const result = await callVia0GCompute(systemPrompt, message, maxTokens);
+// result.reply = "..."
+// result.model = "qwen/qwen-2.5-7b-instruct"
+// result.provider = "0x..."
+```
+
+---
+
+## 2. 0G Compute Network
+
+### What it does
+
+Decentralized GPU marketplace. Users create a **ledger** (on-chain account), deposit A0GI tokens, transfer balance to **provider sub-accounts**, then call inference or fine-tuning endpoints. Responses are verified via TEE signatures.
+
+### Key Concepts
+
+- **Ledger:** User's on-chain balance on 0G Compute (holds A0GI)
+- **Provider:** GPU operator running inference/fine-tuning services
+- **Sub-account:** Balance allocated to a specific provider + service type
+- **1 A0GI = 10^18 neuron** (smallest unit for transfers)
+- **TEE verification:** Trusted Execution Environment signatures verify response authenticity
+
+### Known Providers (testnet)
+
+| Address | Model |
+|---------|-------|
+| `0xa48f01287233509FD694a22Bf840225062E67836` | qwen/qwen-2.5-7b-instruct |
+| `0x8e60d466FD16798Bec4868aa4CE38586D5590049` | openai/gpt-oss-20b |
+| `0x69Eb5a0BD7d0f4bF39eD5CE9Bd3376c61863aE08` | google/gemma-3-27b-it |
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `pages/compute.tsx` | UI: discover services, account setup, inference, fine-tuning |
+| `pages/api/compute/list-services.ts` | List all inference providers (model, pricing, verifiability) |
+| `pages/api/compute/setup-account.ts` | Create ledger, deposit, transfer to sub-account, get balance |
+| `pages/api/compute/inference.ts` | Send message to provider, get verified response |
+| `pages/api/compute/ft-list-services.ts` | List fine-tuning providers |
+| `pages/api/compute/ft-list-models.ts` | List available fine-tuning models |
+| `pages/api/compute/ft-create-task.ts` | Create fine-tuning task with dataset + training params |
+| `pages/api/compute/ft-get-task.ts` | Get task status, list tasks, get training logs |
+| `lib/0g-compute.ts` | Broker setup: `createZGComputeNetworkBroker()` + `callVia0GCompute()` helper |
+
+### Library: `lib/0g-compute.ts`
+
+```typescript
+import { createZGComputeNetworkBroker } from "@0glabs/0g-serving-broker";
+
+// Creates broker with wallet derived from ZG_STORAGE_PRIVATE_KEY
+// RPC: https://evmrpc-testnet.0g.ai
+
+export async function callVia0GCompute(
+  systemPrompt: string,
+  message: string,
+  maxTokens: number
+): Promise<{ reply: string; model: string; provider: string }>
+```
+
+### API: Setup Account
+
+**POST** `/api/compute/setup-account`
+
+```json
+// Create ledger (min ~5 A0GI to succeed)
+{ "action": "create-ledger", "amount": "5" }
+
+// Deposit more funds
+{ "action": "deposit", "amount": "1" }
+
+// Transfer to provider sub-account
+{ "action": "transfer", "amount": "0.1", "provider": "0x...", "service": "inference" }
+
+// Check balance
+{ "action": "get-balance" }
+```
+
+### API: Inference
+
+**POST** `/api/compute/inference`
+
+```json
+// Request
+{ "provider": "0x...", "message": "Classify this text..." }
+
+// Response
+{
+  "success": true,
+  "provider": "0x...",
+  "model": "qwen/qwen-2.5-7b-instruct",
+  "response": "Positive. The text...",
+  "verified": true,
+  "usage": { "prompt_tokens": 10, "completion_tokens": 20 }
+}
+```
+
+**Flow:** Acknowledge provider signer → fetch service metadata → get auth headers → POST to `{endpoint}/chat/completions` (OpenAI-compatible) → verify response → settle fee.
+
+### API: Fine-Tuning
+
+**POST** `/api/compute/ft-create-task`
+
+```json
+{
+  "provider": "0x...",
+  "model": "Qwen2.5-0.5B-Instruct",
+  "dataset": [
+    { "instruction": "Classify...", "input": "How do I...?", "output": "Category: SDK Bug..." }
+  ],
+  "trainingParams": { "num_train_epochs": 1, "learning_rate": 0.0002 }
+}
+```
+
+Note: Dataset upload uses manual TEE HTTP request (bypasses broken SDK FormData). Signs timestamp message for authentication.
+
+**POST** `/api/compute/ft-get-task`
+
+```json
+{ "provider": "0x...", "taskId": "task-123", "action": "status" }  // or "list" or "log"
+```
+
+---
+
+## 3. 0G Storage Network
+
+### What it does
+
+Content-addressed, immutable file storage with Merkle tree verification. Supports optional AES-256-GCM encryption. Used by INFT to store agent configs.
+
+### Network
+
+- **Indexer:** `https://indexer-storage-testnet-turbo.0g.ai`
+- **RPC:** `https://evmrpc-testnet.0g.ai`
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `pages/storage.tsx` | UI: upload/download content, KV store |
+| `pages/api/storage/upload.ts` | Upload content to 0G Storage (optional encryption) |
+| `pages/api/storage/download.ts` | Download by root hash (optional decryption + Merkle verification) |
+| `pages/api/storage/kv-write.ts` | Store key-value pairs on 0G Storage |
+| `lib/encrypt.ts` | AES-256-GCM encrypt/decrypt using SHA-256(ZG_STORAGE_PRIVATE_KEY) |
+
+### API: Upload
+
+**POST** `/api/storage/upload`
+
+```json
+// Request
+{ "content": "Knowledge content here...", "encrypted": false }
+
+// Response
+{
+  "success": true,
+  "rootHash": "0x...",
+  "txHash": "0x...",
+  "encrypted": false,
+  "contentLength": 142
+}
+```
+
+**Flow:** Optionally encrypt → write temp file → create ZgFile + Merkle tree → upload to indexer → return root hash → cleanup.
+
+### API: Download
+
+**POST** `/api/storage/download`
+
+```json
+// Request
+{ "rootHash": "0x...", "decrypt": true }
+
+// Response
+{
+  "success": true,
+  "rootHash": "0x...",
+  "content": "Knowledge content here...",
+  "verified": true,
+  "decrypted": true
+}
+```
+
+### API: KV Write
+
+**POST** `/api/storage/kv-write`
+
+```json
+// Request
+{ "key": "0g-storage:merkle-verification", "value": "Use SDK v0.48+..." }
+
+// Response
+{ "success": true, "key": "...", "rootHash": "0x...", "txHash": "0x..." }
+```
+
+Encodes as JSON with `{ sparkKey, sparkValue, timestamp, type: "knowledge-item" }`, uploads to 0G Storage.
+
+### Encryption: `lib/encrypt.ts`
+
+```typescript
+export function encrypt(plaintext: string): string
+// Key: SHA-256(ZG_STORAGE_PRIVATE_KEY)
+// Returns: base64(IV[16] + authTag[16] + ciphertext)
+
+export function decrypt(encryptedBase64: string): string
+// Extracts IV + tag + ciphertext, decrypts with AES-256-GCM
+```
+
+Used for: agent API key encryption in upload-config, content encryption in storage upload/download, decryption in infer before calling external LLM.
+
+---
+
+## Integration Points
+
+- **INFT → Storage:** Agent config uploaded to 0G Storage on mint. Root hash stored in ERC-7857 `IntelligentData`.
+- **INFT → Compute:** Inference routed through 0G Compute (decentralized GPU). No API key needed.
+- **Compute → Storage:** Fine-tuning datasets uploaded to TEE via manual HTTP.
+- **Storage → Chain:** Root hashes referenced in on-chain IntelligentData — content-addressed integrity.
+
+## Wallet Connection
+
+- **Provider:** RainbowKit + Wagmi (Pages Router with `ssr: false` dynamic import)
+- **Components:** `components/Providers.tsx` wraps WagmiProvider + QueryClientProvider + RainbowKitProvider
+- **App:** `pages/_app.tsx` dynamically imports Providers with `ssr: false` to avoid SSR errors
+- **Auto-connect:** Enabled via `injected()` connector
