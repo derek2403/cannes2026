@@ -28,6 +28,16 @@ export const PREDICTION_MARKET_ABI = [
     stateMutability: "nonpayable",
   },
   {
+    name: "dispute",
+    type: "function",
+    inputs: [
+      { name: "marketId", type: "string" },
+      { name: "newOutcome", type: "uint8" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
     name: "getPool",
     type: "function",
     inputs: [{ name: "marketId", type: "string" }],
@@ -78,6 +88,15 @@ export const PREDICTION_MARKET_ABI = [
       { name: "marketId", type: "string", indexed: false },
       { name: "bettor", type: "address", indexed: true },
       { name: "payout", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    name: "MarketDisputed",
+    type: "event",
+    inputs: [
+      { name: "marketId", type: "string", indexed: false },
+      { name: "oldOutcome", type: "uint8", indexed: false },
+      { name: "newOutcome", type: "uint8", indexed: false },
     ],
   },
 ] as const;
