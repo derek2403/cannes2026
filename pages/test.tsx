@@ -8,7 +8,7 @@ import * as THREE from "three";
    ═══════════════════════════════════════════════════════════ */
 
 type Vote = "YES" | "NO";
-type Phase = "idle" | "selecting" | "fading" | "discussion";
+type Phase = "idle" | "selecting" | "fading" | "voting" | "discussion";
 
 interface Evidence { label: string; type: "proof" | "reference" | "source"; }
 interface Agent { id: number; name: string; reputation: number; vote: Vote; evidence: Evidence[]; }
@@ -427,6 +427,56 @@ function CurvedFlowParticle({
 }
 
 /* ═══════════════════════════════════════════════════════════
+   Voting Node (color reveal, no links)
+   ═══════════════════════════════════════════════════════════ */
+
+// Which color-reveal wave each agent belongs to (0=first, 1=second, 2=stays grey)
+const VOTE_WAVE: number[] = [0, 0, 1, 2, 1, 0, 2, 2, 1, 2];
+
+function VotingNode({
+  position, agent, agentIndex, refs,
+}: {
+  position: THREE.Vector3; agent: Agent; agentIndex: number; refs: PhaseRefs;
+}) {
+  const meshRef = useRef<THREE.Mesh>(null!);
+  const matRef = useRef<THREE.MeshStandardMaterial>(null!);
+  const size = 0.35 + (agent.reputation / 100) * 0.65;
+  const wave = VOTE_WAVE[agentIndex];
+  const voteColor = useMemo(() => new THREE.Color(getAgentColor(agent)), [agent]);
+  const grey = useMemo(() => new THREE.Color("#cccccc"), []);
+
+  useFrame(() => {
+    const t = refs.elapsed.current;
+    const mat = matRef.current;
+    if (!mat) return;
+
+    // Wave 0 starts at 0.3s, wave 1 at 1.2s, wave 2 stays grey
+    if (wave === 2) {
+      mat.color.set(grey);
+      mat.emissive.set(grey);
+      mat.emissiveIntensity = 0.5;
+    } else {
+      const delay = wave === 0 ? 0.3 : 1.2;
+      const p = smoothstep(Math.max(0, Math.min((t - delay) / 0.6, 1)));
+      mat.color.copy(grey).lerp(voteColor, p);
+      mat.emissive.copy(grey).lerp(voteColor, p);
+      mat.emissiveIntensity = 0.5 + p * 0.5;
+    }
+  });
+
+  return (
+    <mesh ref={meshRef} position={position}>
+      <sphereGeometry args={[size, 32, 32]} />
+      <meshStandardMaterial
+        ref={matRef} color="#cccccc" emissive="#cccccc"
+        emissiveIntensity={0.5} roughness={0.2} metalness={0.7}
+        transparent opacity={0.9}
+      />
+    </mesh>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
    Delayed visibility wrapper (staggered pop-in)
    ═══════════════════════════════════════════════════════════ */
 
@@ -462,6 +512,10 @@ function Scene({ phase, setPhase }: { phase: Phase; setPhase: (p: Phase) => void
       elapsedRef.current = 0;
       setPhase("fading");
     } else if (phaseRef.current === "fading" && elapsedRef.current >= 2.2) {
+      phaseRef.current = "voting";
+      elapsedRef.current = 0;
+      setPhase("voting");
+    } else if (phaseRef.current === "voting" && elapsedRef.current >= 3.0) {
       phaseRef.current = "discussion";
       elapsedRef.current = 0;
       setPhase("discussion");
@@ -469,7 +523,8 @@ function Scene({ phase, setPhase }: { phase: Phase; setPhase: (p: Phase) => void
   });
 
   const { truthPos, agentPositions, evidencePositions } = layout;
-  const showCandidates = phase !== "discussion";
+  const showCandidates = phase !== "discussion" && phase !== "voting";
+  const showVoting = phase === "voting";
   const showDiscussion = phase === "discussion";
 
   return (
@@ -494,6 +549,17 @@ function Scene({ phase, setPhase }: { phase: Phase; setPhase: (p: Phase) => void
           />
         );
       })}
+
+      {/* ── Voting layer (no links, colors appear) ── */}
+      {showVoting && AGENTS.map((agent, i) => (
+        <VotingNode
+          key={`v-${agent.id}`}
+          position={agentPositions[i]}
+          agent={agent}
+          agentIndex={i}
+          refs={refs}
+        />
+      ))}
 
       {/* ── Discussion layer ── */}
       {showDiscussion && (
@@ -639,6 +705,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   idle: "50 candidate agents standing by",
   selecting: "Selecting 10 oracle agents...",
   fading: "Forming oracle network...",
+  voting: "Agents casting votes...",
   discussion: "Oracle discussion in progress",
 };
 
