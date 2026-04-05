@@ -1,11 +1,8 @@
 import Head from 'next/head';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Header from '../components/header/Header';
 import { Roboto, Figtree } from "next/font/google";
-import type { GetServerSideProps } from 'next';
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
 
 const roboto = Roboto({
     weight: ['400', '500', '700'],
@@ -98,18 +95,6 @@ interface AIMarket {
     };
 }
 
-export const getServerSideProps: GetServerSideProps = async () => {
-    const marketsFile = join(process.cwd(), 'data', 'markets.json');
-    let aiMarkets: AIMarket[] = [];
-    try {
-        if (existsSync(marketsFile)) {
-            aiMarkets = JSON.parse(readFileSync(marketsFile, 'utf-8'));
-            aiMarkets.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        }
-    } catch { /* empty */ }
-    return { props: { aiMarkets } };
-};
-
 const statusColors: Record<string, string> = {
     PROPOSED: 'text-blue-700 bg-blue-50 border-blue-200',
     RESOLVED: 'text-emerald-700 bg-emerald-50 border-emerald-200',
@@ -188,8 +173,25 @@ function AIMarketCard({ market }: { market: AIMarket }) {
     );
 }
 
-export default function Market({ aiMarkets = [] }: { aiMarkets: AIMarket[] }) {
+export default function Market() {
     const [activeFilter, setActiveFilter] = useState("All");
+    const [aiMarkets, setAiMarkets] = useState<AIMarket[]>([]);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const fetchMarkets = useCallback(async () => {
+        setRefreshing(true);
+        try {
+            const res = await fetch("/api/markets");
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                data.sort((a: AIMarket, b: AIMarket) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                setAiMarkets(data);
+            }
+        } catch { /* empty */ }
+        setRefreshing(false);
+    }, []);
+
+    useEffect(() => { fetchMarkets(); }, [fetchMarkets]);
 
     return (
         <div className={`min-h-screen bg-[#f8f9fa] ${roboto.variable} ${figtree.variable} font-[family-name:var(--font-roboto)]`}>
@@ -205,7 +207,21 @@ export default function Market({ aiMarkets = [] }: { aiMarkets: AIMarket[] }) {
 
                 {/* Header Row: Title & Actions */}
                 <div className="flex items-center justify-between mb-6 px-2">
-                    <h1 className={typography.sectionHeader}>All markets</h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className={typography.sectionHeader}>All markets</h1>
+                        <button
+                            onClick={fetchMarkets}
+                            disabled={refreshing}
+                            className="p-2 hover:bg-gray-200 rounded-lg transition-colors text-gray-500 disabled:opacity-50"
+                            title="Refresh markets"
+                        >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={refreshing ? 'animate-spin' : ''}>
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <polyline points="1 20 1 14 7 14"></polyline>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                            </svg>
+                        </button>
+                    </div>
                     <div className="flex items-center gap-4 text-gray-500">
                         <button className="p-2 hover:bg-gray-200 rounded-lg transition-colors">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
