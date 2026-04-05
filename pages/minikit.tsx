@@ -131,11 +131,8 @@ export default function MiniKitPage() {
       <main className="flex w-full max-w-md flex-col items-center gap-6 px-6 py-16">
         <div className="text-center">
           <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Cannes 2026
+            Dive
           </h1>
-          <p className="mt-2 text-zinc-500 dark:text-zinc-400">
-            World ID + MiniKit Demo
-          </p>
         </div>
 
         {/* MiniKit status */}
