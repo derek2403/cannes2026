@@ -684,7 +684,7 @@ function Legend() {
   );
 }
 
-function Stats({ agents: agentList }: { agents: Agent[] }) {
+function Stats({ agents: agentList, consensus }: { agents: Agent[]; consensus: Vote | null }) {
   const yesCount = agentList.filter((a) => a.vote === "YES").length;
   const noCount = agentList.filter((a) => a.vote === "NO").length;
   return (
@@ -693,7 +693,7 @@ function Stats({ agents: agentList }: { agents: Agent[] }) {
       <div>Agents: {agentList.length}</div>
       <div style={{ color: "#00ff88" }}>YES: {yesCount}</div>
       <div style={{ color: "#ff4455" }}>NO: {noCount}</div>
-      <div style={{ marginTop: 6, color: TRUTH_COLOR, fontWeight: "bold" }}>Resolution: {RESOLUTION}</div>
+      <div style={{ marginTop: 6, color: getTruthColor(consensus), fontWeight: "bold" }}>Resolution: {consensus || "—"}</div>
     </div>
   );
 }
@@ -718,7 +718,7 @@ function Header({ phase }: { phase: Phase }) {
       </h1>
       <p style={{
         fontSize: 13, marginTop: 6,
-        color: phase === "discussion" ? TRUTH_COLOR : "#888",
+        color: phase === "discussion" ? "#00ff88" : "#888",
         transition: "color 1s",
       }}>
         {PHASE_LABELS[phase]}

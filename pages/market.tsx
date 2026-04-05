@@ -135,21 +135,16 @@ function AIMarketCard({ market }: { market: AIMarket }) {
     return (
         <Link
             href={`/dispute?marketId=${market.id}`}
-            className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group relative"
+            className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group"
         >
-            {/* AI Oracle badge */}
-            <div className="absolute top-3 right-3 flex items-center gap-1.5 text-[0.65rem] font-semibold text-violet-600 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
-                AI Oracle
-            </div>
-
             <div className="flex items-start gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-slate-600 flex items-center justify-center shrink-0 shadow-sm border border-slate-700 mt-0.5">
                     <span className="text-[18px]">{icon}</span>
                 </div>
-                <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors pr-16">
+                <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors">
                     {market.resolution.question}
                 </h3>
+
             </div>
 
             <div className="flex flex-col gap-3 mt-auto">

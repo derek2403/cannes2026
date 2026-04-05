@@ -5,6 +5,9 @@ import Header from '../components/header/Header';
 import { Roboto, Figtree } from "next/font/google";
 import dynamic from 'next/dynamic';
 import type { AgentDiscussionGraphProps } from '@/components/AgentDiscussionGraph';
+import type { GetServerSideProps } from 'next';
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
 
 const AgentDiscussionGraph = dynamic<AgentDiscussionGraphProps>(
     () => import('@/components/AgentDiscussionGraph'),
@@ -129,7 +132,25 @@ const OUTCOME_INDEX_PERCENT = { yes: 1, no: 99 } as const;
 
 
 
-export default function DisputePage() {
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+    const marketId = (ctx.query.marketId as string) || "";
+    let initialQuestion = "";
+    if (marketId) {
+        try {
+            const marketsFile = join(process.cwd(), 'data', 'markets.json');
+            if (existsSync(marketsFile)) {
+                const markets = JSON.parse(readFileSync(marketsFile, 'utf-8'));
+                const market = markets.find((m: { id: string }) => m.id === marketId);
+                if (market?.resolution?.question) {
+                    initialQuestion = market.resolution.question;
+                }
+            }
+        } catch { /* empty */ }
+    }
+    return { props: { initialQuestion } };
+};
+
+export default function DisputePage({ initialQuestion }: { initialQuestion: string }) {
     const router = useRouter();
     const marketId = (router.query.marketId as string) || "";
 
@@ -146,7 +167,7 @@ export default function DisputePage() {
     const [round1Result, setRound1Result] = useState<{ yes: number; no: number } | null>(null);
     const [finalConsensus, setFinalConsensus] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const [marketQuestion, setMarketQuestion] = useState("What will WTI Crude Oil (WTI) hit in April 2026?");
+    const [marketQuestion, setMarketQuestion] = useState(initialQuestion || "");
 
     // Store raw API responses for the graph
     const [r1Data, setR1Data] = useState<Record<string, unknown> | null>(null);
