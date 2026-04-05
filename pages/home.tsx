@@ -85,11 +85,11 @@ export default function ExplorerHome() {
 
       {/* Hero Section */}
       <section className="w-[96%] max-w-[1800px] mx-auto mt-6 mb-10 pb-8">
-        <div className="bg-[#111623] rounded-[1.5rem] relative overflow-hidden py-24 sm:py-32 px-6 lg:px-16 shadow-2xl">
+        <div className="bg-[#111623] rounded-[1.5rem] relative overflow-hidden py-14 sm:py-20 px-6 lg:px-16 shadow-2xl mb-8">
           <div className="absolute inset-0 z-0 opacity-70">
             <Plasma color="#ffffff" speed={0.6} direction="forward" scale={2.6} opacity={0.5} mouseInteractive={true} />
           </div>
-          <div className="relative z-10 flex flex-col items-center justify-center text-center max-w-[900px] mx-auto py-8">
+          <div className="relative z-10 flex flex-col items-center justify-center text-center max-w-[900px] mx-auto py-4">
             <h1 className="font-['Satoshi',sans-serif] text-[44px] md:text-[56px] font-medium tracking-tight text-white mb-4 drop-shadow-md">
               DIVE Protocol Explorer
             </h1>
