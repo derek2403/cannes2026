@@ -1,8 +1,7 @@
 import Head from "next/head";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Header from "../components/header/Header";
 import { Roboto, Figtree } from "next/font/google";
-import { useRouter } from "next/router";
 
 const roboto = Roboto({
   weight: ["400", "500", "700"],
@@ -16,42 +15,92 @@ const figtree = Figtree({
   variable: "--font-figtree",
 });
 
-/* ── types ───────────────────────────────────────────────── */
+// Typography tokens matching home/market/dispute pages
+const typography = {
+  /** Main page title — true black (overrides body --foreground) */
+  pageTitle: "font-['Satoshi',sans-serif] font-[800] !text-[#000000] text-2xl",
+  sectionHeader: "font-['Satoshi',sans-serif] font-[700] text-[#212529] text-2xl",
+  smallLabel: "font-[family-name:var(--font-roboto)] font-[700] text-[#6c757d] text-[0.75rem] uppercase tracking-wide",
+  /** Top reputation row label — navy */
+  statCardLabel:
+    "font-[family-name:var(--font-roboto)] font-[700] !text-[#0a2540] text-[0.75rem] uppercase tracking-wide",
+  /** Balance / Accuracy / Disputes card headers — black */
+  statCardHeadingBlack:
+    "font-[family-name:var(--font-roboto)] font-[700] !text-[#000000] text-[0.75rem] uppercase tracking-wide",
+  bodyText: "font-[family-name:var(--font-roboto)] font-[400] text-[#212529] text-[clamp(0.875rem,1vw,1rem)]",
+  muted: "font-[family-name:var(--font-roboto)] font-[400] text-[#6c757d] text-sm",
+  /** Pale blue pill — matches activity “vote” tags */
+  statusBadge:
+    "font-[family-name:var(--font-roboto)] font-[600] text-[#5c6d7a] bg-[#e8eef2] border border-[#b8c5d0] text-[0.7rem] px-2 py-1 rounded-md",
+  monoText: "font-mono font-[500] text-[#212529]",
+};
 
-interface AgentData {
-  displayName: string;
-  accountId: string;
-  evmAddress?: string;
-  reputation?: number;
-  domainTags?: string;
-  serviceOfferings?: string;
-  worldVerified?: boolean;
-  humanId?: string | null;
-  inftTokenId?: number;
-  modelProvider?: string;
-}
+/* ── hardcoded data ───────────────────────────────────────── */
 
-interface HistoryEvent {
-  type: "market_created" | "dispute_vote" | "reputation_change";
-  timestamp: string;
-  agentName: string;
-  marketId: string;
-  marketQuestion?: string;
-  vote?: string;
-  outcome?: string;
-  correct?: boolean;
-  repChange?: number;
-  phase?: string;
-  role?: string;
-}
+const myAgent = {
+  name: "OracleAlpha",
+  accountId: "0.0.7946371",
+  humanId: "0x110ab…3ccd",
+  walletBalance: 2_847.32,
+  stakedBalance: 1_200.0,
+  pendingRewards: 64.5,
+  reputationScore: 847,
+  reputationMax: 1000,
+  totalVotes: 156,
+  correctVotes: 139,
+  accuracy: 89.1,
+  rank: 3,
+  totalAgents: 42,
+};
 
-interface LeaderboardEntry {
-  rank: number;
-  name: string;
-  accountId: string;
-  reputation: number;
-  isMe: boolean;
-}
+/** Leaderboard row avatars — neutral grey circles */
+const LEADERBOARD_AVATAR_BG = "#6b7280";
+
+const leaderboard = [
+  { rank: 1, name: "SentinelX", accountId: "0.0.7831204", score: 923, accuracy: 94.2, votes: 211, change: "+12" },
+  { rank: 2, name: "NebulaSeer", accountId: "0.0.7905882", score: 891, accuracy: 91.7, votes: 184, change: "+8" },
+  { rank: 3, name: "OracleAlpha", accountId: "0.0.7946371", score: 847, accuracy: 89.1, votes: 156, change: "+27", isMe: true },
+  { rank: 4, name: "VortexMind", accountId: "0.0.7912456", score: 812, accuracy: 87.3, votes: 143, change: "-3" },
+  { rank: 5, name: "CryptoOwl", accountId: "0.0.7889031", score: 788, accuracy: 85.9, votes: 167, change: "+5" },
+  { rank: 6, name: "DeepOracle", accountId: "0.0.7954102", score: 756, accuracy: 83.1, votes: 98, change: "+19" },
+  { rank: 7, name: "QuantumVote", accountId: "0.0.7867293", score: 731, accuracy: 81.4, votes: 132, change: "-11" },
+  { rank: 8, name: "TruthLayer", accountId: "0.0.7921847", score: 704, accuracy: 79.8, votes: 89, change: "+2" },
+];
+
+const reputationHistory = [
+  { month: "Oct", score: 620 },
+  { month: "Nov", score: 685 },
+  { month: "Dec", score: 710 },
+  { month: "Jan", score: 755 },
+  { month: "Feb", score: 798 },
+  { month: "Mar", score: 820 },
+  { month: "Apr", score: 847 },
+];
+
+const activityLog = [
+  { id: 1, type: "vote", market: "BTC above $100k by June 2026?", vote: "YES", result: "correct", rep: "+10", time: "2h ago", tx: "0x2261…9d34c" },
+  { id: 2, type: "reward", market: "ETH merge Phase 3 complete?", vote: "—", result: "payout", rep: "—", time: "5h ago", tx: "0xa3f1…bc21e" },
+  { id: 3, type: "vote", market: "Fed rate cut in Q2 2026?", vote: "NO", result: "correct", rep: "+10", time: "1d ago", tx: "0xc882…f6a09" },
+  { id: 4, type: "vote", market: "SOL flips BNB market cap?", vote: "YES", result: "wrong", rep: "-5", time: "2d ago", tx: "0xd991…e3b72" },
+  { id: 5, type: "dispute", market: "AAPL hits $250 in March?", vote: "NO", result: "escalated", rep: "0", time: "3d ago", tx: "0xf1a2…d8c44" },
+  { id: 6, type: "vote", market: "World population 8.2B by mid-2026?", vote: "YES", result: "correct", rep: "+10", time: "4d ago", tx: "0x8b3c…1fa92" },
+  { id: 7, type: "vote", market: "Gold above $3,200/oz?", vote: "YES", result: "correct", rep: "+10", time: "5d ago", tx: "0x7e0d…abb31" },
+  { id: 8, type: "reward", market: "Monthly oracle bonus", vote: "—", result: "payout", rep: "—", time: "1w ago", tx: "0x55f6…c9012" },
+];
+
+const disputes = [
+  { id: 1, market: "AAPL hits $250 in March?", status: "resolved", myVote: "NO", outcome: "Overturned to NO", repEffect: "+15", resolvedAt: "Mar 28, 2026", reason: "Price data verified via 3 oracle sources — peak was $247.80" },
+  { id: 2, market: "SpaceX Starship orbital success?", status: "resolved", myVote: "YES", outcome: "Upheld YES", repEffect: "+5", resolvedAt: "Mar 15, 2026", reason: "FAA confirmation + telemetry data supported orbital insertion" },
+  { id: 3, market: "UK snap election before July?", status: "active", myVote: "NO", outcome: "Pending", repEffect: "—", resolvedAt: "—", reason: "3 of 5 oracles voted, awaiting 2 more reveals" },
+  { id: 4, market: "Ethereum gas < 5 gwei avg March?", status: "rejected", myVote: "YES", outcome: "Original YES upheld", repEffect: "0", resolvedAt: "Apr 1, 2026", reason: "Dispute lacked sufficient counter-evidence" },
+];
+
+const earnings = [
+  { label: "Oracle Voting Rewards", amount: 1_420.0, icon: "vote" },
+  { label: "Dispute Bonuses", amount: 312.5, icon: "dispute" },
+  { label: "Staking Yield", amount: 96.0, icon: "stake" },
+  { label: "Referral Commissions", amount: 18.82, icon: "ref" },
+];
 
 /* ── animated counter hook ────────────────────────────────── */
 
@@ -59,10 +108,7 @@ function useCounter(target: number, duration = 1200) {
   const [val, setVal] = useState(0);
   const started = useRef(false);
   useEffect(() => {
-    started.current = false;
-  }, [target]);
-  useEffect(() => {
-    if (started.current || target === 0) return;
+    if (started.current) return;
     started.current = true;
     const start = performance.now();
     const step = (now: number) => {
@@ -80,256 +126,208 @@ function useCounter(target: number, duration = 1200) {
 
 function badge(type: string) {
   const map: Record<string, string> = {
-    market_created: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    dispute_vote: "bg-blue-50 text-blue-700 border-blue-200",
-    reputation_change: "bg-amber-50 text-amber-700 border-amber-200",
+    vote: "font-[family-name:var(--font-roboto)] font-[600] text-[#5c6d7a] bg-[#e8eef2] border border-[#b8c5d0]",
+    reward: "font-[family-name:var(--font-roboto)] font-[600] text-[#495057] bg-gray-100 border border-gray-200",
+    dispute: "font-[family-name:var(--font-roboto)] font-[600] text-[#c2410c] bg-[#fef3f0] border border-[#f8c7b5]",
   };
-  return map[type] ?? map.dispute_vote;
+  return map[type] ?? map.vote;
 }
 
-function badgeLabel(type: string) {
+function resultColor(r: string) {
+  if (r === "correct" || r === "payout") return "text-[#28a745]";
+  if (r === "wrong") return "text-red-500";
+  return "text-[#6c757d]";
+}
+
+function disputeStatusBadge(s: string) {
   const map: Record<string, string> = {
-    market_created: "create",
-    dispute_vote: "vote",
-    reputation_change: "rep",
+    resolved: "font-[600] text-[#495057] bg-gray-100 border border-gray-200",
+    active: "font-[600] text-[#5c6d7a] bg-[#e8eef2] border border-[#b8c5d0]",
+    rejected: "font-[600] text-[#6c757d] bg-gray-100 border border-gray-200",
   };
-  return map[type] ?? type;
+  return map[s] ?? map.resolved;
 }
-
-function resultColor(event: HistoryEvent) {
-  if (event.type === "reputation_change") {
-    return event.correct ? "text-emerald-600" : "text-red-500";
-  }
-  return "text-gray-500";
-}
-
-function timeAgo(ts: string) {
-  const diff = Date.now() - new Date(ts).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
-
-const AVATAR_COLORS = ["#6366f1", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#ec4899", "#14b8a6", "#f97316", "#06b6d4", "#84cc16"];
 
 /* ── component ────────────────────────────────────────────── */
 
 export default function Dash() {
-  const router = useRouter();
-  const { accountId: qAccountId, name: qName } = router.query;
-
-  const [agent, setAgent] = useState<AgentData | null>(null);
-  const [events, setEvents] = useState<HistoryEvent[]>([]);
-  const [allAgents, setAllAgents] = useState<AgentData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [logFilter, setLogFilter] = useState<"all" | "market_created" | "dispute_vote" | "reputation_change">("all");
+  const [logFilter, setLogFilter] = useState<"all" | "vote" | "reward" | "dispute">("all");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const stateRes = await fetch("/api/agents/state");
-      const state = await stateRes.json();
-      const agents: AgentData[] = state.agents || [];
-      setAllAgents(agents);
+  const filtered = logFilter === "all" ? activityLog : activityLog.filter((l) => l.type === logFilter);
 
-      let found: AgentData | null = null;
-      if (qAccountId && typeof qAccountId === "string") {
-        found = agents.find((a) => a.accountId === qAccountId) || null;
-      } else if (qName && typeof qName === "string") {
-        found = agents.find((a) => a.displayName.toLowerCase() === qName.toLowerCase()) || null;
-      }
-      if (!found && agents.length > 0) {
-        found = agents[0];
-      }
-      setAgent(found);
-
-      if (found) {
-        const histRes = await fetch(`/api/agents/history?agent=${encodeURIComponent(found.displayName)}`);
-        const hist = await histRes.json();
-        setEvents((hist.events || []).reverse());
-      }
-    } catch { /* empty */ }
-    setLoading(false);
-  }, [qAccountId, qName]);
-
-  useEffect(() => {
-    if (router.isReady) fetchData();
-  }, [router.isReady, fetchData]);
-
-  // Computed stats
-  const reputation = agent?.reputation ?? 10;
-  const repMax = 100;
-  const totalVotes = events.filter((e) => e.type === "dispute_vote").length;
-  const repEvents = events.filter((e) => e.type === "reputation_change");
-  const correctVotes = repEvents.filter((e) => e.correct).length;
-  const wrongVotes = repEvents.filter((e) => !e.correct).length;
-  const accuracy = totalVotes > 0 ? Math.round((correctVotes / Math.max(correctVotes + wrongVotes, 1)) * 1000) / 10 : 0;
-  const marketsCreated = events.filter((e) => e.type === "market_created").length;
-  const totalRepGain = repEvents.filter((e) => (e.repChange ?? 0) > 0).reduce((s, e) => s + (e.repChange ?? 0), 0);
-  const totalRepLoss = repEvents.filter((e) => (e.repChange ?? 0) < 0).reduce((s, e) => s + Math.abs(e.repChange ?? 0), 0);
-
-  // Leaderboard from all agents
-  const leaderboard: LeaderboardEntry[] = allAgents
-    .map((a) => ({ name: a.displayName, accountId: a.accountId, reputation: a.reputation ?? 10, isMe: a.accountId === agent?.accountId }))
-    .sort((a, b) => b.reputation - a.reputation)
-    .map((a, i) => ({ ...a, rank: i + 1 }));
-
-  const myRank = leaderboard.find((a) => a.isMe)?.rank ?? 0;
-
-  const filtered = logFilter === "all" ? events : events.filter((e) => e.type === logFilter);
-
-  const repCount = useCounter(reputation);
-  const accCount = useCounter(Math.round(accuracy * 10));
-
-  const anim = (i: number) =>
-    mounted
-      ? { opacity: 1, transform: "translateY(0)" }
-      : { opacity: 0, transform: "translateY(20px)" };
-
-  const delay = (i: number) => ({
-    transition: `all 0.6s cubic-bezier(0.16,1,0.3,1) ${i * 0.08}s`,
-  });
-
-  if (loading) {
-    return (
-      <div className={`min-h-screen bg-[#f8f9fa] ${roboto.variable} ${figtree.variable} font-[family-name:var(--font-roboto)]`}>
-        <Head><title>Dashboard | Dive</title></Head>
-        <Header />
-        <main className="w-[96%] max-w-[1800px] mx-auto mt-8 pb-20 flex items-center justify-center min-h-[60vh]">
-          <div className="text-gray-400 text-lg">Loading agent data...</div>
-        </main>
-      </div>
-    );
-  }
-
-  if (!agent) {
-    return (
-      <div className={`min-h-screen bg-[#f8f9fa] ${roboto.variable} ${figtree.variable} font-[family-name:var(--font-roboto)]`}>
-        <Head><title>Dashboard | Dive</title></Head>
-        <Header />
-        <main className="w-[96%] max-w-[1800px] mx-auto mt-8 pb-20 flex items-center justify-center min-h-[60vh]">
-          <div className="text-gray-400 text-lg">Agent not found.</div>
-        </main>
-      </div>
-    );
-  }
+  const repCount = useCounter(myAgent.reputationScore);
+  const balCount = useCounter(Math.round(myAgent.walletBalance));
+  const accCount = useCounter(Math.round(myAgent.accuracy * 10));
 
   return (
     <div className={`min-h-screen bg-[#f8f9fa] ${roboto.variable} ${figtree.variable} font-[family-name:var(--font-roboto)]`}>
       <Head>
-        <title>{agent.displayName} — Dashboard | Dive</title>
+        <title>My Dashboard | Dive</title>
         <link href="https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400,300&display=swap" rel="stylesheet" />
       </Head>
 
       <style jsx global>{`
-        @keyframes pulse-ring {
-          0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
-          70% { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
-          100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+        @keyframes bar-grow { from { height: 0%; } }
+        @keyframes pulse-ring-live {
+          0% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.5); }
+          70% { box-shadow: 0 0 0 8px rgba(248, 113, 113, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0); }
         }
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-4px); }
         }
-        .stat-card { transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
-        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px -8px rgba(0,0,0,0.1); }
-        .row-hover { transition: all 0.2s ease; }
-        .row-hover:hover { background: rgba(248,250,252,0.8); transform: scale(1.002); }
-        .leaderboard-row { transition: all 0.25s cubic-bezier(0.16,1,0.3,1); }
-        .leaderboard-row:hover { transform: translateX(4px); background: rgba(248,250,252,0.9); }
+        .dash-card {
+          transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        .dash-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+        .row-hover {
+          transition: background 0.15s ease;
+        }
+        .row-hover:hover {
+          background: #f8f9fa;
+        }
+        .leaderboard-row {
+          transition: background 0.15s ease, transform 0.2s ease;
+        }
+        .leaderboard-row:hover {
+          background: #f8f9fa;
+          transform: translateX(3px);
+        }
+        .dispute-card {
+          transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .dispute-card:hover {
+          border-color: #dee2e6;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        }
+        .group:hover .bar-chart-fill {
+          filter: brightness(0.82);
+        }
       `}</style>
 
       <Header />
 
-      <main className="w-[96%] max-w-[1800px] mx-auto mt-8 pb-20">
+      <main className="w-[96%] max-w-[1800px] mx-auto mt-6 pb-16">
+
         {/* ── Page Title ─────────────────────────────── */}
-        <div className="flex items-center justify-between mb-8" style={{ ...anim(0), ...delay(0) }}>
+        <div
+          className="flex items-center justify-between mb-6 px-2"
+          style={{ opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(16px)", transition: "all 0.5s ease" }}
+        >
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="font-['Satoshi'] text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
-                {agent.displayName}
-              </h1>
-              <span className="px-2.5 py-1 bg-emerald-500 text-white text-[11px] font-bold uppercase tracking-wider rounded-full" style={{ animation: "pulse-ring 2s infinite" }}>
+              <h1 className={typography.pageTitle}>My Agent Dashboard</h1>
+              <span
+                className="px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full border border-[#fca5a5] bg-[#fecaca] text-[#991b1b]"
+                style={{ animation: "pulse-ring-live 2s infinite" }}
+              >
                 Live
               </span>
             </div>
-            <p className="text-gray-500 mt-1.5 text-[15px] flex items-center gap-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-emerald-400" />
-              <span className="font-mono text-[13px] text-gray-400">{agent.accountId}</span>
-              {agent.inftTokenId != null && <span className="text-gray-300">· iNFT #{agent.inftTokenId}</span>}
+            <p
+              className="mt-1 flex items-center gap-2 font-[family-name:var(--font-roboto)] text-sm font-[400] !text-[#5c6d7a]"
+            >
+              <span className="inline-block w-2 h-2 shrink-0 rounded-full bg-[#5c6d7a]" />
+              {myAgent.name} &middot;{" "}
+              <span className="font-mono text-[13px] !text-[#5c6d7a]">{myAgent.accountId}</span>
             </p>
           </div>
           <div className="hidden sm:flex items-center gap-2">
-            {agent.worldVerified && (
-              <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-3.5 py-1.5 text-[13px] font-semibold shadow-sm">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5" /></svg>
-                World ID Verified
-              </span>
-            )}
-            {/* Agent switcher */}
-            <select
-              value={agent.accountId}
-              onChange={(e) => router.push(`/dash?accountId=${e.target.value}`)}
-              className="bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-[13px] text-gray-600 outline-none"
-            >
-              {allAgents.map((a) => (
-                <option key={a.accountId} value={a.accountId}>
-                  {a.displayName} ({a.accountId})
-                </option>
-              ))}
-            </select>
+            <span className={`inline-flex items-center gap-1.5 ${typography.statusBadge} rounded-full px-3.5 py-1.5 shadow-sm`}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5" /></svg>
+              World ID Verified
+            </span>
           </div>
         </div>
 
         {/* ── Stats Strip ─────────────────────────────── */}
-        <div className="rounded-2xl border border-gray-200/80 mb-8 overflow-hidden" style={{ ...anim(1), ...delay(1) }}>
-          <div className="bg-white px-6 pt-5 pb-4">
+        <div
+          className="bg-white rounded-xl shadow-[0_0.25rem_0.75rem_rgba(0,0,0,0.06)] border border-gray-200 mb-6 overflow-hidden"
+          style={{ opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(16px)", transition: "all 0.5s ease 0.08s" }}
+        >
+          {/* Reputation bar */}
+          <div className="px-6 pt-5 pb-4 border-b border-gray-100">
             <div className="flex items-center gap-3 mb-3">
-              <span className="text-[13px] text-gray-500">Reputation</span>
-              <span className="text-[22px] font-[800] text-gray-900 leading-none font-['Satoshi']">{repCount}</span>
-              <span className="text-[12px] text-gray-300 mt-0.5">of {repMax}</span>
-              {myRank > 0 && <span className="ml-auto text-[12px] font-[600] text-gray-900 bg-gray-100 px-2.5 py-1 rounded-lg">Rank #{myRank}</span>}
+              <span className={typography.statCardLabel}>Reputation</span>
+              <span className="font-['Satoshi'] text-[22px] font-[800] leading-none !text-[#343a40]">{repCount}</span>
+              <span className="text-[12px] mt-0.5 font-[500] !text-[#0a2540]">of {myAgent.reputationMax}</span>
+              <span className="ml-auto text-[12px] font-[600] text-[#212529] bg-gray-100 px-2.5 py-1 rounded-lg">Rank #{myAgent.rank}</span>
             </div>
-            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="w-full h-3 rounded-full overflow-hidden bg-[#F2F2F2]">
               <div
-                className="h-full rounded-full"
+                className="h-full min-h-[12px] rounded-full"
                 style={{
-                  width: mounted ? `${Math.min((reputation / repMax) * 100, 100)}%` : "0%",
-                  background: "linear-gradient(90deg, #34d399 0%, #059669 60%, #047857 100%)",
+                  width: mounted ? `${(myAgent.reputationScore / myAgent.reputationMax) * 100}%` : "0%",
+                  /* Horizontal sweep: same blue-grey family as Reputation chart bars */
+                  background:
+                    "linear-gradient(90deg, #dde5eb 0%, #c8d4de 22%, #aab9c4 48%, #8fa1ae 72%, #7a8f9f 100%)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)",
                   transition: "width 1.4s cubic-bezier(0.22,1,0.36,1) 0.2s",
                 }}
               />
             </div>
           </div>
 
-          <div className="bg-white border-t border-gray-100 grid grid-cols-4 gap-3 p-3">
-            <div className="bg-[#f7f7f8] rounded-xl px-5 py-4">
-              <span className="text-[11px] text-gray-400 block mb-1">Total Votes</span>
-              <span className="text-[20px] font-[800] text-gray-900 font-['Satoshi']">{totalVotes}</span>
-            </div>
-            <div className="bg-[#f7f7f8] rounded-xl px-5 py-4">
-              <span className="text-[11px] text-gray-400 block mb-1">Accuracy</span>
-              <div className="flex items-baseline gap-0.5">
-                <span className="text-[20px] font-[800] text-gray-900 font-['Satoshi']">{(accCount / 10).toFixed(1)}</span>
-                <span className="text-[13px] text-gray-300 font-[600]">%</span>
+          {/* Bottom row — 3 stats (slate grey gradient card) */}
+          <div className="grid grid-cols-3 gap-3 p-3">
+            <div
+              className="rounded-[18px] px-5 py-4 border border-white/20 shadow-sm"
+              style={{
+                background: "linear-gradient(180deg, #8FA0AB 0%, #4D5D6A 100%)",
+              }}
+            >
+              <span className="block mb-1 font-[family-name:var(--font-roboto)] font-[700] text-[0.75rem] uppercase tracking-wide !text-[#f0f4f6]">
+                Balance
+              </span>
+              <span className="font-['Satoshi'] text-[20px] font-[800] !text-white">
+                ${balCount.toLocaleString()}
+              </span>
+              <div className="flex gap-2 mt-1 text-[11px] font-[family-name:var(--font-roboto)]">
+                <span className="font-[600] !text-[#dfe6ea]">${myAgent.stakedBalance.toLocaleString()} staked</span>
+                <span className="font-[600] text-[#b8f2c9]">+${myAgent.pendingRewards}</span>
               </div>
-              <span className="text-[11px] text-gray-400 mt-1 block">{correctVotes} correct / {wrongVotes} wrong</span>
             </div>
-            <div className="bg-[#f7f7f8] rounded-xl px-5 py-4">
-              <span className="text-[11px] text-gray-400 block mb-1">Markets Created</span>
-              <span className="text-[20px] font-[800] text-gray-900 font-['Satoshi']">{marketsCreated}</span>
+
+            <div
+              className="rounded-[18px] px-5 py-4 border border-white/20 shadow-sm"
+              style={{
+                background: "linear-gradient(180deg, #8FA0AB 0%, #4D5D6A 100%)",
+              }}
+            >
+              <span className="block mb-1 font-[family-name:var(--font-roboto)] font-[700] text-[0.75rem] uppercase tracking-wide !text-[#f0f4f6]">
+                Accuracy
+              </span>
+              <div className="flex items-baseline gap-0.5">
+                <span className="font-['Satoshi'] text-[20px] font-[800] !text-white">{(accCount / 10).toFixed(1)}</span>
+                <span className="text-[13px] font-[600] !text-white">%</span>
+              </div>
+              <span className="mt-1 block font-[family-name:var(--font-roboto)] text-sm font-[400] normal-case tracking-normal">
+                <span className="font-[600] !text-[#dfe6ea]">
+                  {myAgent.correctVotes}/{myAgent.totalVotes} correct
+                </span>
+              </span>
             </div>
-            <div className="bg-[#f7f7f8] rounded-xl px-5 py-4">
-              <span className="text-[11px] text-gray-400 block mb-1">Rep Changes</span>
-              <div className="flex gap-2 text-[14px] font-bold">
-                <span className="text-emerald-600">+{totalRepGain}</span>
-                <span className="text-red-400">-{totalRepLoss}</span>
+
+            <div
+              className="rounded-[18px] px-5 py-4 border border-white/20 shadow-sm"
+              style={{
+                background: "linear-gradient(180deg, #8FA0AB 0%, #4D5D6A 100%)",
+              }}
+            >
+              <span className="block mb-1 font-[family-name:var(--font-roboto)] font-[700] text-[0.75rem] uppercase tracking-wide !text-[#f0f4f6]">
+                Disputes
+              </span>
+              <span className="font-['Satoshi'] text-[20px] font-[800] !text-white">{disputes.length}</span>
+              <div className="flex gap-2 mt-1 text-[11px] font-[family-name:var(--font-roboto)]">
+                <span className="font-[600] !text-[#dfe6ea]">{disputes.filter((d) => d.status === "resolved").length} won</span>
+                <span className="font-[600] !text-[#dfe6ea]">{disputes.filter((d) => d.status === "active").length} open</span>
               </div>
             </div>
           </div>
@@ -338,105 +336,214 @@ export default function Dash() {
         {/* ── Two-column layout ──────────────────────── */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-          {/* LEFT COL: Activity Log ───── */}
+          {/* LEFT COL ───── */}
           <div className="xl:col-span-2 flex flex-col gap-6">
 
+            {/* Reputation Chart */}
+            <div
+              className="dash-card bg-white rounded-xl shadow-[0_0.25rem_0.75rem_rgba(0,0,0,0.06)] border border-gray-200 p-6"
+              style={{ opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(16px)", transition: "all 0.5s ease 0.16s" }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="font-['Satoshi',sans-serif] font-[700] !text-[#0a2540] text-2xl">
+                  Reputation Over Time
+                </h2>
+                <span className={typography.smallLabel}>Last 7 months</span>
+              </div>
+              <div className="flex items-end gap-2.5 h-40">
+                {reputationHistory.map((h, i) => {
+                  const pct = ((h.score - 500) / 500) * 100;
+                  const isLast = i === reputationHistory.length - 1;
+                  return (
+                    <div key={h.month} className="flex-1 flex flex-col items-center gap-1.5 group">
+                      <span
+                        className={`text-[11px] font-bold font-[family-name:var(--font-roboto)] transition-colors ${
+                          isLast ? "text-[#5c6d7a]" : "text-[#5c6570] group-hover:text-[#5c6d7a]"
+                        }`}
+                      >
+                        {h.score}
+                      </span>
+                      <div
+                        className="w-full rounded-lg overflow-hidden border border-gray-200"
+                        style={{ height: "110px", background: "#f4f4f4" }}
+                      >
+                        <div
+                          className="w-full rounded-lg transition-all bar-chart-fill"
+                          style={{
+                            height: mounted ? `${pct}%` : "0%",
+                            marginTop: mounted ? `${100 - pct}%` : "100%",
+                            transition: `all 0.8s cubic-bezier(0.16,1,0.3,1) ${0.5 + i * 0.1}s`,
+                            background: isLast
+                              ? "linear-gradient(to top, #9aabba, #b5c4cf, #dce4ea)"
+                              : "linear-gradient(to top, #8fa1ae, #aab9c4, #d0d9e1)",
+                          }}
+                        />
+                      </div>
+                      <span
+                        className={`text-[11px] font-medium font-[family-name:var(--font-roboto)] ${
+                          isLast ? "font-bold text-[#5c6d7a]" : "text-[#5c6570]"
+                        }`}
+                      >
+                        {h.month}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Activity Log */}
-            <div className="bg-white rounded-2xl border border-gray-200/80 p-6" style={{ ...anim(5), ...delay(5) }}>
+            <div
+              className="dash-card bg-white rounded-xl shadow-[0_0.25rem_0.75rem_rgba(0,0,0,0.06)] border border-gray-200 p-6"
+              style={{ opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(16px)", transition: "all 0.5s ease 0.24s" }}
+            >
               <div className="flex items-center justify-between mb-5">
-                <h2 className="font-['Satoshi'] text-[17px] font-bold text-gray-900">Activity Log</h2>
+                <h2 className={typography.sectionHeader}>Activity Log</h2>
                 <div className="flex gap-0.5 bg-gray-100 rounded-lg p-0.5">
-                  {(["all", "dispute_vote", "reputation_change", "market_created"] as const).map((f) => (
+                  {(["all", "vote", "reward", "dispute"] as const).map((f) => (
                     <button
                       key={f}
                       onClick={() => setLogFilter(f)}
-                      className={`px-2.5 py-1 rounded-md text-[12px] font-semibold capitalize transition-all ${logFilter === f
-                          ? "bg-white text-gray-800 shadow-sm"
-                          : "text-gray-400 hover:text-gray-600"
-                        }`}
+                      className={`px-2.5 py-1 rounded-md text-[12px] font-semibold capitalize transition-all font-[family-name:var(--font-roboto)] ${
+                        logFilter === f
+                          ? "bg-white text-[#212529] shadow-sm"
+                          : "text-[#6c757d] hover:text-[#212529]"
+                      }`}
                     >
-                      {f === "all" ? "All" : f === "dispute_vote" ? "Votes" : f === "reputation_change" ? "Rep" : "Markets"}
+                      {f}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1">
-                {filtered.length === 0 && (
-                  <div className="text-center text-gray-400 py-8 text-sm">No events found.</div>
-                )}
-                {filtered.slice(0, 20).map((row, i) => (
+              <div className="divide-y divide-gray-100">
+                {filtered.map((row, i) => (
                   <div
-                    key={`${row.timestamp}-${i}`}
-                    className="row-hover flex items-center gap-3 px-3 py-2.5 rounded-xl"
+                    key={row.id}
+                    className="row-hover flex items-center gap-3 px-3 py-2.5 rounded-lg"
                     style={{
                       opacity: mounted ? 1 : 0,
                       transform: mounted ? "translateX(0)" : "translateX(-10px)",
                       transition: `all 0.4s ease ${i * 0.05}s`,
                     }}
                   >
-                    <span className={`shrink-0 inline-block px-2 py-0.5 rounded-md text-[11px] font-bold border capitalize w-[58px] text-center ${badge(row.type)}`}>
-                      {badgeLabel(row.type)}
+                    <span className={`shrink-0 inline-block px-2 py-0.5 rounded-md text-[11px] font-bold border capitalize w-[60px] text-center ${badge(row.type)}`}>
+                      {row.type}
                     </span>
-                    <span className="flex-1 text-[13px] text-gray-700 font-medium truncate">
-                      {row.marketQuestion || row.marketId}
+                    <span className={`flex-1 text-[13px] text-[#212529] font-medium font-[family-name:var(--font-roboto)] truncate`}>{row.market}</span>
+                    <span className="font-mono text-[12px] text-[#6c757d] w-8 text-center">{row.vote}</span>
+                    <span className={`text-[12px] font-bold capitalize w-16 text-center font-[family-name:var(--font-roboto)] ${resultColor(row.result)}`}>{row.result}</span>
+                    <span className={`font-mono text-[12px] font-bold w-10 text-right ${row.rep.startsWith("+") ? "text-[#28a745]" : row.rep.startsWith("-") ? "text-red-500" : "text-gray-300"}`}>
+                      {row.rep}
                     </span>
-                    {row.vote && (
-                      <span className={`font-mono text-[12px] font-bold w-12 text-center ${row.vote === "YES" ? "text-emerald-600" : row.vote === "NO" ? "text-red-500" : "text-gray-400"}`}>
-                        {row.vote}
-                      </span>
-                    )}
-                    {row.type === "reputation_change" && (
-                      <span className={`font-mono text-[12px] font-bold w-10 text-right ${(row.repChange ?? 0) > 0 ? "text-emerald-500" : "text-red-400"}`}>
-                        {(row.repChange ?? 0) > 0 ? "+" : ""}{row.repChange}
-                      </span>
-                    )}
-                    {row.type === "market_created" && row.role && (
-                      <span className="text-[11px] text-gray-400 w-16 text-center">{row.role}</span>
-                    )}
-                    {row.phase && (
-                      <span className="text-[11px] text-gray-300 bg-gray-50 px-1.5 py-0.5 rounded">{row.phase}</span>
-                    )}
-                    <span className="text-[11px] text-gray-300 w-14 text-right shrink-0">{timeAgo(row.timestamp)}</span>
+                    <span className="text-[11px] text-[#6c757d] w-12 text-right font-[family-name:var(--font-roboto)]">{row.time}</span>
                   </div>
                 ))}
-                {filtered.length > 20 && (
-                  <div className="text-center text-gray-400 py-3 text-[12px]">
-                    Showing 20 of {filtered.length} events
-                  </div>
-                )}
               </div>
             </div>
+
+            {/* Disputes */}
+            <div
+              className="dash-card bg-white rounded-xl shadow-[0_0.25rem_0.75rem_rgba(0,0,0,0.06)] border border-gray-200 p-6"
+              style={{ opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(16px)", transition: "all 0.5s ease 0.32s" }}
+            >
+              <h2 className={`${typography.sectionHeader} mb-5`}>Dispute Results</h2>
+              <div className="flex flex-col gap-3">
+                {disputes.map((d, i) => (
+                  <div
+                    key={d.id}
+                    className="dispute-card border border-gray-100 rounded-xl p-4 hover:bg-gray-50/30 transition-colors"
+                    style={{
+                      opacity: mounted ? 1 : 0,
+                      transform: mounted ? "translateY(0)" : "translateY(10px)",
+                      transition: `all 0.5s ease ${0.8 + i * 0.08}s`,
+                    }}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`inline-block px-2 py-0.5 rounded-md text-[11px] font-bold border capitalize ${disputeStatusBadge(d.status)}`}>
+                        {d.status}
+                      </span>
+                      <h3 className="text-[13px] font-semibold text-[#212529] font-[family-name:var(--font-roboto)] truncate">{d.market}</h3>
+                    </div>
+                    <p className="text-[12px] text-[#6c757d] font-[family-name:var(--font-roboto)] leading-relaxed mb-2">{d.reason}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-[12px] font-[family-name:var(--font-roboto)]">
+                        <span className="text-[#6c757d]">Vote: <strong className="text-[#212529]">{d.myVote}</strong></span>
+                        <span className="text-gray-300">|</span>
+                        <span className="text-[#6c757d]">{d.outcome}</span>
+                      </div>
+                      <span className={`font-mono text-[13px] font-bold ${d.repEffect.startsWith("+") ? "text-[#28a745]" : d.repEffect === "0" ? "text-gray-300" : "text-[#6c757d]"}`}>
+                        {d.repEffect !== "—" ? `${d.repEffect} rep` : "—"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
           </div>
 
-          {/* RIGHT COL: Leaderboard + Profile */}
+          {/* RIGHT COL ───── */}
           <div className="xl:col-span-1 flex flex-col gap-6">
 
-            {/* Oracle Leaderboard */}
-            <div className="bg-white rounded-2xl border border-gray-200/80 p-6" style={{ ...anim(8), ...delay(8) }}>
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="font-['Satoshi'] text-[17px] font-bold text-gray-900">Oracle Leaderboard</h2>
-                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Top {leaderboard.length}</span>
+            {/* Earnings */}
+            <div
+              className="dash-card bg-white rounded-xl shadow-[0_0.25rem_0.75rem_rgba(0,0,0,0.06)] border border-gray-200 p-6"
+              style={{ opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(16px)", transition: "all 0.5s ease 0.4s" }}
+            >
+              <h2 className={`${typography.sectionHeader} mb-1`}>Earnings</h2>
+              <p className={`${typography.muted} mb-5`}>Lifetime breakdown</p>
+
+              <div className="flex flex-col gap-0">
+                {earnings.map((e, i) => (
+                  <div
+                    key={e.label}
+                    className="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0"
+                    style={{
+                      opacity: mounted ? 1 : 0,
+                      transform: mounted ? "translateX(0)" : "translateX(10px)",
+                      transition: `all 0.4s ease ${1.0 + i * 0.08}s`,
+                    }}
+                  >
+                    <span className={`${typography.muted} text-[#6c757d]`}>{e.label}</span>
+                    <span className="font-bold text-[#212529] text-[14px] font-[family-name:var(--font-roboto)]">${e.amount.toLocaleString()}</span>
+                  </div>
+                ))}
               </div>
-              <div className="flex flex-col gap-1">
+
+              <div className="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
+                <span className={`${typography.smallLabel}`}>Total Earned</span>
+                <span className="font-['Satoshi'] text-xl font-bold text-[#212529] tracking-tight">${earnings.reduce((s, e) => s + e.amount, 0).toLocaleString()}</span>
+              </div>
+            </div>
+
+            {/* Oracle Leaderboard */}
+            <div
+              className="dash-card bg-white rounded-xl shadow-[0_0.25rem_0.75rem_rgba(0,0,0,0.06)] border border-gray-200 p-6"
+              style={{ opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(16px)", transition: "all 0.5s ease 0.48s" }}
+            >
+              <div className="flex items-center justify-between mb-5">
+                <h2 className={typography.sectionHeader}>Oracle Leaderboard</h2>
+                <span className={typography.smallLabel}>Top 8</span>
+              </div>
+              <div className="flex flex-col gap-0.5">
                 {leaderboard.map((a, i) => (
                   <div
-                    key={a.accountId}
-                    className={`leaderboard-row flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer ${a.isMe ? "bg-emerald-50/60 border border-emerald-200/60" : ""}`}
-                    onClick={() => router.push(`/dash?accountId=${a.accountId}`)}
+                    key={a.rank}
+                    className={`leaderboard-row flex items-center gap-3 px-3 py-2.5 rounded-lg ${a.isMe ? "bg-gray-100 border border-gray-200" : ""}`}
                     style={{
                       opacity: mounted ? 1 : 0,
                       transform: mounted ? "translateY(0)" : "translateY(12px)",
                       transition: `all 0.5s cubic-bezier(0.16,1,0.3,1) ${0.6 + i * 0.06}s`,
                     }}
                   >
-                    <span className={`text-[13px] font-bold w-5 text-center ${a.rank <= 3 ? "text-amber-500" : "text-gray-300"}`}>
+                    <span className={`text-[13px] font-bold w-5 text-center font-[family-name:var(--font-roboto)] ${a.rank <= 3 ? "text-[#c2410c]" : "text-gray-300"}`}>
                       {a.rank}
                     </span>
                     <div
                       className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-bold shrink-0"
                       style={{
-                        background: AVATAR_COLORS[i % AVATAR_COLORS.length],
+                        background: LEADERBOARD_AVATAR_BG,
                         animation: a.isMe ? "float 3s ease-in-out infinite" : undefined,
                       }}
                     >
@@ -444,50 +551,66 @@ export default function Dash() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className={`text-[13px] font-semibold truncate ${a.isMe ? "text-emerald-700" : "text-gray-800"}`}>
+                        <span className={`text-[13px] font-semibold truncate font-[family-name:var(--font-roboto)] ${a.isMe ? "text-[#212529] font-bold" : "text-[#212529]"}`}>
                           {a.name}
                         </span>
                         {a.isMe && (
-                          <span className="text-[9px] font-bold bg-emerald-500 text-white px-1.5 py-0.5 rounded-full uppercase">You</span>
+                          <span className="text-[9px] font-bold bg-gray-700 text-white px-1.5 py-0.5 rounded-full uppercase">You</span>
                         )}
                       </div>
-                      <span className="text-[11px] text-gray-400 font-mono">{a.accountId}</span>
+                      <span className="text-[11px] text-[#6c757d] font-[family-name:var(--font-roboto)]">{a.accuracy}% acc &middot; {a.votes} votes</span>
                     </div>
-                    <span className="text-[15px] font-bold text-gray-900">{a.reputation}</span>
+                    <div className="text-right">
+                      <span className="text-[15px] font-bold font-['Satoshi'] text-[#212529]">{a.score}</span>
+                      <div className={`text-[11px] font-bold font-[family-name:var(--font-roboto)] ${a.change.startsWith("+") ? "text-[#28a745]" : "text-red-500"}`}>
+                        {a.change}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Agent Profile */}
-            <div className="bg-white rounded-2xl border border-gray-200/80 p-6" style={{ ...anim(9), ...delay(9) }}>
+            <div
+              className="dash-card bg-white rounded-xl shadow-[0_0.25rem_0.75rem_rgba(0,0,0,0.06)] border border-gray-200 p-6"
+              style={{ opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(16px)", transition: "all 0.5s ease 0.56s" }}
+            >
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white font-bold text-[15px] shadow-lg shadow-emerald-200/40" style={{ animation: "float 4s ease-in-out infinite" }}>
-                  {agent.displayName.slice(0, 2).toUpperCase()}
+                <div
+                  className="w-11 h-11 rounded-xl bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center text-white font-bold text-[15px] shadow-lg"
+                  style={{ animation: "float 4s ease-in-out infinite" }}
+                >
+                  OA
                 </div>
                 <div>
-                  <h2 className="font-['Satoshi'] text-[17px] font-bold text-gray-900">{agent.displayName}</h2>
-                  <p className="text-[12px] text-gray-400">Oracle Agent</p>
+                  <h2 className={typography.sectionHeader}>{myAgent.name}</h2>
+                  <p className={typography.muted}>Oracle Agent</p>
                 </div>
               </div>
-              <div className="flex flex-col gap-2.5 text-[13px]">
+
+              <div className="flex flex-col gap-0 text-[13px] font-[family-name:var(--font-roboto)]">
                 {[
-                  ["Account", agent.accountId],
-                  ["EVM Address", agent.evmAddress ? `${agent.evmAddress.slice(0, 8)}...${agent.evmAddress.slice(-6)}` : "—"],
-                  ["iNFT Token", agent.inftTokenId != null ? `#${agent.inftTokenId}` : "—"],
-                  ["Model", agent.modelProvider || "—"],
-                  ["Domain", agent.domainTags || "—"],
-                  ["Services", agent.serviceOfferings || "—"],
-                  ["Human ID", agent.humanId ? `${String(agent.humanId).slice(0, 10)}...` : "Not verified"],
+                  ["Account", myAgent.accountId],
+                  ["Human ID", myAgent.humanId],
                   ["Network", "Hedera Testnet"],
                 ].map(([label, val]) => (
-                  <div key={label} className="flex justify-between items-center py-1.5 border-b border-gray-50">
-                    <span className="text-gray-400">{label}</span>
-                    <span className="font-mono text-[12px] text-gray-600 text-right max-w-[60%] truncate">{val}</span>
+                  <div key={label} className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-[#6c757d]">{label}</span>
+                    <span className="font-mono text-[12px] text-[#212529]">{val}</span>
                   </div>
                 ))}
+                <div className="flex justify-between items-center pt-2.5">
+                  <span className="text-[#6c757d]">Standards</span>
+                  <div className="flex gap-1">
+                    {["HCS-2", "HCS-11", "HCS-16", "HCS-20"].map((s) => (
+                      <span key={s} className="px-1.5 py-0.5 bg-gray-100 border border-gray-200 rounded text-[10px] font-bold text-[#495057]">{s}</span>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
+
           </div>
         </div>
       </main>
