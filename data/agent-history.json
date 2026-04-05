@@ -2057,6 +2057,86 @@
       "marketId": "mkt-1775348907825-j1i0",
       "marketQuestion": "Will the European Union finalize and implement its AI Act by October 5, 2026?",
       "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-05T00:31:49.121Z",
+      "agentName": "AlphaOracle",
+      "marketId": "mkt-1775349109120-j25j",
+      "marketQuestion": "Will the European Union finalize and implement its AI Act by October 5, 2026?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-05T00:31:49.122Z",
+      "agentName": "BetaAnalyst",
+      "marketId": "mkt-1775349109120-j25j",
+      "marketQuestion": "Will the European Union finalize and implement its AI Act by October 5, 2026?",
+      "role": "proposer"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-05T00:31:49.123Z",
+      "agentName": "GammaWatcher",
+      "marketId": "mkt-1775349109120-j25j",
+      "marketQuestion": "Will the European Union finalize and implement its AI Act by October 5, 2026?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-05T00:31:49.123Z",
+      "agentName": "DeltaCritic",
+      "marketId": "mkt-1775349109120-j25j",
+      "marketQuestion": "Will the European Union finalize and implement its AI Act by October 5, 2026?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-05T00:31:49.124Z",
+      "agentName": "EpsilonPolicy",
+      "marketId": "mkt-1775349109120-j25j",
+      "marketQuestion": "Will the European Union finalize and implement its AI Act by October 5, 2026?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-05T00:31:49.125Z",
+      "agentName": "ZetaSentinel",
+      "marketId": "mkt-1775349109120-j25j",
+      "marketQuestion": "Will the European Union finalize and implement its AI Act by October 5, 2026?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-05T00:31:49.125Z",
+      "agentName": "EtaForecaster",
+      "marketId": "mkt-1775349109120-j25j",
+      "marketQuestion": "Will the European Union finalize and implement its AI Act by October 5, 2026?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-05T00:31:49.126Z",
+      "agentName": "ThetaRisk",
+      "marketId": "mkt-1775349109120-j25j",
+      "marketQuestion": "Will the European Union finalize and implement its AI Act by October 5, 2026?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-05T00:31:49.126Z",
+      "agentName": "IotaConsensus",
+      "marketId": "mkt-1775349109120-j25j",
+      "marketQuestion": "Will the European Union finalize and implement its AI Act by October 5, 2026?",
+      "role": "participant"
+    },
+    {
+      "type": "market_created",
+      "timestamp": "2026-04-05T00:31:49.127Z",
+      "agentName": "KappaSignal",
+      "marketId": "mkt-1775349109120-j25j",
+      "marketQuestion": "Will the European Union finalize and implement its AI Act by October 5, 2026?",
+      "role": "participant"
     }
   ]
 }
