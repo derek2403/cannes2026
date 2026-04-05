@@ -67,8 +67,10 @@ export default function ExplorerHome() {
     if (!q) return;
     if (q.startsWith('mkt-')) {
       router.push(`/event?id=${q}`);
+    } else if (q.startsWith('0.0.')) {
+      router.push(`/dash?accountId=${q}`);
     } else {
-      router.push(`/agents?search=${q}`);
+      router.push(`/dash?name=${q}`);
     }
   };
 
