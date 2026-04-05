@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { MiniKit } from "@worldcoin/minikit-js";
 import { createPublicClient, http, formatUnits } from "viem";
 import { Geist } from "next/font/google";
@@ -100,15 +100,21 @@ export default function MiniKitPage({ markets }: { markets: MarketData[] }) {
     }
   }, [wallet]);
 
+  const didInit = useRef(false);
+
   useEffect(() => {
+    if (didInit.current) return;
+    didInit.current = true;
     MiniKit.install(APP_ID);
     setIsMiniKit(MiniKit.isInstalled());
     markets.forEach((m) => refreshPool(m.id));
-  }, [markets, refreshPool]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    refreshBalance();
-  }, [refreshBalance]);
+    if (wallet) refreshBalance();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wallet]);
 
   return (
     <div
