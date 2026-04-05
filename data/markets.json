@@ -39,7 +39,7 @@
       "is_trending": false
     },
     "settlement": {
-      "winning_outcome": "NO",
+      "winning_outcome": "YES",
       "settlement_price": 0.95,
       "dispute_tx_hash": null
     }

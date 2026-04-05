@@ -29,10 +29,11 @@ interface AgentData {
   humanId?: string | null;
   inftTokenId?: number;
   modelProvider?: string;
+  usdcEarnings?: string;
 }
 
 interface HistoryEvent {
-  type: "market_created" | "dispute_vote" | "reputation_change";
+  type: "market_created" | "dispute_vote" | "reputation_change" | "usdc_payout";
   timestamp: string;
   agentName: string;
   marketId: string;
@@ -41,6 +42,7 @@ interface HistoryEvent {
   outcome?: string;
   correct?: boolean;
   repChange?: number;
+  earned?: string;
   phase?: string;
   role?: string;
 }
@@ -50,6 +52,7 @@ interface LeaderboardEntry {
   name: string;
   accountId: string;
   reputation: number;
+  usdcEarnings: string;
   isMe: boolean;
 }
 
@@ -83,6 +86,7 @@ function badge(type: string) {
     market_created: "bg-emerald-50 text-emerald-700 border-emerald-200",
     dispute_vote: "bg-blue-50 text-blue-700 border-blue-200",
     reputation_change: "bg-amber-50 text-amber-700 border-amber-200",
+    usdc_payout: "bg-green-50 text-green-700 border-green-200",
   };
   return map[type] ?? map.dispute_vote;
 }
@@ -92,6 +96,7 @@ function badgeLabel(type: string) {
     market_created: "create",
     dispute_vote: "vote",
     reputation_change: "rep",
+    usdc_payout: "payout",
   };
   return map[type] ?? type;
 }
@@ -124,8 +129,9 @@ export default function Dash() {
   const [agent, setAgent] = useState<AgentData | null>(null);
   const [events, setEvents] = useState<HistoryEvent[]>([]);
   const [allAgents, setAllAgents] = useState<AgentData[]>([]);
+  const [allHistory, setAllHistory] = useState<HistoryEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [logFilter, setLogFilter] = useState<"all" | "market_created" | "dispute_vote" | "reputation_change">("all");
+  const [logFilter, setLogFilter] = useState<"all" | "market_created" | "dispute_vote" | "reputation_change" | "usdc_payout">("all");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
@@ -135,7 +141,11 @@ export default function Dash() {
     try {
       const stateRes = await fetch("/api/agents/state");
       const state = await stateRes.json();
-      const agents: AgentData[] = state.agents || [];
+      const usdcEarnings: Record<string, string> = state.usdc_earnings || {};
+      const agents: AgentData[] = (state.agents || []).map((a: AgentData) => ({
+        ...a,
+        usdcEarnings: usdcEarnings[a.displayName] || "0.00",
+      }));
       setAllAgents(agents);
 
       let found: AgentData | null = null;
@@ -149,10 +159,14 @@ export default function Dash() {
       }
       setAgent(found);
 
+      // Fetch all history (for leaderboard earnings)
+      const allHistRes = await fetch("/api/agents/history");
+      const allHist = await allHistRes.json();
+      setAllHistory(allHist.events || []);
+
       if (found) {
-        const histRes = await fetch(`/api/agents/history?agent=${encodeURIComponent(found.displayName)}`);
-        const hist = await histRes.json();
-        setEvents((hist.events || []).reverse());
+        const agentEvents = (allHist.events || []).filter((e: HistoryEvent) => e.agentName === found!.displayName);
+        setEvents(agentEvents.reverse());
       }
     } catch { /* empty */ }
     setLoading(false);
@@ -175,8 +189,14 @@ export default function Dash() {
   const totalRepLoss = repEvents.filter((e) => (e.repChange ?? 0) < 0).reduce((s, e) => s + Math.abs(e.repChange ?? 0), 0);
 
   // Leaderboard from all agents
+  // Compute per-agent earnings from history
+  const agentEarningsMap: Record<string, number> = {};
+  allHistory.filter((e) => e.type === "reputation_change" && e.correct).forEach((e) => {
+    agentEarningsMap[e.agentName] = (agentEarningsMap[e.agentName] || 0) + 10;
+  });
+
   const leaderboard: LeaderboardEntry[] = allAgents
-    .map((a) => ({ name: a.displayName, accountId: a.accountId, reputation: a.reputation ?? 10, isMe: a.accountId === agent?.accountId }))
+    .map((a) => ({ name: a.displayName, accountId: a.accountId, reputation: a.reputation ?? 10, usdcEarnings: (agentEarningsMap[a.displayName] || 0).toFixed(2), isMe: a.accountId === agent?.accountId }))
     .sort((a, b) => b.reputation - a.reputation)
     .map((a, i) => ({ ...a, rank: i + 1 }));
 
@@ -308,7 +328,7 @@ export default function Dash() {
             </div>
           </div>
 
-          <div className="bg-white border-t border-gray-100 grid grid-cols-4 gap-3 p-3">
+          <div className="bg-white border-t border-gray-100 grid grid-cols-5 gap-3 p-3">
             <div className="bg-[#f7f7f8] rounded-xl px-5 py-4">
               <span className="text-[11px] text-gray-400 block mb-1">Total Votes</span>
               <span className="text-[20px] font-[800] text-gray-900 font-['Satoshi']">{totalVotes}</span>
@@ -332,6 +352,11 @@ export default function Dash() {
                 <span className="text-red-400">-{totalRepLoss}</span>
               </div>
             </div>
+            <div className="bg-[#f7f7f8] rounded-xl px-5 py-4">
+              <span className="text-[11px] text-gray-400 block mb-1">USDC Earned</span>
+              <span className="text-[20px] font-[800] text-emerald-600 font-['Satoshi']">${(correctVotes * 10).toFixed(2)}</span>
+              <span className="text-[11px] text-gray-400 mt-1 block">{correctVotes} x $10</span>
+            </div>
           </div>
         </div>
 
@@ -346,7 +371,7 @@ export default function Dash() {
               <div className="flex items-center justify-between mb-5">
                 <h2 className="font-['Satoshi'] text-[17px] font-bold text-gray-900">Activity Log</h2>
                 <div className="flex gap-0.5 bg-gray-100 rounded-lg p-0.5">
-                  {(["all", "dispute_vote", "reputation_change", "market_created"] as const).map((f) => (
+                  {(["all", "dispute_vote", "reputation_change", "usdc_payout", "market_created"] as const).map((f) => (
                     <button
                       key={f}
                       onClick={() => setLogFilter(f)}
@@ -355,7 +380,7 @@ export default function Dash() {
                           : "text-gray-400 hover:text-gray-600"
                         }`}
                     >
-                      {f === "all" ? "All" : f === "dispute_vote" ? "Votes" : f === "reputation_change" ? "Rep" : "Markets"}
+                      {f === "all" ? "All" : f === "dispute_vote" ? "Votes" : f === "reputation_change" ? "Rep" : f === "usdc_payout" ? "Payouts" : "Markets"}
                     </button>
                   ))}
                 </div>
@@ -389,6 +414,11 @@ export default function Dash() {
                     {row.type === "reputation_change" && (
                       <span className={`font-mono text-[12px] font-bold w-10 text-right ${(row.repChange ?? 0) > 0 ? "text-emerald-500" : "text-red-400"}`}>
                         {(row.repChange ?? 0) > 0 ? "+" : ""}{row.repChange}
+                      </span>
+                    )}
+                    {row.type === "usdc_payout" && (
+                      <span className={`font-mono text-[12px] font-bold w-16 text-right ${parseFloat(row.earned || "0") > 0 ? "text-emerald-600" : "text-gray-400"}`}>
+                        {parseFloat(row.earned || "0") > 0 ? `+$${row.earned}` : "$0.00"}
                       </span>
                     )}
                     {row.type === "market_created" && row.role && (
@@ -453,7 +483,12 @@ export default function Dash() {
                       </div>
                       <span className="text-[11px] text-gray-400 font-mono">{a.accountId}</span>
                     </div>
-                    <span className="text-[15px] font-bold text-gray-900">{a.reputation}</span>
+                    <div className="text-right shrink-0">
+                      <span className="text-[15px] font-bold text-gray-900 block">{a.reputation}</span>
+                      {parseFloat(a.usdcEarnings) > 0 && (
+                        <span className="text-[11px] font-semibold text-emerald-600">${a.usdcEarnings}</span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -461,31 +496,31 @@ export default function Dash() {
 
             {/* Agent Profile */}
             <div className="bg-white rounded-2xl border border-gray-200/80 p-6" style={{ ...anim(9), ...delay(9) }}>
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white font-bold text-[15px] shadow-lg shadow-emerald-200/40" style={{ animation: "float 4s ease-in-out infinite" }}>
-                  {agent.displayName.slice(0, 2).toUpperCase()}
-                </div>
-                <div>
-                  <h2 className="font-['Satoshi'] text-[17px] font-bold text-gray-900">{agent.displayName}</h2>
-                  <p className="text-[12px] text-gray-400">Oracle Agent</p>
-                </div>
-              </div>
               <div className="flex flex-col gap-2.5 text-[13px]">
-                {[
-                  ["Account", agent.accountId],
-                  ["EVM Address", agent.evmAddress ? `${agent.evmAddress.slice(0, 8)}...${agent.evmAddress.slice(-6)}` : "—"],
-                  ["iNFT Token", agent.inftTokenId != null ? `#${agent.inftTokenId}` : "—"],
-                  ["Model", agent.modelProvider || "—"],
-                  ["Domain", agent.domainTags || "—"],
-                  ["Services", agent.serviceOfferings || "—"],
-                  ["Human ID", agent.humanId ? `${String(agent.humanId).slice(0, 10)}...` : "Not verified"],
-                  ["Network", "Hedera Testnet"],
-                ].map(([label, val]) => (
-                  <div key={label} className="flex justify-between items-center py-1.5 border-b border-gray-50">
-                    <span className="text-gray-400">{label}</span>
-                    <span className="font-mono text-[12px] text-gray-600 text-right max-w-[60%] truncate">{val}</span>
-                  </div>
-                ))}
+                {(() => {
+                  const CONTRACT = "0x5F5B1E82189e7B51eDD1791068b6603BF12CE0d5";
+                  const rows: { label: string; val: string; href?: string }[] = [
+                    { label: "Account", val: agent.accountId, href: `https://hashscan.io/testnet/account/${agent.accountId}` },
+                    { label: "EVM Address", val: agent.evmAddress ? `${agent.evmAddress.slice(0, 8)}...${agent.evmAddress.slice(-6)}` : "—", href: agent.evmAddress ? `https://hashscan.io/testnet/account/${agent.evmAddress}` : undefined },
+                    { label: "iNFT Token", val: agent.inftTokenId != null ? `#${agent.inftTokenId}` : "—", href: agent.inftTokenId != null ? `https://chainscan-galileo.0g.ai/address/${CONTRACT}` : undefined },
+                    { label: "Model", val: "0G Compute" },
+                    { label: "Domain", val: agent.domainTags || "—" },
+                    { label: "Services", val: agent.serviceOfferings || "—" },
+                  ];
+                  return rows.map((r) => (
+                    <div key={r.label} className="flex justify-between items-center py-1.5 border-b border-gray-50">
+                      <span className="text-gray-400">{r.label}</span>
+                      {r.href ? (
+                        <a href={r.href} target="_blank" rel="noopener noreferrer" className="font-mono text-[12px] text-blue-500 hover:text-blue-700 text-right max-w-[60%] truncate flex items-center gap-1 transition-colors">
+                          {r.val}
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
+                        </a>
+                      ) : (
+                        <span className="font-mono text-[12px] text-gray-600 text-right max-w-[60%] truncate">{r.val}</span>
+                      )}
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
           </div>

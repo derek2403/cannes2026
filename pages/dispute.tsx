@@ -529,6 +529,25 @@ export default function DisputePage() {
                                                 ))}
                                             </div>
                                         )}
+                                        {repUpdates.length > 0 && (
+                                            <div className="mt-3 pt-3 border-t border-gray-100">
+                                                <div className="text-[10px] font-bold text-gray-400 uppercase mb-1">USDC Payout</div>
+                                                {repUpdates.map((u, i) => (
+                                                    <div key={i} className="flex justify-between text-[11px] py-0.5">
+                                                        <span className="text-gray-600">{u.agent}</span>
+                                                        <span className={u.correct ? "text-emerald-600 font-bold" : "text-gray-400 font-bold"}>
+                                                            {u.correct ? '+$10.00' : '$0.00'}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                                <div className="flex justify-between text-[11px] pt-1.5 mt-1.5 border-t border-gray-100">
+                                                    <span className="font-bold text-gray-700">Total Paid</span>
+                                                    <span className="font-bold text-emerald-600">
+                                                        ${(repUpdates.filter(u => u.correct).length * 10).toFixed(2)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })()}
