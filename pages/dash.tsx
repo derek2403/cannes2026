@@ -83,10 +83,10 @@ function useCounter(target: number, duration = 1200) {
 
 function badge(type: string) {
   const map: Record<string, string> = {
-    market_created: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    dispute_vote: "bg-blue-50 text-blue-700 border-blue-200",
-    reputation_change: "bg-amber-50 text-amber-700 border-amber-200",
-    usdc_payout: "bg-green-50 text-green-700 border-green-200",
+    market_created: "font-[family-name:var(--font-roboto)] font-[600] text-[#495057] bg-gray-100 border border-gray-200",
+    dispute_vote: "font-[family-name:var(--font-roboto)] font-[600] text-[#5c6d7a] bg-[#e8eef2] border border-[#b8c5d0]",
+    reputation_change: "font-[family-name:var(--font-roboto)] font-[600] text-[#495057] bg-gray-100 border border-gray-200",
+    usdc_payout: "font-[family-name:var(--font-roboto)] font-[600] text-[#495057] bg-gray-100 border border-gray-200",
   };
   return map[type] ?? map.dispute_vote;
 }
@@ -118,7 +118,7 @@ function timeAgo(ts: string) {
   return `${days}d ago`;
 }
 
-const AVATAR_COLORS = ["#6366f1", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#ec4899", "#14b8a6", "#f97316", "#06b6d4", "#84cc16"];
+const LEADERBOARD_AVATAR_BG = "#6b7280";
 
 /* ── component ────────────────────────────────────────────── */
 
@@ -248,10 +248,10 @@ export default function Dash() {
       </Head>
 
       <style jsx global>{`
-        @keyframes pulse-ring {
-          0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
-          70% { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
-          100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+        @keyframes pulse-ring-live {
+          0% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.5); }
+          70% { box-shadow: 0 0 0 8px rgba(248, 113, 113, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0); }
         }
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
@@ -275,20 +275,20 @@ export default function Dash() {
               <h1 className="font-['Satoshi'] text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
                 {agent.displayName}
               </h1>
-              <span className="px-2.5 py-1 bg-emerald-500 text-white text-[11px] font-bold uppercase tracking-wider rounded-full" style={{ animation: "pulse-ring 2s infinite" }}>
+              <span className="px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full border border-[#fca5a5] bg-[#fecaca] text-[#991b1b]" style={{ animation: "pulse-ring-live 2s infinite" }}>
                 Live
               </span>
             </div>
-            <p className="text-gray-500 mt-1.5 text-[15px] flex items-center gap-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-emerald-400" />
+            <p className="mt-1 flex items-center gap-2 font-[family-name:var(--font-roboto)] text-sm font-[400] !text-[#5c6d7a]">
+              <span className="inline-block w-2 h-2 shrink-0 rounded-full bg-[#5c6d7a]" />
               <span className="font-mono text-[13px] text-gray-400">{agent.accountId}</span>
               {agent.inftTokenId != null && <span className="text-gray-300">· iNFT #{agent.inftTokenId}</span>}
             </p>
           </div>
           <div className="hidden sm:flex items-center gap-2">
             {agent.worldVerified && (
-              <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-3.5 py-1.5 text-[13px] font-semibold shadow-sm">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5" /></svg>
+              <span className="inline-flex items-center gap-1.5 font-[family-name:var(--font-roboto)] font-[600] text-[#5c6d7a] bg-[#e8eef2] border border-[#b8c5d0] text-[0.7rem] rounded-full px-3.5 py-1.5 shadow-sm">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5" /></svg>
                 World ID Verified
               </span>
             )}
@@ -311,17 +311,18 @@ export default function Dash() {
         <div className="rounded-2xl border border-gray-200/80 mb-8 overflow-hidden" style={{ ...anim(1), ...delay(1) }}>
           <div className="bg-white px-6 pt-5 pb-4">
             <div className="flex items-center gap-3 mb-3">
-              <span className="text-[13px] text-gray-500">Reputation</span>
-              <span className="text-[22px] font-[800] text-gray-900 leading-none font-['Satoshi']">{repCount}</span>
-              <span className="text-[12px] text-gray-300 mt-0.5">of {repMax}</span>
-              {myRank > 0 && <span className="ml-auto text-[12px] font-[600] text-gray-900 bg-gray-100 px-2.5 py-1 rounded-lg">Rank #{myRank}</span>}
+              <span className="font-[family-name:var(--font-roboto)] font-[700] !text-[#0a2540] text-[0.75rem] uppercase tracking-wide">Reputation</span>
+              <span className="font-['Satoshi'] text-[22px] font-[800] leading-none !text-[#343a40]">{repCount}</span>
+              <span className="text-[12px] mt-0.5 font-[500] !text-[#0a2540]">of {repMax}</span>
+              {myRank > 0 && <span className="ml-auto text-[12px] font-[600] text-[#212529] bg-gray-100 px-2.5 py-1 rounded-lg">Rank #{myRank}</span>}
             </div>
-            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="w-full h-3 rounded-full overflow-hidden bg-[#F2F2F2]">
               <div
-                className="h-full rounded-full"
+                className="h-full min-h-[12px] rounded-full"
                 style={{
                   width: mounted ? `${Math.min((reputation / repMax) * 100, 100)}%` : "0%",
-                  background: "linear-gradient(90deg, #34d399 0%, #059669 60%, #047857 100%)",
+                  background: "linear-gradient(90deg, #dde5eb 0%, #c8d4de 22%, #aab9c4 48%, #8fa1ae 72%, #7a8f9f 100%)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35)",
                   transition: "width 1.4s cubic-bezier(0.22,1,0.36,1) 0.2s",
                 }}
               />
@@ -348,13 +349,13 @@ export default function Dash() {
             <div className="bg-[#f7f7f8] rounded-xl px-5 py-4">
               <span className="text-[11px] text-gray-400 block mb-1">Rep Changes</span>
               <div className="flex gap-2 text-[14px] font-bold">
-                <span className="text-emerald-600">+{totalRepGain}</span>
-                <span className="text-red-400">-{totalRepLoss}</span>
+                <span className="text-[#28a745]">+{totalRepGain}</span>
+                <span className="text-red-500">-{totalRepLoss}</span>
               </div>
             </div>
             <div className="bg-[#f7f7f8] rounded-xl px-5 py-4">
               <span className="text-[11px] text-gray-400 block mb-1">USDC Earned</span>
-              <span className="text-[20px] font-[800] text-emerald-600 font-['Satoshi']">${(correctVotes * 10).toFixed(2)}</span>
+              <span className="text-[20px] font-[800] text-[#28a745] font-['Satoshi']">${(correctVotes * 10).toFixed(2)}</span>
               <span className="text-[11px] text-gray-400 mt-1 block">{correctVotes} x $10</span>
             </div>
           </div>
@@ -407,17 +408,17 @@ export default function Dash() {
                       {row.marketQuestion || row.marketId}
                     </span>
                     {row.vote && (
-                      <span className={`font-mono text-[12px] font-bold w-12 text-center ${row.vote === "YES" ? "text-emerald-600" : row.vote === "NO" ? "text-red-500" : "text-gray-400"}`}>
+                      <span className={`font-mono text-[12px] font-bold w-12 text-center ${row.vote === "YES" ? "text-[#28a745]" : row.vote === "NO" ? "text-red-500" : "text-[#6c757d]"}`}>
                         {row.vote}
                       </span>
                     )}
                     {row.type === "reputation_change" && (
-                      <span className={`font-mono text-[12px] font-bold w-10 text-right ${(row.repChange ?? 0) > 0 ? "text-emerald-500" : "text-red-400"}`}>
+                      <span className={`font-mono text-[12px] font-bold w-10 text-right ${(row.repChange ?? 0) > 0 ? "text-[#28a745]" : "text-red-500"}`}>
                         {(row.repChange ?? 0) > 0 ? "+" : ""}{row.repChange}
                       </span>
                     )}
                     {row.type === "usdc_payout" && (
-                      <span className={`font-mono text-[12px] font-bold w-16 text-right ${parseFloat(row.earned || "0") > 0 ? "text-emerald-600" : "text-gray-400"}`}>
+                      <span className={`font-mono text-[12px] font-bold w-16 text-right ${parseFloat(row.earned || "0") > 0 ? "text-[#28a745]" : "text-[#6c757d]"}`}>
                         {parseFloat(row.earned || "0") > 0 ? `+$${row.earned}` : "$0.00"}
                       </span>
                     )}
@@ -452,7 +453,7 @@ export default function Dash() {
                 {leaderboard.map((a, i) => (
                   <div
                     key={a.accountId}
-                    className={`leaderboard-row flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer ${a.isMe ? "bg-emerald-50/60 border border-emerald-200/60" : ""}`}
+                    className={`leaderboard-row flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer ${a.isMe ? "bg-gray-100 border border-gray-200" : ""}`}
                     onClick={() => router.push(`/dash?accountId=${a.accountId}`)}
                     style={{
                       opacity: mounted ? 1 : 0,
@@ -460,13 +461,13 @@ export default function Dash() {
                       transition: `all 0.5s cubic-bezier(0.16,1,0.3,1) ${0.6 + i * 0.06}s`,
                     }}
                   >
-                    <span className={`text-[13px] font-bold w-5 text-center ${a.rank <= 3 ? "text-amber-500" : "text-gray-300"}`}>
+                    <span className={`text-[13px] font-bold w-5 text-center font-[family-name:var(--font-roboto)] ${a.rank <= 3 ? "text-[#c2410c]" : "text-gray-300"}`}>
                       {a.rank}
                     </span>
                     <div
                       className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-bold shrink-0"
                       style={{
-                        background: AVATAR_COLORS[i % AVATAR_COLORS.length],
+                        background: LEADERBOARD_AVATAR_BG,
                         animation: a.isMe ? "float 3s ease-in-out infinite" : undefined,
                       }}
                     >
@@ -474,11 +475,11 @@ export default function Dash() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className={`text-[13px] font-semibold truncate ${a.isMe ? "text-emerald-700" : "text-gray-800"}`}>
+                        <span className={`text-[13px] font-semibold truncate font-[family-name:var(--font-roboto)] ${a.isMe ? "text-[#212529] font-bold" : "text-[#212529]"}`}>
                           {a.name}
                         </span>
                         {a.isMe && (
-                          <span className="text-[9px] font-bold bg-emerald-500 text-white px-1.5 py-0.5 rounded-full uppercase">You</span>
+                          <span className="text-[9px] font-bold bg-gray-700 text-white px-1.5 py-0.5 rounded-full uppercase">You</span>
                         )}
                       </div>
                       <span className="text-[11px] text-gray-400 font-mono">{a.accountId}</span>
@@ -486,7 +487,7 @@ export default function Dash() {
                     <div className="text-right shrink-0">
                       <span className="text-[15px] font-bold text-gray-900 block">{a.reputation}</span>
                       {parseFloat(a.usdcEarnings) > 0 && (
-                        <span className="text-[11px] font-semibold text-emerald-600">${a.usdcEarnings}</span>
+                        <span className="text-[11px] font-semibold text-[#28a745]">${a.usdcEarnings}</span>
                       )}
                     </div>
                   </div>
@@ -511,7 +512,7 @@ export default function Dash() {
                     <div key={r.label} className="flex justify-between items-center py-1.5 border-b border-gray-50">
                       <span className="text-gray-400">{r.label}</span>
                       {r.href ? (
-                        <a href={r.href} target="_blank" rel="noopener noreferrer" className="font-mono text-[12px] text-blue-500 hover:text-blue-700 text-right max-w-[60%] truncate flex items-center gap-1 transition-colors">
+                        <a href={r.href} target="_blank" rel="noopener noreferrer" className="font-mono text-[12px] text-[#066a9c] hover:text-[#0a58ca] hover:underline text-right max-w-[60%] truncate flex items-center gap-1 transition-colors">
                           {r.val}
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
                         </a>
