@@ -33,6 +33,7 @@ interface PredictionMarketProps {
   setStatus: (s: string) => void;
   refreshPool: (marketId: string) => void;
   refreshBalance: () => void;
+  onBetPlaced?: () => void;
 }
 
 // Polling helper for MiniKit transactions
@@ -57,6 +58,7 @@ export default function PredictionMarket({
   setStatus,
   refreshPool,
   refreshBalance,
+  onBetPlaced,
 }: PredictionMarketProps) {
   const [betAmount, setBetAmount] = useState("1");
 
@@ -107,6 +109,7 @@ export default function PredictionMarket({
         setStatus(`Bet placed! ${betAmount} WLD on ${yes ? "YES" : "NO"}`);
         refreshPool(selectedMarket);
         refreshBalance();
+        onBetPlaced?.();
       } else {
         setStatus("Tx may still be pending");
       }

@@ -59,6 +59,7 @@ export default function MiniKitPage({ markets }: { markets: MarketData[] }) {
   );
   const [pools, setPools] = useState<Record<string, PoolInfo>>({});
   const [wldBalance, setWldBalance] = useState<string | null>(null);
+  const [positionKey, setPositionKey] = useState(0);
 
   const refreshPool = useCallback(
     async (marketId: string) => {
@@ -171,6 +172,7 @@ export default function MiniKitPage({ markets }: { markets: MarketData[] }) {
           setStatus={setStatus}
           refreshPool={refreshPool}
           refreshBalance={refreshBalance}
+          onBetPlaced={() => setPositionKey((k) => k + 1)}
         />
 
         {/* My Positions */}
@@ -181,6 +183,7 @@ export default function MiniKitPage({ markets }: { markets: MarketData[] }) {
           setStatus={setStatus}
           refreshPool={refreshPool}
           refreshBalance={refreshBalance}
+          refreshKey={positionKey}
         />
 
         {/* Dispute Resolution */}
