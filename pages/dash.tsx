@@ -257,12 +257,12 @@ export default function Dash() {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-4px); }
         }
-        .stat-card { transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
-        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px -8px rgba(0,0,0,0.1); }
-        .row-hover { transition: all 0.2s ease; }
-        .row-hover:hover { background: rgba(248,250,252,0.8); transform: scale(1.002); }
-        .leaderboard-row { transition: all 0.25s cubic-bezier(0.16,1,0.3,1); }
-        .leaderboard-row:hover { transform: translateX(4px); background: rgba(248,250,252,0.9); }
+        .dash-card { transition: box-shadow 0.2s ease, transform 0.2s ease; }
+        .dash-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.08); }
+        .row-hover { transition: background 0.15s ease; }
+        .row-hover:hover { background: #f8f9fa; }
+        .leaderboard-row { transition: background 0.15s ease, transform 0.2s ease; }
+        .leaderboard-row:hover { background: #f8f9fa; transform: translateX(3px); }
       `}</style>
 
       <Header />
@@ -272,7 +272,7 @@ export default function Dash() {
         <div className="flex items-center justify-between mb-8" style={{ ...anim(0), ...delay(0) }}>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="font-['Satoshi'] text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+              <h1 className="font-['Satoshi',sans-serif] font-[800] !text-[#000000] text-2xl">
                 {agent.displayName}
               </h1>
               <span className="px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full border border-[#fca5a5] bg-[#fecaca] text-[#991b1b]" style={{ animation: "pulse-ring-live 2s infinite" }}>
@@ -308,7 +308,7 @@ export default function Dash() {
         </div>
 
         {/* ── Stats Strip ─────────────────────────────── */}
-        <div className="rounded-2xl border border-gray-200/80 mb-8 overflow-hidden" style={{ ...anim(1), ...delay(1) }}>
+        <div className="bg-white rounded-xl shadow-[0_0.25rem_0.75rem_rgba(0,0,0,0.06)] border border-gray-200 mb-6 overflow-hidden" style={{ ...anim(1), ...delay(1) }}>
           <div className="bg-white px-6 pt-5 pb-4">
             <div className="flex items-center gap-3 mb-3">
               <span className="font-[family-name:var(--font-roboto)] font-[700] !text-[#0a2540] text-[0.75rem] uppercase tracking-wide">Reputation</span>
@@ -368,9 +368,9 @@ export default function Dash() {
           <div className="xl:col-span-2 flex flex-col gap-6">
 
             {/* Activity Log */}
-            <div className="bg-white rounded-2xl border border-gray-200/80 p-6" style={{ ...anim(5), ...delay(5) }}>
+            <div className="dash-card bg-white rounded-xl shadow-[0_0.25rem_0.75rem_rgba(0,0,0,0.06)] border border-gray-200 p-6" style={{ ...anim(5), ...delay(5) }}>
               <div className="flex items-center justify-between mb-5">
-                <h2 className="font-['Satoshi'] text-[17px] font-bold text-gray-900">Activity Log</h2>
+                <h2 className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-2xl">Activity Log</h2>
                 <div className="flex gap-0.5 bg-gray-100 rounded-lg p-0.5">
                   {(["all", "dispute_vote", "reputation_change", "usdc_payout", "market_created"] as const).map((f) => (
                     <button
@@ -444,10 +444,10 @@ export default function Dash() {
           <div className="xl:col-span-1 flex flex-col gap-6">
 
             {/* Oracle Leaderboard */}
-            <div className="bg-white rounded-2xl border border-gray-200/80 p-6" style={{ ...anim(8), ...delay(8) }}>
+            <div className="dash-card bg-white rounded-xl shadow-[0_0.25rem_0.75rem_rgba(0,0,0,0.06)] border border-gray-200 p-6" style={{ ...anim(8), ...delay(8) }}>
               <div className="flex items-center justify-between mb-5">
-                <h2 className="font-['Satoshi'] text-[17px] font-bold text-gray-900">Oracle Leaderboard</h2>
-                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Top {leaderboard.length}</span>
+                <h2 className="font-['Satoshi',sans-serif] font-[700] text-[#212529] text-2xl">Oracle Leaderboard</h2>
+                <span className="font-[family-name:var(--font-roboto)] font-[700] text-[#6c757d] text-[0.75rem] uppercase tracking-wide">Top {leaderboard.length}</span>
               </div>
               <div className="flex flex-col gap-1">
                 {leaderboard.map((a, i) => (
@@ -496,7 +496,7 @@ export default function Dash() {
             </div>
 
             {/* Agent Profile */}
-            <div className="bg-white rounded-2xl border border-gray-200/80 p-6" style={{ ...anim(9), ...delay(9) }}>
+            <div className="dash-card bg-white rounded-xl shadow-[0_0.25rem_0.75rem_rgba(0,0,0,0.06)] border border-gray-200 p-6" style={{ ...anim(9), ...delay(9) }}>
               <div className="flex flex-col gap-2.5 text-[13px]">
                 {(() => {
                   const CONTRACT = "0x5F5B1E82189e7B51eDD1791068b6603BF12CE0d5";
@@ -517,7 +517,7 @@ export default function Dash() {
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
                         </a>
                       ) : (
-                        <span className="font-mono text-[12px] text-gray-600 text-right max-w-[60%] truncate">{r.val}</span>
+                        <span className="font-mono text-[12px] text-[#212529] text-right max-w-[60%] truncate">{r.val}</span>
                       )}
                     </div>
                   ));
