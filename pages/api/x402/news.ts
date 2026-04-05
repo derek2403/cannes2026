@@ -43,9 +43,26 @@ function buildFeed() {
     .slice(-20);
 
   const agents = (state.agents || []).map(
-    (a: { displayName: string; accountId: string }) => ({
+    (a: {
+      displayName: string;
+      accountId: string;
+      evmAddress?: string;
+      reputation?: number;
+      inftTokenId?: number;
+      zgRootHash?: string;
+      reputationTopicId?: string;
+      registryTopicId?: string;
+      worldVerified?: boolean;
+      humanId?: string | null;
+    }) => ({
       name: a.displayName,
       accountId: a.accountId,
+      evmAddress: a.evmAddress || null,
+      reputation: a.reputation ?? 10,
+      inftTokenId: a.inftTokenId ?? null,
+      zgRootHash: a.zgRootHash || null,
+      worldVerified: a.worldVerified || false,
+      humanId: a.humanId || null,
     })
   );
 
@@ -53,6 +70,13 @@ function buildFeed() {
     timestamp: new Date().toISOString(),
     protocol: "x402",
     network: "eip155:84532",
+    hedera: {
+      network: state.network || "testnet",
+      operator_id: state.operatorId || null,
+      registry_topic_id: state.registryTopicId || null,
+      reputation_topic_id: state.reputationTopicId || null,
+      explorer_base: "https://hashscan.io/testnet",
+    },
     markets: markets.map(
       (m: {
         id: string;
@@ -130,7 +154,7 @@ export default async function handler(
     (req.query.sub as string) ||
     null;
 
-  let payment = null;
+  let payment: Record<string, unknown> | null = null;
 
   // If subscription-based access, auto-create next Hedera scheduled tx
   if (subId) {
@@ -139,9 +163,28 @@ export default async function handler(
 
     if (sub && new Date(sub.expires_at) > new Date()) {
       try {
-        payment = await maybeCreateNextScheduledTx(sub);
+        const newTx = await maybeCreateNextScheduledTx(sub);
+
+        // Re-read after potential update
+        const updated = readSubs();
+        const latest = updated.subscriptions.find((s) => s.id === subId);
+
+        payment = {
+          subscription_id: subId,
+          payer: sub.payer_account_id,
+          status: "active",
+          expires_at: sub.expires_at,
+          total_hbar_paid: latest?.total_hbar_paid ?? sub.total_hbar_paid,
+          total_scheduled_txs: latest?.total_scheduled_txs ?? sub.total_scheduled_txs,
+          latest_tx: newTx || null,
+          all_schedules: (latest?.schedules ?? sub.schedules).map((s) => ({
+            schedule_id: s.schedule_id,
+            scheduled_tx_id: s.scheduled_tx_id,
+            created_at: s.created_at,
+            explorer: `https://hashscan.io/testnet/schedule/${s.schedule_id}`,
+          })),
+        };
       } catch {
-        // Scheduled tx creation failed — still return data
         payment = { error: "Failed to create next scheduled tx" };
       }
     }

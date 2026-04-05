@@ -5,13 +5,45 @@ const BASE = typeof window !== "undefined" ? window.location.origin : "";
 
 const CURL_EXAMPLES = [
   {
-    title: "1. Request without payment (get 402 + PAYMENT-REQUIRED header)",
+    title: "Step 1 — Try fetching AI swarm data without payment",
     cmd: `curl -s -D - ${BASE || "http://localhost:3000"}/api/x402/news`,
-    note: "Returns HTTP 402 with base64-encoded PAYMENT-REQUIRED header containing price, network, and payTo address.",
+    note: "You get HTTP 402. The PAYMENT-REQUIRED header contains a base64 JSON with price ($0.01 USDC), network (Base Sepolia 84532), and payTo address. No free rides — our AI oracle swarm data costs money.",
   },
   {
-    title: "2. Agent auto-pays with @x402/fetch",
-    cmd: `import { wrapFetchWithPayment } from "@x402/fetch";
+    title: "Step 2 — Subscribe via Hedera scheduled transaction",
+    cmd: `curl -s -X POST ${BASE || "http://localhost:3000"}/api/x402/subscribe \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "payer_account_id": "0.0.YOUR_ACCOUNT",
+    "duration_minutes": 10,
+    "interval_seconds": 10
+  }'`,
+    note: "Creates a Hedera ScheduleCreateTransaction (1 HBAR) on-chain. Returns a subscription_id and a HashScan explorer link. A new scheduled tx is auto-created every 10s on each poll.",
+  },
+  {
+    title: "Step 3 — Fetch AI swarm data with your subscription",
+    cmd: `# Use the subscription_id from Step 2
+curl -s ${BASE || "http://localhost:3000"}/api/x402/news \\
+  -H "X-Subscription-Id: sub-YOUR_SUBSCRIPTION_ID" | jq .`,
+    note: "Middleware checks your subscription is active, bypasses the x402 paywall, and returns live prediction market data + oracle activity from our AI agent swarm. Each poll auto-creates a new Hedera scheduled tx.",
+  },
+  {
+    title: "Step 4 — Poll the AI swarm feed in a loop",
+    cmd: `# Poll every 10 seconds — each request triggers a Hedera scheduled tx
+SUB_ID="sub-YOUR_SUBSCRIPTION_ID"
+while true; do
+  echo "--- $(date) ---"
+  curl -s ${BASE || "http://localhost:3000"}/api/x402/news \\
+    -H "X-Subscription-Id: $SUB_ID" \\
+    | jq '{markets: .total_markets, agents: .total_agents, latest: .oracle_activity[0]}'
+  sleep 10
+done`,
+    note: "Each poll returns fresh AI swarm data and auto-creates a new Hedera ScheduleCreateTransaction on-chain. Check HashScan to see the chain of scheduled payments growing in real time.",
+  },
+  {
+    title: "Alternative — One-shot pay with x402 USDC (no subscription)",
+    cmd: `# If you have a Base Sepolia wallet with USDC, use @x402/fetch:
+import { wrapFetchWithPayment } from "@x402/fetch";
 import { x402Client } from "@x402/core/client";
 import { ExactEvmScheme } from "@x402/evm/exact/client";
 import { privateKeyToAccount } from "viem/accounts";
@@ -19,40 +51,12 @@ import { privateKeyToAccount } from "viem/accounts";
 const account = privateKeyToAccount("0xYOUR_PRIVATE_KEY");
 const client = new x402Client()
   .register("eip155:*", new ExactEvmScheme(account));
-
 const fetchWithPay = wrapFetchWithPayment(fetch, client);
 
-// Auto: receives 402 → signs USDC payment → retries → gets data
+// Auto: receives 402 → signs 0.01 USDC → facilitator settles on Base Sepolia
 const res = await fetchWithPay("${BASE || "http://localhost:3000"}/api/x402/news");
-const data = await res.json();`,
-    note: "The x402 client handles the full flow automatically: parse 402 → sign EIP-3009 USDC authorization → retry with PAYMENT-SIGNATURE header → facilitator settles on-chain.",
-  },
-  {
-    title: "3. Subscribe for recurring access (Hedera scheduled tx)",
-    cmd: `curl -s -X POST ${BASE || "http://localhost:3000"}/api/x402/subscribe \\
-  -H "Content-Type: application/json" \\
-  -d '{"payer_account_id":"0.0.YOUR_ACCOUNT","duration_minutes":10}'`,
-    note: "Alternative: creates a Hedera ScheduleCreateTransaction for HBAR-based recurring payments. Returns a subscription_id.",
-  },
-  {
-    title: "4. Agent polling loop (every 10 seconds)",
-    cmd: `import { wrapFetchWithPayment } from "@x402/fetch";
-import { x402Client } from "@x402/core/client";
-import { ExactEvmScheme } from "@x402/evm/exact/client";
-import { privateKeyToAccount } from "viem/accounts";
-
-const account = privateKeyToAccount("0xAGENT_KEY");
-const client = new x402Client()
-  .register("eip155:*", new ExactEvmScheme(account));
-const fetchWithPay = wrapFetchWithPayment(fetch, client);
-
-// Poll every 10 seconds — each request pays 0.01 USDC
-setInterval(async () => {
-  const res = await fetchWithPay("${BASE || "http://localhost:3000"}/api/x402/news");
-  const { markets, oracle_activity } = await res.json();
-  console.log(markets.length, "markets,", oracle_activity.length, "events");
-}, 10_000);`,
-    note: "Each GET costs $0.01 USDC on Base Sepolia. The facilitator at x402.org settles each payment on-chain automatically.",
+const { markets, oracle_activity, agents } = await res.json();`,
+    note: "x402 per-request flow: GET → 402 → client signs EIP-3009 USDC authorization → retry with PAYMENT-SIGNATURE header → facilitator at x402.org settles on-chain → data returned. $0.01 per request.",
   },
 ];
 

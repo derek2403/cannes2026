@@ -90,8 +90,32 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  // DELETE = unsubscribe
+  if (req.method === "DELETE") {
+    const id =
+      (req.query.id as string) || req.body?.subscription_id;
+    if (!id) return res.status(400).json({ error: "subscription_id or ?id= required" });
+
+    const subs = readSubs();
+    const sub = subs.subscriptions.find((s) => s.id === id);
+    if (!sub) return res.status(404).json({ error: "Subscription not found" });
+
+    sub.status = "expired";
+    sub.expires_at = new Date().toISOString();
+    saveSubs(subs);
+
+    return res.json({
+      success: true,
+      subscription_id: id,
+      status: "expired",
+      total_hbar_paid: sub.total_hbar_paid,
+      total_scheduled_txs: sub.total_scheduled_txs,
+      message: "Subscription cancelled. No further scheduled transactions will be created.",
+    });
+  }
+
   if (req.method !== "POST")
-    return res.status(405).json({ error: "POST only" });
+    return res.status(405).json({ error: "POST or DELETE only" });
 
   const {
     payer_account_id,

@@ -69,6 +69,50 @@
           "created_at": "2026-04-05T03:39:04.625Z"
         }
       ]
+    },
+    {
+      "id": "sub-e2ad3bf104afe1c8",
+      "payer_account_id": "0.0.7946371",
+      "created_at": "2026-04-05T03:59:43.394Z",
+      "expires_at": "2026-04-05T04:02:14.469Z",
+      "duration_minutes": 10,
+      "interval_seconds": 10,
+      "last_payment_at": "2026-04-05T04:01:29.773Z",
+      "total_hbar_paid": 6,
+      "total_scheduled_txs": 6,
+      "status": "expired",
+      "schedules": [
+        {
+          "schedule_id": "0.0.8515980",
+          "scheduled_tx_id": "0.0.7946371@1775361573.788433257?scheduled",
+          "created_at": "2026-04-05T03:59:43.394Z"
+        },
+        {
+          "schedule_id": "0.0.8515990",
+          "scheduled_tx_id": "0.0.7946371@1775361628.615391312?scheduled",
+          "created_at": "2026-04-05T04:00:33.406Z"
+        },
+        {
+          "schedule_id": "0.0.8515992",
+          "scheduled_tx_id": "0.0.7946371@1775361648.871749239?scheduled",
+          "created_at": "2026-04-05T04:00:53.016Z"
+        },
+        {
+          "schedule_id": "0.0.8515995",
+          "scheduled_tx_id": "0.0.7946371@1775361660.822164083?scheduled",
+          "created_at": "2026-04-05T04:01:05.385Z"
+        },
+        {
+          "schedule_id": "0.0.8515997",
+          "scheduled_tx_id": "0.0.7946371@1775361671.227020099?scheduled",
+          "created_at": "2026-04-05T04:01:17.308Z"
+        },
+        {
+          "schedule_id": "0.0.8515998",
+          "scheduled_tx_id": "0.0.7946371@1775361684.534863175?scheduled",
+          "created_at": "2026-04-05T04:01:29.773Z"
+        }
+      ]
     }
   ]
 }
