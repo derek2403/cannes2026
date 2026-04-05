@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import Header from '../components/header/Header';
 import { Roboto, Figtree } from "next/font/google";
 import dynamic from 'next/dynamic';
-import cloud from 'd3-cloud';
 import type { AgentDiscussionGraphProps } from '@/components/AgentDiscussionGraph';
 
 const AgentDiscussionGraph = dynamic<AgentDiscussionGraphProps>(
@@ -34,28 +33,38 @@ function InteractiveWordCloud({ words: wordData }: { words: WordNode[] }) {
 
     useEffect(() => {
         if (wordData.length === 0) return;
-        let seed = 42;
-        const seededRand = () => {
-            seed = (seed * 1664525 + 1013904223) & 0xffffffff;
-            return (seed >>> 0) / 0x100000000;
+        let cancelled = false;
+        let origRandom: typeof Math.random | null = null;
+
+        import('d3-cloud').then((mod) => {
+            if (cancelled) return;
+            const cloud = mod.default;
+            let seed = 42;
+            const seededRand = () => {
+                seed = (seed * 1664525 + 1013904223) & 0xffffffff;
+                return (seed >>> 0) / 0x100000000;
+            };
+            origRandom = Math.random;
+            Math.random = seededRand;
+
+            cloud<WordNode>()
+                .size([width, height])
+                .words(wordData.map(d => ({ ...d })))
+                .padding(6)
+                .rotate((d: WordNode) => d.forceRotate !== undefined ? d.forceRotate : (seededRand() > 0.5 ? 0 : -90))
+                .font("Satoshi")
+                .fontSize((d: WordNode) => d.size)
+                .on("end", (computedWords: WordNode[]) => {
+                    if (origRandom) Math.random = origRandom;
+                    if (!cancelled) setWords(computedWords);
+                })
+                .start();
+        });
+
+        return () => {
+            cancelled = true;
+            if (origRandom) Math.random = origRandom;
         };
-        const origRandom = Math.random;
-        Math.random = seededRand;
-
-        cloud<WordNode>()
-            .size([width, height])
-            .words(wordData.map(d => ({ ...d })))
-            .padding(6)
-            .rotate((d: WordNode) => d.forceRotate !== undefined ? d.forceRotate : (seededRand() > 0.5 ? 0 : -90))
-            .font("Satoshi")
-            .fontSize(d => d.size)
-            .on("end", (computedWords) => {
-                Math.random = origRandom;
-                setWords(computedWords as WordNode[]);
-            })
-            .start();
-
-        return () => { Math.random = origRandom; };
     }, [wordData]);
 
     return (
