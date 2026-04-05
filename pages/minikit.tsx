@@ -9,8 +9,6 @@ import WalletAuth from "@/components/WalletAuth";
 import PredictionMarket from "@/components/PredictionMarket";
 import MyPositions from "@/components/MyPositions";
 import DisputeResolution from "@/components/DisputeResolution";
-import fs from "fs";
-import path from "path";
 
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
@@ -47,16 +45,15 @@ interface PoolInfo {
   outcome: number;
 }
 
-export default function MiniKitPage({ markets }: { markets: MarketData[] }) {
+export default function MiniKitPage() {
+  const [markets, setMarkets] = useState<MarketData[]>([]);
   const [wallet, setWallet] = useState<string | null>(null);
   const [verified, setVerified] = useState(false);
   const [status, setStatus] = useState("");
   const [isMiniKit, setIsMiniKit] = useState(false);
 
   // Betting state
-  const [selectedMarket, setSelectedMarket] = useState<string>(
-    markets[0]?.id ?? ""
-  );
+  const [selectedMarket, setSelectedMarket] = useState<string>("");
   const [pools, setPools] = useState<Record<string, PoolInfo>>({});
   const [wldBalance, setWldBalance] = useState<string | null>(null);
   const [positionKey, setPositionKey] = useState(0);
@@ -108,7 +105,17 @@ export default function MiniKitPage({ markets }: { markets: MarketData[] }) {
     didInit.current = true;
     MiniKit.install(APP_ID);
     setIsMiniKit(MiniKit.isInstalled());
-    markets.forEach((m) => refreshPool(m.id));
+
+    fetch("/api/markets")
+      .then((r) => r.json())
+      .then((data: MarketData[]) => {
+        setMarkets(data);
+        if (data.length > 0 && !selectedMarket) {
+          setSelectedMarket(data[0].id);
+        }
+        data.forEach((m) => refreshPool(m.id));
+      })
+      .catch(() => setMarkets([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -202,23 +209,3 @@ export default function MiniKitPage({ markets }: { markets: MarketData[] }) {
   );
 }
 
-// Load markets from data/markets.json at request time
-export async function getServerSideProps() {
-  const marketsPath = path.join(process.cwd(), "data", "markets.json");
-  let raw: { id: string; resolution: { question: string } }[] = [];
-
-  if (fs.existsSync(marketsPath)) {
-    try {
-      raw = JSON.parse(fs.readFileSync(marketsPath, "utf-8"));
-    } catch {
-      raw = [];
-    }
-  }
-
-  const markets = raw.map((m) => ({
-    id: m.id,
-    resolution: { question: m.resolution.question },
-  }));
-
-  return { props: { markets } };
-}
