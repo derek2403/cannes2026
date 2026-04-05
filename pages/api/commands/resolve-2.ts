@@ -52,7 +52,7 @@ export default async function handler(
     return res.status(405).json({ error: "POST only" });
   }
 
-  const { marketId, committeeSize = 3 } = req.body;
+  const { marketId, committeeSize = 3, committeeNames } = req.body;
   if (!marketId) {
     return res.status(400).json({ error: "marketId is required" });
   }
@@ -74,7 +74,18 @@ export default async function handler(
     return res.status(400).json({ error: "No minted agents found" });
   }
 
-  const committee = selectCommittee(allAgents, committeeSize);
+  // Reuse the same committee from Round 1 if names are provided
+  let committee: typeof allAgents;
+  if (committeeNames && Array.isArray(committeeNames) && committeeNames.length > 0) {
+    committee = committeeNames
+      .map((name: string) => allAgents.find((a) => a.displayName === name))
+      .filter((a): a is (typeof allAgents)[number] => a != null);
+    if (committee.length === 0) {
+      committee = selectCommittee(allAgents, committeeSize);
+    }
+  } else {
+    committee = selectCommittee(allAgents, committeeSize);
+  }
 
   const baseUrl = getBaseUrl(req);
   let walletAddress: string;
@@ -88,87 +99,52 @@ export default async function handler(
 
   const phases: Record<string, unknown>[] = [];
 
-  // ═══ DISCUSSION ROUND 1: Initial views ════════════════════════
-  const initialViews: { agent: string; tokenId: number; view: string }[] = [];
-
-  for (const agent of committee) {
+  // ═══ DISCUSSION ROUND 1: Initial views (parallel) ═════════════
+  const viewPromises = committee.map(async (agent) => {
     const result = await callAgent(
       baseUrl,
       agent.inftTokenId!,
-      `You are an oracle agent in a prediction market dispute resolution.
-Today's date is ${new Date().toISOString().split("T")[0]}.
-
-MARKET QUESTION: ${market.resolution.question}
-
-RESOLUTION CRITERIA: ${market.resolution.resolution_criteria}
-
-Present your analysis WITH REFERENCES. You must cite real sources (news articles, official data, announcements) with URLs.
-1. What evidence supports YES (cite sources with URLs)
-2. What evidence supports NO (cite sources with URLs)
-3. Your initial position and confidence level
-4. Key uncertainties
-5. References: list all URLs cited
-
-Be thorough but concise. Every claim must have a source.`,
-      walletAddress
+      `Oracle dispute. Q: ${market.resolution.question}\n1 sentence position (YES/NO) + 1 key reason. Be very brief.`,
+      walletAddress,
+      100
     );
-    initialViews.push({
-      agent: agent.displayName,
-      tokenId: agent.inftTokenId!,
-      view: result.response,
-    });
-  }
+    return { agent: agent.displayName, tokenId: agent.inftTokenId!, view: result.response };
+  });
+  const initialViews = await Promise.all(viewPromises);
+
   phases.push({
     phase: "discussion_round_1",
     description: "Each agent presents their initial analysis",
     views: initialViews.map((v) => ({ agent: v.agent, view: v.view })),
   });
 
-  // ═══ DISCUSSION ROUND 2: Agents respond to each other ════════
+  // ═══ DISCUSSION ROUND 2: Agents respond (parallel) ═══════════
   const viewSummary = initialViews
     .map((v) => `[${v.agent}]: ${v.view}`)
-    .join("\n\n---\n\n");
+    .join("\n");
 
-  const responses: { agent: string; response: string }[] = [];
-
-  for (const agent of committee) {
+  const responsePromises = committee.map(async (agent) => {
     const result = await callAgent(
       baseUrl,
       agent.inftTokenId!,
-      `You are in a group discussion about resolving this prediction market:
-Today's date is ${new Date().toISOString().split("T")[0]}.
-
-MARKET QUESTION: ${market.resolution.question}
-
-Here are all agents' initial analyses:
-
-${viewSummary}
-
-Now respond to the other agents. You MUST back up every point with references:
-1. Which arguments do you find compelling? Verify their sources.
-2. Which arguments are flawed and why? Provide counter-evidence with URLs.
-3. Has your position changed based on the evidence?
-4. What additional evidence or references should be considered? Cite URLs.
-
-Be specific — reference other agents' points by name. Every claim needs a source URL.`,
-      walletAddress
+      `Q: ${market.resolution.question}\nOthers: ${viewSummary.slice(0, 500)}\n1 sentence: agree/disagree with one agent + counter-point.`,
+      walletAddress,
+      100
     );
-    responses.push({
-      agent: agent.displayName,
-      response: result.response,
-    });
-  }
+    return { agent: agent.displayName, response: result.response };
+  });
+  const responses = await Promise.all(responsePromises);
+
   phases.push({
     phase: "discussion_round_2",
     description: "Agents respond to each other's arguments",
     responses: responses.map((r) => ({ agent: r.agent, response: r.response })),
   });
 
-  // ═══ PHASE 2 COMMIT ═══════════════════════════════════════════
-  // After discussion, each agent votes independently with sealed commits.
+  // ═══ PHASE 2 COMMIT (parallel) ═══════════════════════════════
   const discussionSummary = responses
     .map((r) => `[${r.agent}]: ${r.response}`)
-    .join("\n\n---\n\n");
+    .join("\n");
 
   const commits: CommitEntry[] = [];
 
@@ -176,23 +152,9 @@ Be specific — reference other agents' points by name. Every claim needs a sour
     const result = await callAgent(
       baseUrl,
       agent.inftTokenId!,
-      `Final vote round. You've heard all arguments and seen all evidence.
-Today's date is ${new Date().toISOString().split("T")[0]}.
-
-MARKET QUESTION: ${market.resolution.question}
-
-Discussion summary:
-${discussionSummary}
-
-Based on ALL evidence, references, and discussion, cast your FINAL vote.
-You MUST choose YES or NO based on the weight of evidence and references discussed.
-Synthesize what the group has found. Which side has stronger, more credible sources?
-Cite the most decisive references that tipped your decision.
-
-End your response with exactly one of these lines:
-"FINAL VOTE: YES"
-"FINAL VOTE: NO"`,
-      walletAddress
+      `Q: ${market.resolution.question}\nDiscussion: ${discussionSummary.slice(0, 400)}\nEnd with "FINAL VOTE: YES" or "FINAL VOTE: NO"`,
+      walletAddress,
+      80
     );
 
     const vote = extractVote(result.response);

@@ -185,11 +185,13 @@ export default async function handler(
 
   const { tokenId, message, userAddress, maxTokens } = req.body;
 
-  if (!tokenId || !message || !userAddress) {
+  if (!tokenId || !message) {
     return res
       .status(400)
-      .json({ error: "Missing tokenId, message, or userAddress" });
+      .json({ error: "Missing tokenId or message" });
   }
+
+  const callerAddress = userAddress || "0x0000000000000000000000000000000000000000";
 
   try {
     // 1. On-chain authorization check
@@ -208,7 +210,7 @@ export default async function handler(
           address: SPARKINFT_ADDRESS,
           abi: SPARKINFT_ABI,
           functionName: "isAuthorized",
-          args: [BigInt(tokenId), userAddress as `0x${string}`],
+          args: [BigInt(tokenId), callerAddress as `0x${string}`],
         }),
       ]);
       owner = ownerResult as string;
@@ -219,13 +221,11 @@ export default async function handler(
       });
     }
 
-    const isOwner = owner.toLowerCase() === userAddress.toLowerCase();
+    const isOwner = owner.toLowerCase() === callerAddress.toLowerCase();
 
+    // Inference is public — log for audit but don't block
     if (!isOwner && !isAuthorizedUser) {
-      return res.status(403).json({
-        error:
-          "Not authorized. You must be the token owner or an authorized user.",
-      });
+      console.log(`[infer] Public access: ${callerAddress} for token #${tokenId}`);
     }
 
     // 2. Read IntelligentData from on-chain (ERC-7857)

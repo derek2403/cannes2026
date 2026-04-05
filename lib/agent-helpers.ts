@@ -8,14 +8,24 @@ const HISTORY_FILE = join(process.cwd(), "data", "agent-history.json");
 export interface AgentEntry {
   displayName: string;
   accountId?: string;
+  privateKeyEncrypted?: string;
+  evmAddress?: string;
+  ownerAddress?: string;
   profileTopicId?: string;
   reputationTopicId?: string;
   registryTopicId?: string;
+  floraTopicIds?: { communication?: string; transaction?: string; state?: string } | null;
   inftTokenId?: number;
   modelProvider?: string;
   reputation?: number;
   capabilities?: number[];
   model?: string;
+  domainTags?: string;
+  serviceOfferings?: string;
+  worldVerified?: boolean;
+  humanId?: string | null;
+  zgRootHash?: string;
+  createdAt?: string;
 }
 
 export interface HederaState {
@@ -51,7 +61,8 @@ export async function callAgent(
   baseUrl: string,
   tokenId: number,
   message: string,
-  walletAddress: string
+  walletAddress: string,
+  maxTokens = 300
 ): Promise<{ agentName?: string; response: string; error?: string }> {
   try {
     const res = await fetch(`${baseUrl}/api/inft/infer`, {
@@ -61,7 +72,7 @@ export async function callAgent(
         tokenId,
         message,
         userAddress: walletAddress,
-        maxTokens: 800,
+        maxTokens,
       }),
     });
     const data = await res.json();

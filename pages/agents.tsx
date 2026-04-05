@@ -7,6 +7,7 @@ import { join } from "path";
 interface AgentData {
   displayName: string;
   accountId?: string;
+  evmAddress?: string;
   profileTopicId?: string;
   reputationTopicId?: string;
   registryTopicId?: string;
@@ -17,6 +18,9 @@ interface AgentData {
   model?: string;
   domainTags?: string;
   serviceOfferings?: string;
+  worldVerified?: boolean;
+  humanId?: string | null;
+  zgRootHash?: string;
   createdAt?: string;
 }
 
@@ -438,6 +442,9 @@ export default function AgentsPage({
                         } />
                         <InfoRow label="Domain" value={agent.domainTags || "—"} />
                         <InfoRow label="Services" value={agent.serviceOfferings || "—"} />
+                        {agent.evmAddress && (
+                          <InfoRow label="EVM" value={`0x${agent.evmAddress.replace("0x","").slice(0,8)}...`} />
+                        )}
                         {agent.profileTopicId && (
                           <InfoRow
                             label="HCS-11"
@@ -445,6 +452,14 @@ export default function AgentsPage({
                             link={`https://hashscan.io/testnet/topic/${agent.profileTopicId}`}
                           />
                         )}
+                        {agent.zgRootHash && (
+                          <InfoRow label="0G Hash" value={`${agent.zgRootHash.slice(0,12)}...`} />
+                        )}
+                        <InfoRow
+                          label="World ID"
+                          value={agent.worldVerified ? "Verified" : "Not verified"}
+                          color={agent.worldVerified ? C.green : C.muted}
+                        />
                       </InfoBlock>
                       <InfoBlock title="Reputation Breakdown">
                         <InfoRow
