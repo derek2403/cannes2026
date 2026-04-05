@@ -1,5 +1,5 @@
 import Head from 'next/head';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Header from '../components/header/Header';
 import { Roboto, Figtree } from "next/font/google";
@@ -71,8 +71,127 @@ const TeamButtons = ({ teamA, teamB }: { teamA: string, teamB: string }) => (
 );
 
 
+interface AIMarket {
+    id: string;
+    created_at: string;
+    ai_insight: {
+        agent_id: string;
+        confidence_score: number;
+        suggested_categories: string[];
+    };
+    resolution: {
+        question: string;
+        resolution_date: string;
+        resolution_criteria: string;
+    };
+    amm: {
+        current_odds_yes: number;
+    };
+    ux: {
+        status: string;
+    };
+    settlement: {
+        winning_outcome: string | null;
+    };
+}
+
+const statusColors: Record<string, string> = {
+    PROPOSED: 'text-blue-700 bg-blue-50 border-blue-200',
+    RESOLVED: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+    DISPUTED: 'text-amber-700 bg-amber-50 border-amber-200',
+};
+
+const categoryIcons: Record<string, string> = {
+    climate: '🌍',
+    geopolitical: '🌐',
+    cryptocurrency: '₿',
+    space: '🚀',
+    AI: '🤖',
+};
+
+function AIMarketCard({ market }: { market: AIMarket }) {
+    const status = market.ux.status;
+    const category = market.ai_insight.suggested_categories[0] || '';
+    const icon = categoryIcons[category] || '📊';
+    const yesPercent = Math.round(market.amm.current_odds_yes * 100);
+    const isResolved = status === 'RESOLVED';
+    const outcome = market.settlement.winning_outcome;
+
+    return (
+        <Link
+            href={`/dispute?marketId=${market.id}`}
+            className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group"
+        >
+            <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-slate-600 flex items-center justify-center shrink-0 shadow-sm border border-slate-700 mt-0.5">
+                    <span className="text-[18px]">{icon}</span>
+                </div>
+                <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors">
+                    {market.resolution.question}
+                </h3>
+
+            </div>
+
+            <div className="flex flex-col gap-3 mt-auto">
+                {isResolved && outcome ? (
+                    <div className="flex items-center justify-between">
+                        <span className="text-gray-700 text-base font-medium">Outcome</span>
+                        <span className={`font-bold text-lg ${outcome === 'YES' ? 'text-green-600' : 'text-red-600'}`}>
+                            {outcome}
+                        </span>
+                    </div>
+                ) : (
+                    <>
+                        <div className="flex items-center justify-between">
+                            <span className="text-gray-700 text-base font-medium">Yes</span>
+                            <div className="flex items-center gap-4">
+                                <span className="font-semibold text-gray-900 text-lg">{yesPercent}%</span>
+                                <YesNoButtons yesPrice={0} noPrice={0} compact />
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-gray-700 text-base font-medium">No</span>
+                            <div className="flex items-center gap-4">
+                                <span className="font-semibold text-gray-900 text-lg">{100 - yesPercent}%</span>
+                                <YesNoButtons yesPrice={0} noPrice={0} compact />
+                            </div>
+                        </div>
+                    </>
+                )}
+            </div>
+
+            <div className="mt-8 pt-3 border-t border-gray-100 flex items-center justify-between text-gray-400 text-sm">
+                <div className="flex items-center gap-2">
+                    <span className={`px-2 py-0.5 rounded text-xs font-semibold border ${statusColors[status] || 'text-gray-600 bg-gray-50 border-gray-200'}`}>
+                        {status}
+                    </span>
+                    <span className="text-gray-400">{new Date(market.created_at).toLocaleDateString()}</span>
+                </div>
+                <span className="text-xs text-gray-400">by {market.ai_insight.agent_id}</span>
+            </div>
+        </Link>
+    );
+}
+
 export default function Market() {
     const [activeFilter, setActiveFilter] = useState("All");
+    const [aiMarkets, setAiMarkets] = useState<AIMarket[]>([]);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const fetchMarkets = useCallback(async () => {
+        setRefreshing(true);
+        try {
+            const res = await fetch("/api/markets");
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                data.sort((a: AIMarket, b: AIMarket) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                setAiMarkets(data);
+            }
+        } catch { /* empty */ }
+        setRefreshing(false);
+    }, []);
+
+    useEffect(() => { fetchMarkets(); }, [fetchMarkets]);
 
     return (
         <div className={`min-h-screen bg-[#f8f9fa] ${roboto.variable} ${figtree.variable} font-[family-name:var(--font-roboto)]`}>
@@ -88,7 +207,21 @@ export default function Market() {
 
                 {/* Header Row: Title & Actions */}
                 <div className="flex items-center justify-between mb-6 px-2">
-                    <h1 className={typography.sectionHeader}>All markets</h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className={typography.sectionHeader}>All markets</h1>
+                        <button
+                            onClick={fetchMarkets}
+                            disabled={refreshing}
+                            className="p-2 hover:bg-gray-200 rounded-lg transition-colors text-gray-500 disabled:opacity-50"
+                            title="Refresh markets"
+                        >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={refreshing ? 'animate-spin' : ''}>
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <polyline points="1 20 1 14 7 14"></polyline>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                            </svg>
+                        </button>
+                    </div>
                     <div className="flex items-center gap-4 text-gray-500">
                         <button className="p-2 hover:bg-gray-200 rounded-lg transition-colors">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -120,6 +253,11 @@ export default function Market() {
 
                 {/* Grid Container */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+
+                    {/* AI Oracle Markets (dynamic from data/markets.json) */}
+                    {aiMarkets.map((market) => (
+                        <AIMarketCard key={market.id} market={market} />
+                    ))}
 
                     {/* Card 1: WTI Crude Oil */}
                     <Link href="/event" className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">

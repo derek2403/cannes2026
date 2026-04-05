@@ -8,6 +8,7 @@ import WorldIdVerification from "@/components/WorldIdVerification";
 import WalletAuth from "@/components/WalletAuth";
 import PredictionMarket from "@/components/PredictionMarket";
 import MyPositions from "@/components/MyPositions";
+import DisputeResolution from "@/components/DisputeResolution";
 import fs from "fs";
 import path from "path";
 
@@ -175,6 +176,11 @@ export default function MiniKitPage({ markets }: { markets: MarketData[] }) {
           refreshPool={refreshPool}
           refreshBalance={refreshBalance}
         />
+
+        {/* Dispute Resolution */}
+        {selectedMarket && (
+          <DisputeResolution marketId={selectedMarket} />
+        )}
 
         {/* Status */}
         {status && (

@@ -1,0 +1,209 @@
+{
+  "voteId": "peer-vote-1775342399290",
+  "marketId": "mkt-1775341779551-6vz9",
+  "results": [
+    {
+      "agent": "AlphaOracle",
+      "ratings": {
+        "BetaAnalyst": 8,
+        "GammaWatcher": 7,
+        "DeltaCritic": 5,
+        "EpsilonPolicy": 9,
+        "ZetaSentinel": 6,
+        "EtaForecaster": 8,
+        "ThetaRisk": 7,
+        "IotaConsensus": 9,
+        "KappaSignal": 6
+      },
+      "raw": "```json\n{\n  \"BetaAnalyst\": 8,\n  \"GammaWatcher\": 7,\n  \"DeltaCritic\": 5,\n  \"EpsilonPolicy\": 9,\n  \"ZetaSentinel\": 6,\n  \"EtaForecaster\": 8,\n  \"ThetaRisk\": 7,\n  \"IotaConsensus\": 9,\n  \"KappaSignal\": 6\n}\n```"
+    },
+    {
+      "agent": "BetaAnalyst",
+      "ratings": {
+        "AlphaOracle": 8,
+        "GammaWatcher": 7,
+        "DeltaCritic": 5,
+        "EpsilonPolicy": 6,
+        "ZetaSentinel": 9,
+        "EtaForecaster": 7,
+        "ThetaRisk": 4,
+        "IotaConsensus": 6,
+        "KappaSignal": 8
+      },
+      "raw": "```json\n{\n    \"AlphaOracle\": 8,\n    \"GammaWatcher\": 7,\n    \"DeltaCritic\": 5,\n    \"EpsilonPolicy\": 6,\n    \"ZetaSentinel\": 9,\n    \"EtaForecaster\": 7,\n    \"ThetaRisk\": 4,\n    \"IotaConsensus\": 6,\n    \"KappaSignal\": 8\n}\n```"
+    },
+    {
+      "agent": "GammaWatcher",
+      "ratings": {
+        "AlphaOracle": 8,
+        "BetaAnalyst": 7,
+        "DeltaCritic": 6,
+        "EpsilonPolicy": 5,
+        "ZetaSentinel": 9,
+        "EtaForecaster": 7,
+        "ThetaRisk": 6,
+        "IotaConsensus": 8,
+        "KappaSignal": 7
+      },
+      "raw": "{\n  \"AlphaOracle\": 8,\n  \"BetaAnalyst\": 7,\n  \"DeltaCritic\": 6,\n  \"EpsilonPolicy\": 5,\n  \"ZetaSentinel\": 9,\n  \"EtaForecaster\": 7,\n  \"ThetaRisk\": 6,\n  \"IotaConsensus\": 8,\n  \"KappaSignal\": 7\n}"
+    },
+    {
+      "agent": "DeltaCritic",
+      "ratings": {
+        "AlphaOracle": 7,
+        "BetaAnalyst": 8,
+        "GammaWatcher": 6,
+        "EpsilonPolicy": 5,
+        "ZetaSentinel": 9,
+        "EtaForecaster": 4,
+        "ThetaRisk": 7,
+        "IotaConsensus": 8,
+        "KappaSignal": 6
+      },
+      "raw": "```json\n{\n  \"AlphaOracle\": 7,\n  \"BetaAnalyst\": 8,\n  \"GammaWatcher\": 6,\n  \"EpsilonPolicy\": 5,\n  \"ZetaSentinel\": 9,\n  \"EtaForecaster\": 4,\n  \"ThetaRisk\": 7,\n  \"IotaConsensus\": 8,\n  \"KappaSignal\": 6\n}\n```"
+    },
+    {
+      "agent": "EpsilonPolicy",
+      "ratings": {
+        "AlphaOracle": 8,
+        "BetaAnalyst": 7,
+        "GammaWatcher": 6,
+        "DeltaCritic": 5,
+        "ZetaSentinel": 9,
+        "EtaForecaster": 6,
+        "ThetaRisk": 7,
+        "IotaConsensus": 8,
+        "KappaSignal": 7
+      },
+      "raw": "```json\n{\n  \"AlphaOracle\": 8,\n  \"BetaAnalyst\": 7,\n  \"GammaWatcher\": 6,\n  \"DeltaCritic\": 5,\n  \"ZetaSentinel\": 9,\n  \"EtaForecaster\": 6,\n  \"ThetaRisk\": 7,\n  \"IotaConsensus\": 8,\n  \"KappaSignal\": 7\n}\n```"
+    },
+    {
+      "agent": "ZetaSentinel",
+      "ratings": {
+        "AlphaOracle": 8,
+        "BetaAnalyst": 7,
+        "GammaWatcher": 6,
+        "DeltaCritic": 5,
+        "EpsilonPolicy": 7,
+        "EtaForecaster": 8,
+        "ThetaRisk": 6,
+        "IotaConsensus": 9,
+        "KappaSignal": 7
+      },
+      "raw": "{\n  \"AlphaOracle\": 8,\n  \"BetaAnalyst\": 7,\n  \"GammaWatcher\": 6,\n  \"DeltaCritic\": 5,\n  \"EpsilonPolicy\": 7,\n  \"EtaForecaster\": 8,\n  \"ThetaRisk\": 6,\n  \"IotaConsensus\": 9,\n  \"KappaSignal\": 7\n}"
+    },
+    {
+      "agent": "EtaForecaster",
+      "ratings": {
+        "AlphaOracle": 8,
+        "BetaAnalyst": 7,
+        "GammaWatcher": 6,
+        "DeltaCritic": 5,
+        "EpsilonPolicy": 9,
+        "ZetaSentinel": 7,
+        "ThetaRisk": 6,
+        "IotaConsensus": 8,
+        "KappaSignal": 7
+      },
+      "raw": "```json\n{\n    \"AlphaOracle\": 8,\n    \"BetaAnalyst\": 7,\n    \"GammaWatcher\": 6,\n    \"DeltaCritic\": 5,\n    \"EpsilonPolicy\": 9,\n    \"ZetaSentinel\": 7,\n    \"ThetaRisk\": 6,\n    \"IotaConsensus\": 8,\n    \"KappaSignal\": 7\n}\n```"
+    },
+    {
+      "agent": "ThetaRisk",
+      "ratings": {
+        "AlphaOracle": 8,
+        "BetaAnalyst": 7,
+        "GammaWatcher": 6,
+        "DeltaCritic": 5,
+        "EpsilonPolicy": 9,
+        "ZetaSentinel": 7,
+        "EtaForecaster": 6,
+        "IotaConsensus": 8,
+        "KappaSignal": 7
+      },
+      "raw": "```json\n{\n  \"AlphaOracle\": 8,\n  \"BetaAnalyst\": 7,\n  \"GammaWatcher\": 6,\n  \"DeltaCritic\": 5,\n  \"EpsilonPolicy\": 9,\n  \"ZetaSentinel\": 7,\n  \"EtaForecaster\": 6,\n  \"IotaConsensus\": 8,\n  \"KappaSignal\": 7\n}\n```"
+    },
+    {
+      "agent": "IotaConsensus",
+      "ratings": {
+        "AlphaOracle": 8,
+        "BetaAnalyst": 7,
+        "GammaWatcher": 6,
+        "DeltaCritic": 5,
+        "EpsilonPolicy": 9,
+        "ZetaSentinel": 6,
+        "EtaForecaster": 7,
+        "ThetaRisk": 8,
+        "KappaSignal": 7
+      },
+      "raw": "```json\n{\n    \"AlphaOracle\": 8,\n    \"BetaAnalyst\": 7,\n    \"GammaWatcher\": 6,\n    \"DeltaCritic\": 5,\n    \"EpsilonPolicy\": 9,\n    \"ZetaSentinel\": 6,\n    \"EtaForecaster\": 7,\n    \"ThetaRisk\": 8,\n    \"KappaSignal\": 7\n}\n```"
+    },
+    {
+      "agent": "KappaSignal",
+      "ratings": {
+        "AlphaOracle": 8,
+        "BetaAnalyst": 7,
+        "GammaWatcher": 6,
+        "DeltaCritic": 5,
+        "EpsilonPolicy": 9,
+        "ZetaSentinel": 7,
+        "EtaForecaster": 8,
+        "ThetaRisk": 6,
+        "IotaConsensus": 9
+      },
+      "raw": "```json\n{\n  \"AlphaOracle\": 8,\n  \"BetaAnalyst\": 7,\n  \"GammaWatcher\": 6,\n  \"DeltaCritic\": 5,\n  \"EpsilonPolicy\": 9,\n  \"ZetaSentinel\": 7,\n  \"EtaForecaster\": 8,\n  \"ThetaRisk\": 6,\n  \"IotaConsensus\": 9\n}\n```"
+    }
+  ],
+  "avgRatings": {
+    "BetaAnalyst": {
+      "total": 65,
+      "count": 9,
+      "avg": 7.2
+    },
+    "GammaWatcher": {
+      "total": 56,
+      "count": 9,
+      "avg": 6.2
+    },
+    "DeltaCritic": {
+      "total": 46,
+      "count": 9,
+      "avg": 5.1
+    },
+    "EpsilonPolicy": {
+      "total": 68,
+      "count": 9,
+      "avg": 7.6
+    },
+    "ZetaSentinel": {
+      "total": 69,
+      "count": 9,
+      "avg": 7.7
+    },
+    "EtaForecaster": {
+      "total": 61,
+      "count": 9,
+      "avg": 6.8
+    },
+    "ThetaRisk": {
+      "total": 57,
+      "count": 9,
+      "avg": 6.3
+    },
+    "IotaConsensus": {
+      "total": 73,
+      "count": 9,
+      "avg": 8.1
+    },
+    "KappaSignal": {
+      "total": 62,
+      "count": 9,
+      "avg": 6.9
+    },
+    "AlphaOracle": {
+      "total": 71,
+      "count": 9,
+      "avg": 7.9
+    }
+  },
+  "timestamp": "2026-04-04T22:39:59.290Z"
+}
