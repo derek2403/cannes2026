@@ -54,6 +54,7 @@ interface MyPositionsProps {
   setStatus: (s: string) => void;
   refreshPool: (marketId: string) => void;
   refreshBalance: () => void;
+  refreshKey?: number;
 }
 
 const pollUserOp = async (hash: string) => {
@@ -75,6 +76,7 @@ export default function MyPositions({
   setStatus,
   refreshPool,
   refreshBalance,
+  refreshKey,
 }: MyPositionsProps) {
   const [positions, setPositions] = useState<Record<string, PositionInfo>>({});
   const [resolveOutcomes, setResolveOutcomes] = useState<Record<string, number>>({});
@@ -108,7 +110,7 @@ export default function MyPositions({
 
   useEffect(() => {
     refreshPositions();
-  }, [refreshPositions]);
+  }, [refreshPositions, refreshKey]);
 
   const handleResolve = async (marketId: string) => {
     if (!MiniKit.isInstalled()) {
