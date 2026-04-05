@@ -1,154 +1,153 @@
 # Register Agent (Full Flow)
 
-Register a new DIVE oracle agent through the complete pipeline:
+Register a new DIVE oracle agent through the complete pipeline from `test-full-flow.sh`:
 Phase 1 (Hedera account) -> Phase 2 (World ID) -> Phase 3 (0G Storage + iNFT mint + HCS) -> Phase 4 (inference test) -> Phase 5 (mirror node verify) -> Phase 6 (summary + links).
+
+**World ID is NOT skipped.** The user must verify via World App unless they explicitly type "skip".
 
 ## Arguments
 
-- `$ARGUMENTS` — Optional. If provided, skip the interactive prompts and use this as the agent name with defaults for everything else.
+- `$ARGUMENTS` — Agent name (optional, defaults to `DIVEAgent-<timestamp>`)
 
 ## Instructions
 
-### Step 0: Gather Inputs
+The dev server must be running at http://localhost:3000. Confirm with user if unsure.
 
-**Read credentials from `.env`:**
-Read the file `.env` in the project root. Extract:
-- `OPENAI_API_KEY` — needed if user picks `openai` as model provider
+### Phase 1: Create Hedera Account
 
-**Ask the user for agent details (if `$ARGUMENTS` is empty):**
-
-Ask all of these in a single message:
-
-```
-Let's register a new DIVE agent. I need a few details:
-
-1. Agent name (e.g. "AlphaOracle", "MyResearchBot")
-2. Domain tags — comma-separated (e.g. "oracle,research" or "oracle,data,markets")
-3. Service offerings — comma-separated (e.g. "evidence-analysis,voting")
-4. System prompt — what personality/role should this agent have?
-5. Model provider — "0g-compute" (free, decentralized) or "openai" (uses your API key from .env)
-
-Or just give me a name and I'll use sensible defaults for the rest.
-```
-
-**Defaults** (if user only gives a name or uses `$ARGUMENTS`):
-- `domainTags`: `"oracle,research"`
-- `serviceOfferings`: `"evidence-analysis,voting"`
-- `systemPrompt`: `"You are <agentName>, a DIVE oracle agent for prediction markets."`
-- `modelProvider`: `"0g-compute"`
-
-If user picks `"openai"` as modelProvider, read `OPENAI_API_KEY` from `.env` and include it as `"apiKey"` in Step 3.
-
----
-
-### Step 1: Create Hedera Account
-
+Run:
 ```bash
 curl -s -X POST "http://localhost:3000/api/inft/prepare-agent" -H "Content-Type: application/json" -d '{}' --max-time 30
 ```
 
-Save from response: `hederaAccountId`, `evmAddress`, `encryptedAgentKey`.
+From the JSON response, save these values for later phases:
+- `hederaAccountId` (e.g. `0.0.xxxxx`)
+- `evmAddress` (e.g. `0x...`)
+- `encryptedAgentKey`
+- `agentBookNonce`
 
-Print:
+Print to user:
 ```
-Step 1: Hedera Account Created
-  Account: <hederaAccountId>
-  EVM:     <evmAddress>
+Phase 1: Hedera Account Created
+  Account:  <hederaAccountId>
+  EVM:      <evmAddress>
+  Nonce:    <agentBookNonce>
 ```
 
-If `hederaAccountId` is missing, print raw response and **stop**.
+If `hederaAccountId` is missing/empty, print the raw response and **stop**.
 
 ---
 
-### Step 2: World ID Verification
+### Phase 2: World ID — AgentBook Registration
 
-**Do NOT skip this automatically.** First ask the user if they want to verify with World ID or skip.
+**Do NOT skip this phase automatically.** Ask the user:
 
-**If they want to verify:**
+```
+Phase 2: World ID Verification
 
-Run the AgentKit CLI directly in the terminal (it will display a QR code the user scans with World App):
+Your agent's EVM address: <evmAddress>
 
-```bash
-npx @worldcoin/agentkit-cli register <evmAddress>
+To register on AgentBook, open a SEPARATE terminal and run:
+
+  npx @worldcoin/agentkit-cli register <evmAddress>
+
+This will open a QR code — scan it with World App.
+
+Type "done" when finished, or "skip" to continue without World ID.
 ```
 
-Set timeout to 120 seconds — the user needs time to scan the QR code. The command blocks until verification completes or times out.
+Wait for user response.
 
-After the command finishes:
-1. Wait 3 seconds for on-chain confirmation
+**If user says "done":**
+1. Sleep 3 seconds (for on-chain confirmation)
 2. Check AgentBook:
 ```bash
 curl -s -X POST "http://localhost:3000/api/world/check-agent" -H "Content-Type: application/json" -d '{"address": "<evmAddress>"}' --max-time 15
 ```
-3. If `isHumanBacked` is true: save `humanId`, set `worldVerified = true`
-4. If not: warn user, set `humanId = null`, `worldVerified = false`
+3. If response has `isHumanBacked: true` and a non-null `humanId`:
+   - Save `humanId`, set `worldVerified = true`
+   - Print: `World ID verified! humanId: <humanId>`
+4. If not found:
+   - Print: `Not found on AgentBook. Continuing without World ID.`
+   - Set `humanId = null`, `worldVerified = false`
 
-**If "skip":** set `humanId = null`, `worldVerified = false`
+**If user says "skip":**
+- Set `humanId = null`, `worldVerified = false`
+- Print: `Skipping World ID.`
 
 ---
 
-### Step 3: Register Agent (0G + iNFT + HCS)
+### Phase 3: Mint iNFT + HCS Logging
 
-Build the request body using all gathered inputs:
+Determine agent name:
+- If `$ARGUMENTS` is provided and non-empty, use that as the agent name
+- Otherwise generate: `DIVEAgent-<unix_timestamp>`
 
+Build the JSON body and send:
 ```bash
 curl -s -X POST "http://localhost:3000/api/inft/register-agent" \
   -H "Content-Type: application/json" \
   --max-time 120 \
   -d '{
-    "agentName": "<agentName>",
-    "domainTags": "<domainTags>",
-    "serviceOfferings": "<serviceOfferings>",
-    "modelProvider": "<modelProvider>",
-    "systemPrompt": "<systemPrompt>",
-    "apiKey": "<OPENAI_API_KEY from .env, ONLY if modelProvider is openai, otherwise omit this field>",
+    "agentName": "<AGENT_NAME>",
+    "domainTags": "oracle,research",
+    "serviceOfferings": "evidence-analysis,voting",
+    "modelProvider": "0g-compute",
+    "systemPrompt": "You are <AGENT_NAME>, a DIVE oracle agent for prediction markets.",
     "reputation": 10,
-    "hederaAccountId": "<from Step 1>",
-    "evmAddress": "<from Step 1>",
-    "encryptedAgentKey": "<from Step 1>",
-    "humanId": "<from Step 2 or null>",
-    "worldVerified": <true or false from Step 2>
+    "hederaAccountId": "<HEDERA_ID>",
+    "evmAddress": "<EVM_ADDR>",
+    "encryptedAgentKey": "<ENC_KEY>",
+    "humanId": "<HUMAN_ID_or_null>",
+    "worldVerified": <true_or_false>
   }'
 ```
 
-**Important:**
-- If `modelProvider` is `"0g-compute"`, do NOT include `apiKey` in the body.
-- If `modelProvider` is `"openai"`, include `"apiKey"` with the value from `.env`.
-- `humanId` should be the actual string or JSON `null` (not the string `"null"`).
-- This call takes 30-60 seconds. Tell the user.
+**Important:** `humanId` should be the string value or `null` (not the string `"null"`). `worldVerified` is a boolean.
 
-Save from response: `tokenId`, `txHash`, `uploadTxHash`, `rootHash`, `hedera.profileTopicId`, `hedera.registryTopicId`, `hedera.reputationTopicId`.
+This call takes 30-60 seconds. Tell the user it's in progress.
+
+From the response, extract and save:
+- `tokenId` (iNFT token number)
+- `txHash` (mint transaction)
+- `uploadTxHash` (0G Storage upload transaction)
+- `rootHash` (0G Storage root hash)
+- `hedera.profileTopicId`
+- `hedera.registryTopicId`
+- `hedera.reputationTopicId`
+- `world.verified`
+- `world.humanId`
 
 Print:
 ```
-Step 3: Agent Registered!
-  iNFT Token:      #<tokenId>
-  Mint TX:          <txHash>
-  Upload TX:        <uploadTxHash>
-  0G Root Hash:     <rootHash>
-  Profile Topic:    <profileTopicId>
-  Registry Topic:   <registryTopicId>
-  Reputation Topic: <reputationTopicId>
-  World Verified:   <true/false>
-  Human ID:         <humanId or "none">
+Phase 3: Agent Registered
+  iNFT Token:     #<tokenId>
+  Mint TX:         <txHash>
+  Upload TX:       <uploadTxHash>
+  0G Root Hash:    <rootHash>
+  Profile Topic:   <profileTopicId>
+  Registry Topic:  <registryTopicId>
+  Reputation Topic:<reputationTopicId>
+  World Verified:  <true/false>
+  Human ID:        <humanId or "none">
 ```
 
 If `tokenId` is missing, print raw response and **stop**.
 
 ---
 
-### Step 4: Test Inference
+### Phase 4: Test Inference (0G Compute)
 
 ```bash
 curl -s -X POST "http://localhost:3000/api/inft/infer" \
   -H "Content-Type: application/json" \
   --max-time 60 \
-  -d '{"tokenId": <tokenId>, "message": "What is the capital of France? One sentence."}'
+  -d '{"tokenId": <TOKEN_ID>, "message": "What is the capital of France? One sentence."}'
 ```
 
 Print:
 ```
-Step 4: Inference Test
+Phase 4: Inference Test
   Agent:    <agent>
   Source:   <source>
   Model:    <model>
@@ -158,33 +157,46 @@ Step 4: Inference Test
 
 ---
 
-### Step 5: Verify HCS (Mirror Node)
+### Phase 5: Verify HCS Messages (Mirror Node)
 
-Wait 5 seconds, then fetch and decode base64 messages from each topic:
+Wait 5 seconds for mirror node indexing.
 
+**Profile Topic** (if profileTopicId exists):
 ```bash
-curl -s "https://testnet.mirrornode.hedera.com/api/v1/topics/<profileTopicId>/messages?limit=5&order=asc"
-curl -s "https://testnet.mirrornode.hedera.com/api/v1/topics/<registryTopicId>/messages?limit=4&order=desc"
-curl -s "https://testnet.mirrornode.hedera.com/api/v1/topics/<reputationTopicId>/messages?limit=4&order=desc"
+curl -s "https://testnet.mirrornode.hedera.com/api/v1/topics/<PROFILE_TOPIC>/messages?limit=5&order=asc"
 ```
+Each message in `.messages[]` has a `.message` field that is base64-encoded JSON. Decode with:
+```bash
+echo '<base64string>' | base64 -d
+```
+Print decoded profile info (display_name, worldVerified, humanId, inftTokenId).
 
-Each `.messages[].message` is base64 JSON. Decode and print key fields.
+**Registry Topic** (last 4 messages):
+```bash
+curl -s "https://testnet.mirrornode.hedera.com/api/v1/topics/<REGISTRY_TOPIC>/messages?limit=4&order=desc"
+```
+Decode and print the `op` and `agent_name` or `m` fields.
+
+**Reputation Topic** (last 4 messages):
+```bash
+curl -s "https://testnet.mirrornode.hedera.com/api/v1/topics/<REP_TOPIC>/messages?limit=4&order=desc"
+```
+Decode and print the `op`, `tick`, `amt`, `to`, and `m` fields.
 
 ---
 
-### Step 6: Summary + Explorer Links
+### Phase 6: Full Summary + Explorer Links
+
+Print a complete summary:
 
 ```
 ============================================================
   DIVE AGENT REGISTERED
 ============================================================
 
-  Agent Name:       <agentName>
+  Agent Name:       <AGENT_NAME>
   iNFT Token ID:    #<tokenId>
-  Model Provider:   <modelProvider>
-  Domain:           <domainTags>
-  Services:         <serviceOfferings>
-  Compute Working:  <true/false>
+  Compute Working:  <true/false based on Phase 4>
 
   --- Hedera ---
   Account ID:       <hederaAccountId>
@@ -209,10 +221,23 @@ Each `.messages[].message` is base64 JSON. Decode and print key fields.
   Profile Topic:    https://hashscan.io/testnet/topic/<profileTopicId>
   Registry Topic:   https://hashscan.io/testnet/topic/<registryTopicId>
   Reputation Topic: https://hashscan.io/testnet/topic/<reputationTopicId>
+
+  --- Mirror Node (raw JSON) ---
+  Profile:          https://testnet.mirrornode.hedera.com/api/v1/topics/<profileTopicId>/messages?limit=5&order=asc
+  Registry:         https://testnet.mirrornode.hedera.com/api/v1/topics/<registryTopicId>/messages?limit=5&order=desc
+  Reputation:       https://testnet.mirrornode.hedera.com/api/v1/topics/<reputationTopicId>/messages?limit=5&order=desc
 ```
 
-If World ID verified:
+If World ID verified, also print:
 ```
+  --- World Chain ---
   AgentBook:        https://worldscan.org/address/0xA23aB2712eA7BBa896930544C7d6636a96b944dA
   Agent Wallet:     https://worldscan.org/address/<evmAddress>
+```
+
+If Phase 4 succeeded, also print:
+```
+  --- 0G Compute ---
+  Model:            <model>
+  Provider:         https://chainscan-galileo.0g.ai/address/<provider>
 ```
