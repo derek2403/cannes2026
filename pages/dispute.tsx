@@ -243,6 +243,14 @@ export default function DisputePage() {
                 for (const r of revealPhase.reveals) votes[r.agent] = r.vote;
             }
 
+            // Eagerly prefetch word cloud + references in background while UI animates
+            if (revealPhase?.reveals) {
+                const reasoningMsgs = revealPhase.reveals
+                    .filter((r: { reasoning?: string }) => r.reasoning)
+                    .map((r: { agent: string; reasoning: string }) => ({ agent: r.agent, text: r.reasoning }));
+                if (reasoningMsgs.length > 0) fetchInsights(reasoningMsgs, data.question || marketQuestion);
+            }
+
             // Animate reveals
             animateReveals(agents, votes, () => {
                 const yes = Object.values(votes).filter(v => v === "YES").length;
@@ -261,7 +269,6 @@ export default function DisputePage() {
                         }
                     }
                     setDiscussionMessages(msgs);
-                    fetchInsights(msgs, marketQuestion);
                     setDisputeStep(4);
                 }
                 setLoading(false);
@@ -270,7 +277,7 @@ export default function DisputePage() {
             console.error("Dispute failed:", err);
             setLoading(false);
         }
-    }, [marketId, animateAgents, animateReveals]);
+    }, [marketId, marketQuestion, animateAgents, animateReveals, fetchInsights]);
 
     // ── ROUND 2 BUTTON: calls resolve-2, animates results ──
     const startRound2 = useCallback(async () => {
@@ -303,7 +310,6 @@ export default function DisputePage() {
                 for (const r of disc2.responses) msgs.push({ agent: r.agent, text: (r.response || "") });
             }
             setDiscussionMessages(msgs);
-            fetchInsights(msgs, marketQuestion);
             // Auto-open discussion modal so user sees chat in real-time
             if (msgs.length > 0) setShowDiscussion(true);
 

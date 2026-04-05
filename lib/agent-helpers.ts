@@ -61,7 +61,8 @@ export async function callAgent(
   baseUrl: string,
   tokenId: number,
   message: string,
-  walletAddress: string
+  walletAddress: string,
+  maxTokens = 300
 ): Promise<{ agentName?: string; response: string; error?: string }> {
   try {
     const res = await fetch(`${baseUrl}/api/inft/infer`, {
@@ -71,7 +72,7 @@ export async function callAgent(
         tokenId,
         message,
         userAddress: walletAddress,
-        maxTokens: 300,
+        maxTokens,
       }),
     });
     const data = await res.json();

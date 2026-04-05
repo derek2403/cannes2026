@@ -99,62 +99,52 @@ export default async function handler(
 
   const phases: Record<string, unknown>[] = [];
 
-  // ═══ DISCUSSION ROUND 1: Initial views ════════════════════════
-  const initialViews: { agent: string; tokenId: number; view: string }[] = [];
-
-  for (const agent of committee) {
+  // ═══ DISCUSSION ROUND 1: Initial views (parallel) ═════════════
+  const viewPromises = committee.map(async (agent) => {
     const result = await callAgent(
       baseUrl,
       agent.inftTokenId!,
-      `Oracle dispute. Date: ${new Date().toISOString().split("T")[0]}.
-Q: ${market.resolution.question}
-In 2-3 sentences: your position (YES or NO), one key reason, one reference URL. Be brief.`,
-      walletAddress
+      `Oracle dispute. Q: ${market.resolution.question}\n1 sentence position (YES/NO) + 1 key reason. Be very brief.`,
+      walletAddress,
+      100
     );
-    initialViews.push({
-      agent: agent.displayName,
-      tokenId: agent.inftTokenId!,
-      view: result.response,
-    });
-  }
+    return { agent: agent.displayName, tokenId: agent.inftTokenId!, view: result.response };
+  });
+  const initialViews = await Promise.all(viewPromises);
+
   phases.push({
     phase: "discussion_round_1",
     description: "Each agent presents their initial analysis",
     views: initialViews.map((v) => ({ agent: v.agent, view: v.view })),
   });
 
-  // ═══ DISCUSSION ROUND 2: Agents respond to each other ════════
+  // ═══ DISCUSSION ROUND 2: Agents respond (parallel) ═══════════
   const viewSummary = initialViews
     .map((v) => `[${v.agent}]: ${v.view}`)
-    .join("\n\n---\n\n");
+    .join("\n");
 
-  const responses: { agent: string; response: string }[] = [];
-
-  for (const agent of committee) {
+  const responsePromises = committee.map(async (agent) => {
     const result = await callAgent(
       baseUrl,
       agent.inftTokenId!,
-      `Q: ${market.resolution.question}
-Others said: ${viewSummary.slice(0, 800)}
-In 2-3 sentences: agree or disagree with one agent by name, give one counter-point. Be brief.`,
-      walletAddress
+      `Q: ${market.resolution.question}\nOthers: ${viewSummary.slice(0, 500)}\n1 sentence: agree/disagree with one agent + counter-point.`,
+      walletAddress,
+      100
     );
-    responses.push({
-      agent: agent.displayName,
-      response: result.response,
-    });
-  }
+    return { agent: agent.displayName, response: result.response };
+  });
+  const responses = await Promise.all(responsePromises);
+
   phases.push({
     phase: "discussion_round_2",
     description: "Agents respond to each other's arguments",
     responses: responses.map((r) => ({ agent: r.agent, response: r.response })),
   });
 
-  // ═══ PHASE 2 COMMIT ═══════════════════════════════════════════
-  // After discussion, each agent votes independently with sealed commits.
+  // ═══ PHASE 2 COMMIT (parallel) ═══════════════════════════════
   const discussionSummary = responses
     .map((r) => `[${r.agent}]: ${r.response}`)
-    .join("\n\n---\n\n");
+    .join("\n");
 
   const commits: CommitEntry[] = [];
 
@@ -162,10 +152,9 @@ In 2-3 sentences: agree or disagree with one agent by name, give one counter-poi
     const result = await callAgent(
       baseUrl,
       agent.inftTokenId!,
-      `Q: ${market.resolution.question}
-Discussion: ${discussionSummary.slice(0, 600)}
-Final vote. One sentence reason, then end with: "FINAL VOTE: YES" or "FINAL VOTE: NO"`,
-      walletAddress
+      `Q: ${market.resolution.question}\nDiscussion: ${discussionSummary.slice(0, 400)}\nEnd with "FINAL VOTE: YES" or "FINAL VOTE: NO"`,
+      walletAddress,
+      80
     );
 
     const vote = extractVote(result.response);
