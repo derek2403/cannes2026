@@ -3,6 +3,9 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Header from '../components/header/Header';
 import { Roboto, Figtree } from "next/font/google";
+import type { GetServerSideProps } from 'next';
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
 
 const roboto = Roboto({
     weight: ['400', '500', '700'],
@@ -71,7 +74,126 @@ const TeamButtons = ({ teamA, teamB }: { teamA: string, teamB: string }) => (
 );
 
 
-export default function Market() {
+interface AIMarket {
+    id: string;
+    created_at: string;
+    ai_insight: {
+        agent_id: string;
+        confidence_score: number;
+        suggested_categories: string[];
+    };
+    resolution: {
+        question: string;
+        resolution_date: string;
+        resolution_criteria: string;
+    };
+    amm: {
+        current_odds_yes: number;
+    };
+    ux: {
+        status: string;
+    };
+    settlement: {
+        winning_outcome: string | null;
+    };
+}
+
+export const getServerSideProps: GetServerSideProps = async () => {
+    const marketsFile = join(process.cwd(), 'data', 'markets.json');
+    let aiMarkets: AIMarket[] = [];
+    try {
+        if (existsSync(marketsFile)) {
+            aiMarkets = JSON.parse(readFileSync(marketsFile, 'utf-8'));
+            aiMarkets.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        }
+    } catch { /* empty */ }
+    return { props: { aiMarkets } };
+};
+
+const statusColors: Record<string, string> = {
+    PROPOSED: 'text-blue-700 bg-blue-50 border-blue-200',
+    RESOLVED: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+    DISPUTED: 'text-amber-700 bg-amber-50 border-amber-200',
+};
+
+const categoryIcons: Record<string, string> = {
+    climate: '🌍',
+    geopolitical: '🌐',
+    cryptocurrency: '₿',
+    space: '🚀',
+    AI: '🤖',
+};
+
+function AIMarketCard({ market }: { market: AIMarket }) {
+    const status = market.ux.status;
+    const category = market.ai_insight.suggested_categories[0] || '';
+    const icon = categoryIcons[category] || '📊';
+    const yesPercent = Math.round(market.amm.current_odds_yes * 100);
+    const isResolved = status === 'RESOLVED';
+    const outcome = market.settlement.winning_outcome;
+
+    return (
+        <Link
+            href={`/dispute?marketId=${market.id}`}
+            className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group relative"
+        >
+            {/* AI Oracle badge */}
+            <div className="absolute top-3 right-3 flex items-center gap-1.5 text-[0.65rem] font-semibold text-violet-600 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
+                AI Oracle
+            </div>
+
+            <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-slate-600 flex items-center justify-center shrink-0 shadow-sm border border-slate-700 mt-0.5">
+                    <span className="text-[18px]">{icon}</span>
+                </div>
+                <h3 className="font-['Satoshi'] font-semibold text-gray-900 text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors pr-16">
+                    {market.resolution.question}
+                </h3>
+            </div>
+
+            <div className="flex flex-col gap-3 mt-auto">
+                {isResolved && outcome ? (
+                    <div className="flex items-center justify-between">
+                        <span className="text-gray-700 text-base font-medium">Outcome</span>
+                        <span className={`font-bold text-lg ${outcome === 'YES' ? 'text-green-600' : 'text-red-600'}`}>
+                            {outcome}
+                        </span>
+                    </div>
+                ) : (
+                    <>
+                        <div className="flex items-center justify-between">
+                            <span className="text-gray-700 text-base font-medium">Yes</span>
+                            <div className="flex items-center gap-4">
+                                <span className="font-semibold text-gray-900 text-lg">{yesPercent}%</span>
+                                <YesNoButtons yesPrice={0} noPrice={0} compact />
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-gray-700 text-base font-medium">No</span>
+                            <div className="flex items-center gap-4">
+                                <span className="font-semibold text-gray-900 text-lg">{100 - yesPercent}%</span>
+                                <YesNoButtons yesPrice={0} noPrice={0} compact />
+                            </div>
+                        </div>
+                    </>
+                )}
+            </div>
+
+            <div className="mt-8 pt-3 border-t border-gray-100 flex items-center justify-between text-gray-400 text-sm">
+                <div className="flex items-center gap-2">
+                    <span className={`px-2 py-0.5 rounded text-xs font-semibold border ${statusColors[status] || 'text-gray-600 bg-gray-50 border-gray-200'}`}>
+                        {status}
+                    </span>
+                    <span className="text-gray-400">{new Date(market.created_at).toLocaleDateString()}</span>
+                </div>
+                <span className="text-xs text-gray-400">by {market.ai_insight.agent_id}</span>
+            </div>
+        </Link>
+    );
+}
+
+export default function Market({ aiMarkets = [] }: { aiMarkets: AIMarket[] }) {
     const [activeFilter, setActiveFilter] = useState("All");
 
     return (
@@ -120,6 +242,11 @@ export default function Market() {
 
                 {/* Grid Container */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+
+                    {/* AI Oracle Markets (dynamic from data/markets.json) */}
+                    {aiMarkets.map((market) => (
+                        <AIMarketCard key={market.id} market={market} />
+                    ))}
 
                     {/* Card 1: WTI Crude Oil */}
                     <Link href="/event" className="bg-white rounded-xl shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 p-6 flex flex-col transition-shadow duration-300 cursor-pointer group">
