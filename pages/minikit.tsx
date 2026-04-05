@@ -185,7 +185,7 @@ export default function MiniKitPage({ markets }: { markets: MarketData[] }) {
 
         {/* Dispute Resolution */}
         {selectedMarket && (
-          <DisputeResolution marketId={selectedMarket} />
+          <DisputeResolution marketId={selectedMarket} question={markets.find(m => m.id === selectedMarket)?.resolution.question} />
         )}
 
         {/* Status */}

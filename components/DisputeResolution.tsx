@@ -2,13 +2,13 @@ import { useState, useCallback } from "react";
 
 interface DisputeResolutionProps {
   marketId: string;
+  question?: string;
 }
 
 // Set NEXT_PUBLIC_NGROK_URL in .env for demo (e.g. https://abc123.ngrok-free.app)
-// Falls back to same-origin (relative URL) if not set
 const API_BASE = process.env.NEXT_PUBLIC_NGROK_URL || "";
 
-export default function DisputeResolution({ marketId }: DisputeResolutionProps) {
+export default function DisputeResolution({ marketId, question }: DisputeResolutionProps) {
   const [disputeStep, setDisputeStep] = useState(1);
   const [animating, setAnimating] = useState(false);
   const [phase1Result, setPhase1Result] = useState<string | null>(null);
@@ -16,59 +16,57 @@ export default function DisputeResolution({ marketId }: DisputeResolutionProps) 
   const [finalOutcome, setFinalOutcome] = useState<string | null>(null);
   const [bondSlashed, setBondSlashed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [agentViews, setAgentViews] = useState<{agent: string; vote: string; reasoning: string}[]>([]);
 
   const startDispute = useCallback(async () => {
     setAnimating(true);
     setError(null);
+    setAgentViews([]);
     setDisputeStep(2);
 
     try {
-      // Phase 1: Research + first commit-reveal vote
-      const res1 = await fetch(`${API_BASE}/api/commands/resolve-1`, {
+      const resp = await fetch(`${API_BASE}/api/commands/minikit-dispute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ marketId, committeeSize: 5 }),
+        body: JSON.stringify({ marketId, question: question || marketId }),
       });
-      const data1 = await res1.json();
+      const data = await resp.json();
 
-      if (data1.error) { setError(data1.error); setAnimating(false); return; }
+      if (data.error) { setError(data.error); setAnimating(false); return; }
 
+      // Show round 1 result
       setDisputeStep(3);
-      const r1 = data1.resolved ? data1.consensus : "Unsure";
-      setPhase1Result(r1);
+      const r1 = data.round1;
+      setPhase1Result(`${r1.tally.YES} YES / ${r1.tally.NO} NO`);
+      setAgentViews(r1.reveals);
 
-      if (data1.resolved) {
-        setFinalOutcome(data1.consensus);
-        setBondSlashed(data1.consensus === "YES");
+      if (data.resolved && !data.round2) {
+        setFinalOutcome(data.consensus);
+        setBondSlashed(data.consensus === "YES");
         setDisputeStep(6);
         setAnimating(false);
         return;
       }
 
-      // Phase 2: Discussion + second commit-reveal vote
+      // Show round 2
+      await new Promise(r => setTimeout(r, 800));
       setDisputeStep(4);
-      const res2 = await fetch(`${API_BASE}/api/commands/resolve-2`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ marketId, committeeSize: 5 }),
-      });
-      const data2 = await res2.json();
-
-      if (data2.error) { setError(data2.error); setAnimating(false); return; }
-
+      await new Promise(r => setTimeout(r, 500));
       setDisputeStep(5);
-      const r2 = data2.resolved ? data2.consensus : "Unsure";
-      setPhase2Result(r2);
 
-      setFinalOutcome(data2.resolved ? data2.consensus : "Unresolved");
-      setBondSlashed(data2.resolved && data2.consensus === "YES");
+      const r2 = data.round2;
+      setPhase2Result(`${r2.tally.YES} YES / ${r2.tally.NO} NO`);
+      setAgentViews(r2.reveals);
+
+      setFinalOutcome(data.consensus);
+      setBondSlashed(data.consensus === "YES");
       setDisputeStep(6);
       setAnimating(false);
     } catch {
-      setError(`Cannot reach server. Make sure ngrok is running.`);
+      setError("Cannot reach server. Make sure ngrok is running.");
       setAnimating(false);
     }
-  }, [marketId]);
+  }, [marketId, question]);
 
   const gavelIcon = (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -89,7 +87,7 @@ export default function DisputeResolution({ marketId }: DisputeResolutionProps) 
     { label: "Outcome proposed: Yes", sub: null, icon: null },
     { label: "Dispute window", sub: "Bond: 750 USDC", icon: gavelIcon },
     { label: "First round voting", sub: phase1Result ? `Result: ${phase1Result}` : null, icon: null },
-    { label: "Discussion", sub: disputeStep > 4 ? "Agents debated" : null, icon: chatIcon },
+    { label: "Discussion", sub: disputeStep > 4 ? "5 agents debated" : null, icon: chatIcon },
     { label: "Second round voting", sub: phase2Result ? `Result: ${phase2Result}` : null, icon: null },
     { label: "Final outcome", sub: null, icon: null },
   ];
@@ -110,7 +108,6 @@ export default function DisputeResolution({ marketId }: DisputeResolutionProps) 
 
           return (
             <div key={i} className="flex items-start gap-3">
-              {/* Dot + vertical connector */}
               <div className="flex flex-col items-center">
                 <div
                   className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-700 ${
@@ -144,7 +141,6 @@ export default function DisputeResolution({ marketId }: DisputeResolutionProps) 
                 )}
               </div>
 
-              {/* Label */}
               <div className="pt-1">
                 <div
                   className={`text-xs font-semibold transition-colors duration-700 ${
@@ -192,7 +188,7 @@ export default function DisputeResolution({ marketId }: DisputeResolutionProps) 
         </div>
       )}
 
-      {/* Progress / result */}
+      {/* Progress */}
       {disputeStep >= 2 && !error && (
         <div className="mt-5 pt-4 border-t border-zinc-200 dark:border-zinc-700">
           {disputeStep < 6 && animating && (
@@ -201,17 +197,31 @@ export default function DisputeResolution({ marketId }: DisputeResolutionProps) 
               <div>
                 <span className="text-xs text-blue-500 font-semibold">Processing dispute...</span>
                 <p className="text-xs text-zinc-500 mt-0.5">
-                  {disputeStep === 2 && "Bond locked. Running Phase 1 research..."}
-                  {disputeStep === 3 && "First vote complete. Checking consensus..."}
-                  {disputeStep === 4 && "Agents are discussing and debating..."}
+                  {disputeStep === 2 && "Bond locked. 5 agents researching..."}
+                  {disputeStep === 3 && "First vote complete."}
+                  {disputeStep === 4 && "Agents discussing each other's arguments..."}
                   {disputeStep === 5 && "Second vote complete. Finalizing..."}
                 </p>
               </div>
             </div>
           )}
 
+          {/* Agent votes */}
+          {agentViews.length > 0 && disputeStep >= 3 && (
+            <div className="mt-3 flex flex-col gap-2">
+              {agentViews.map((v) => (
+                <div key={v.agent} className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full shrink-0 ${v.vote === "YES" ? "bg-green-500" : "bg-red-500"}`} />
+                  <span className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">{v.agent}</span>
+                  <span className={`text-[11px] font-bold ${v.vote === "YES" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>{v.vote}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Final result */}
           {disputeStep >= 6 && !animating && (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 mt-3">
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
