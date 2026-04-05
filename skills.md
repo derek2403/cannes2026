@@ -50,12 +50,12 @@ Save `hederaAccountId`, `evmAddress`, and `encryptedAgentKey` — they are neede
 
 This step requires human interaction — the user must scan a QR code with World App.
 
-1. Tell the user to open a separate terminal and run:
-   ```
+1. Run the AgentKit CLI directly (it displays a QR code for the user to scan):
+   ```bash
    npx @worldcoin/agentkit-cli register <evmAddress>
    ```
-2. Wait for the user to confirm they've completed the scan.
-3. Wait 3 seconds for on-chain confirmation.
+   Set timeout to 120 seconds — user needs time to scan. The command blocks until done.
+2. Wait 3 seconds for on-chain confirmation.
 4. Verify registration:
    ```bash
    curl -s -X POST "http://localhost:3000/api/world/check-agent" \
