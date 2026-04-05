@@ -35,10 +35,14 @@ const STAGE_TO_PHASE: Record<number, Phase> = {
    Mock Data
    ═══════════════════════════════════════════════════════════ */
 
-const RESOLUTION: Vote = "YES";
-const TRUTH_COLOR = RESOLUTION === "YES" ? "#00ff88" : "#ff4455";
 const YES_COLORS = ["#00ff88", "#22ffaa", "#44ff66", "#33ff99", "#55ff77", "#66ffaa"];
 const NO_COLORS = ["#ff4455", "#ff6644", "#ff3333", "#ee5544"];
+
+function getTruthColor(consensus: Vote | null): string {
+  if (consensus === "YES") return "#00ff88";
+  if (consensus === "NO") return "#ff4455";
+  return "#aaaaaa";
+}
 
 const AGENTS: Agent[] = [
   { id: 0, name: "Oracle Alpha", reputation: 95, vote: "YES", evidence: [
@@ -96,21 +100,21 @@ interface Layout {
   evidencePositions: THREE.Vector3[][];
 }
 
-function computeLayout(): Layout {
+function computeLayout(agentList: Agent[]): Layout {
   const truthPos = new THREE.Vector3(0, 0, 0);
 
-  const agentPositions = AGENTS.map((agent, i) => {
+  const agentPositions = agentList.map((agent, i) => {
     const rng1 = seeded(agent.id * 7 + 1);
     const rng2 = seeded(agent.id * 13 + 3);
     const rng3 = seeded(agent.id * 19 + 7);
-    const baseAngle = (i / AGENTS.length) * Math.PI * 2;
+    const baseAngle = (i / agentList.length) * Math.PI * 2;
     const angle = baseAngle + (rng1 - 0.5) * 1.2;
     const radius = 7 + rng2 * 12;
     const y = (rng3 - 0.5) * 10;
     return new THREE.Vector3(radius * Math.cos(angle), y, radius * Math.sin(angle));
   });
 
-  const evidencePositions = AGENTS.map((agent, i) => {
+  const evidencePositions = agentList.map((agent, i) => {
     const agentPos = agentPositions[i];
     const outDir = new THREE.Vector3(agentPos.x, 0, agentPos.z).normalize();
     const perpDir = new THREE.Vector3(-outDir.z, 0, outDir.x);
@@ -249,7 +253,7 @@ function CandidateNode({
 const SCALE_NORMAL = new THREE.Vector3(1, 1, 1);
 const SCALE_HOVERED = new THREE.Vector3(1.2, 1.2, 1.2);
 
-function TruthNodeAnimated({ position, refs }: { position: THREE.Vector3; refs: PhaseRefs }) {
+function TruthNodeAnimated({ position, refs, color }: { position: THREE.Vector3; refs: PhaseRefs; color: string }) {
   const meshRef = useRef<THREE.Mesh>(null!);
   const ringRef = useRef<THREE.Mesh>(null!);
 
@@ -268,14 +272,14 @@ function TruthNodeAnimated({ position, refs }: { position: THREE.Vector3; refs: 
       <mesh ref={meshRef} position={position}>
         <sphereGeometry args={[1.5, 48, 48]} />
         <meshStandardMaterial
-          color={TRUTH_COLOR} emissive={TRUTH_COLOR} emissiveIntensity={1.2}
+          color={color} emissive={color} emissiveIntensity={1.2}
           roughness={0.15} metalness={0.8} transparent opacity={0.92}
         />
       </mesh>
       <mesh ref={ringRef}>
         <torusGeometry args={[2.2, 0.03, 16, 64]} />
         <meshStandardMaterial
-          color={TRUTH_COLOR} emissive={TRUTH_COLOR} emissiveIntensity={0.8}
+          color={color} emissive={color} emissiveIntensity={0.8}
           transparent opacity={0.5}
         />
       </mesh>
@@ -426,19 +430,27 @@ function CurvedFlowParticle({
    Voting Node (color reveal, no links)
    ═══════════════════════════════════════════════════════════ */
 
-// Which color-reveal wave each agent belongs to (0=first, 1=second, 2=stays grey)
-// Agent 1 (Sentinel Beta) is the only NO — reveal it alone in wave 1
-const VOTE_WAVE: number[] = [0, 1, 0, 2, 2];
+// Dynamic wave assignment for staggered vote reveal:
+//   wave 0 (0.3s delay): early reveal — first batch of Round 1 votes
+//   wave 1 (1.2s delay): late reveal — contrasting Round 1 vote
+//   wave 2: stays grey during voting phase, only colored in discussion (Round 2)
+function getVoteWave(agentIndex: number, agentCount: number): number {
+  if (agentCount <= 2) return agentIndex === 0 ? 0 : 1;
+  // First 2 agents: early reveal, next 1: late reveal, rest: grey until discussion
+  if (agentIndex < 2) return 0;
+  if (agentIndex === 2) return 1;
+  return 2;
+}
 
 function VotingNode({
-  position, agent, agentIndex, refs,
+  position, agent, agentIndex, agentCount, refs,
 }: {
-  position: THREE.Vector3; agent: Agent; agentIndex: number; refs: PhaseRefs;
+  position: THREE.Vector3; agent: Agent; agentIndex: number; agentCount: number; refs: PhaseRefs;
 }) {
   const meshRef = useRef<THREE.Mesh>(null!);
   const matRef = useRef<THREE.MeshStandardMaterial>(null!);
   const size = 0.35 + (agent.reputation / 100) * 0.65;
-  const wave = VOTE_WAVE[agentIndex];
+  const wave = getVoteWave(agentIndex, agentCount);
   const voteColor = useMemo(() => new THREE.Color(getAgentColor(agent)), [agent]);
   const grey = useMemo(() => new THREE.Color("#cccccc"), []);
 
@@ -448,6 +460,7 @@ function VotingNode({
     if (!mat) return;
 
     if (wave === 2) {
+      // Stay grey during voting — revealed only in discussion phase
       mat.color.set(grey);
       mat.emissive.set(grey);
       mat.emissiveIntensity = 0.5;
@@ -488,11 +501,11 @@ function DelayedGroup({ refs, delay, children }: {
    Scene (internal — driven by phase)
    ═══════════════════════════════════════════════════════════ */
 
-function Scene({ phase, setPhase }: { phase: Phase; setPhase: (p: Phase) => void }) {
+function Scene({ phase, setPhase, agents, consensus }: { phase: Phase; setPhase: (p: Phase) => void; agents: Agent[]; consensus: Vote | null }) {
   const phaseRef = useRef<Phase>(phase);
   const elapsedRef = useRef(0);
   const refs: PhaseRefs = useMemo(() => ({ phase: phaseRef, elapsed: elapsedRef }), []);
-  const layout = useMemo(() => computeLayout(), []);
+  const layout = useMemo(() => computeLayout(agents), [agents]);
   const candidatePositions = useMemo(() => generateCandidatePositions(), []);
   const [hoveredAgent, setHoveredAgent] = useState<number | null>(null);
 
@@ -511,10 +524,6 @@ function Scene({ phase, setPhase }: { phase: Phase; setPhase: (p: Phase) => void
       phaseRef.current = "voting";
       elapsedRef.current = 0;
       setPhase("voting");
-    } else if (phaseRef.current === "voting" && elapsedRef.current >= 3.0) {
-      phaseRef.current = "discussion";
-      elapsedRef.current = 0;
-      setPhase("discussion");
     }
   });
 
@@ -528,7 +537,7 @@ function Scene({ phase, setPhase }: { phase: Phase; setPhase: (p: Phase) => void
       <Stars radius={100} depth={50} count={3000} factor={4} fade speed={0.5} />
       <ambientLight intensity={showDiscussion ? 0.25 : 0.5} />
       <pointLight position={[0, 0, 0]} intensity={showDiscussion ? 3 : 2}
-        color={showDiscussion ? TRUTH_COLOR : "#aaaaaa"} distance={50} decay={2} />
+        color={showDiscussion ? getTruthColor(consensus) : "#aaaaaa"} distance={50} decay={2} />
       <pointLight position={[20, 20, 20]} intensity={0.8} />
       <pointLight position={[-20, -10, -20]} intensity={0.4} />
 
@@ -547,12 +556,13 @@ function Scene({ phase, setPhase }: { phase: Phase; setPhase: (p: Phase) => void
       })}
 
       {/* ── Voting layer (no links, colors appear) ── */}
-      {showVoting && AGENTS.map((agent, i) => (
+      {showVoting && agents.map((agent, i) => (
         <VotingNode
           key={`v-${agent.id}`}
           position={agentPositions[i]}
           agent={agent}
           agentIndex={i}
+          agentCount={agents.length}
           refs={refs}
         />
       ))}
@@ -560,13 +570,17 @@ function Scene({ phase, setPhase }: { phase: Phase; setPhase: (p: Phase) => void
       {/* ── Discussion layer ── */}
       {showDiscussion && (
         <>
-          <TruthNodeAnimated position={truthPos} refs={refs} />
-          <DelayedGroup refs={refs} delay={0.6}>
-            <NodeLabel position={truthPos} text={`TRUTH: ${RESOLUTION}`}
-              color={TRUTH_COLOR} fontSize={0.55} yOffset={2.2} />
-          </DelayedGroup>
+          {consensus && (
+            <>
+              <TruthNodeAnimated position={truthPos} refs={refs} color={getTruthColor(consensus)} />
+              <DelayedGroup refs={refs} delay={0.6}>
+                <NodeLabel position={truthPos} text={`TRUTH: ${consensus}`}
+                  color={getTruthColor(consensus)} fontSize={0.55} yOffset={2.2} />
+              </DelayedGroup>
+            </>
+          )}
 
-          {AGENTS.map((agent, i) => {
+          {agents.map((agent, i) => {
             const pos = agentPositions[i];
             const color = getAgentColor(agent);
             const size = 0.35 + (agent.reputation / 100) * 0.65;
@@ -589,10 +603,12 @@ function Scene({ phase, setPhase }: { phase: Phase; setPhase: (p: Phase) => void
                     color={color} fontSize={0.2} yOffset={size + 0.15} />
                 </DelayedGroup>
 
-                <DelayedGroup refs={refs} delay={0.4 + i * 0.06}>
-                  <Connection start={truthPos} end={pos} color={color}
-                    opacity={isHovered ? 0.8 : 0.5} lineWidth={isHovered ? 2.5 : 1.5} />
-                </DelayedGroup>
+                {consensus && (
+                  <DelayedGroup refs={refs} delay={0.4 + i * 0.06}>
+                    <Connection start={truthPos} end={pos} color={color}
+                      opacity={isHovered ? 0.8 : 0.5} lineWidth={isHovered ? 2.5 : 1.5} />
+                  </DelayedGroup>
+                )}
 
                 {agent.evidence.map((ev, j) => {
                   const evPos = evidencePositions[i][j];
@@ -613,8 +629,8 @@ function Scene({ phase, setPhase }: { phase: Phase; setPhase: (p: Phase) => void
           })}
 
           {DISCUSSIONS.map((disc, i) => {
-            const a1 = AGENTS[disc.from];
-            const a2 = AGENTS[disc.to];
+            const a1 = agents[disc.from];
+            const a2 = agents[disc.to];
             const sameVote = a1.vote === a2.vote;
             const lineColor = sameVote
               ? new THREE.Color(getAgentColor(a1)).lerp(new THREE.Color(getAgentColor(a2)), 0.5).getStyle()
@@ -668,13 +684,13 @@ function Legend() {
   );
 }
 
-function Stats() {
-  const yesCount = AGENTS.filter((a) => a.vote === "YES").length;
-  const noCount = AGENTS.filter((a) => a.vote === "NO").length;
+function Stats({ agents: agentList }: { agents: Agent[] }) {
+  const yesCount = agentList.filter((a) => a.vote === "YES").length;
+  const noCount = agentList.filter((a) => a.vote === "NO").length;
   return (
     <div style={{ ...overlayBase, top: 24, right: 24 }}>
       <div style={{ fontWeight: "bold", fontSize: 14, marginBottom: 8 }}>Resolution Stats</div>
-      <div>Agents: {AGENTS.length}</div>
+      <div>Agents: {agentList.length}</div>
       <div style={{ color: "#00ff88" }}>YES: {yesCount}</div>
       <div style={{ color: "#ff4455" }}>NO: {noCount}</div>
       <div style={{ marginTop: 6, color: TRUTH_COLOR, fontWeight: "bold" }}>Resolution: {RESOLUTION}</div>
@@ -723,15 +739,19 @@ function Header({ phase }: { phase: Phase }) {
        4 = voting (colors appear, no links)
        5 = discussion (full graph)
 
-     Setting stage=2 will auto-play through 2→3→4→5.
-     You can also jump directly to any stage.
+     Setting stage=2 will auto-play through 2→3→4 (selecting→fading→voting).
+     Stage 5 (discussion) must be set explicitly.
+     Pass consensus="YES"|"NO" to show the TRUTH node in discussion.
    ═══════════════════════════════════════════════════════════ */
 
 export interface AgentDiscussionGraphProps {
   stage: 1 | 2 | 3 | 4 | 5;
+  agentNames?: string[];
+  agentVotes?: Record<string, "YES" | "NO">;
+  consensus?: "YES" | "NO" | null;
 }
 
-export default function AgentDiscussionGraph({ stage }: AgentDiscussionGraphProps) {
+export default function AgentDiscussionGraph({ stage, agentNames, agentVotes, consensus: consensusProp }: AgentDiscussionGraphProps) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [mounted, setMounted] = useState(false);
 
@@ -743,6 +763,16 @@ export default function AgentDiscussionGraph({ stage }: AgentDiscussionGraphProp
     if (target) setPhase(target);
   }, [stage]);
 
+  // Build agents list from props, falling back to defaults
+  const agents = useMemo(() => {
+    if (!agentNames || agentNames.length === 0) return AGENTS;
+    return agentNames.map((name, i) => {
+      const base = AGENTS[i % AGENTS.length];
+      const vote: Vote = agentVotes?.[name] ?? base.vote;
+      return { ...base, id: i, name, vote };
+    });
+  }, [agentNames, agentVotes]);
+
   if (!mounted) {
     return <div style={{ width: "100%", height: "100%", background: "#000" }} />;
   }
@@ -750,15 +780,8 @@ export default function AgentDiscussionGraph({ stage }: AgentDiscussionGraphProp
   return (
     <div style={{ width: "100%", height: "100%", background: "#000", position: "relative" }}>
       <Canvas camera={{ position: [0, 15, 30], fov: 60 }}>
-        <Scene phase={phase} setPhase={setPhase} />
+        <Scene phase={phase} setPhase={setPhase} agents={agents} consensus={consensusProp ?? null} />
       </Canvas>
-      <Header phase={phase} />
-      {phase === "discussion" && (
-        <>
-          <Legend />
-          <Stats />
-        </>
-      )}
     </div>
   );
 }

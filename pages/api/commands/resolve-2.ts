@@ -52,7 +52,7 @@ export default async function handler(
     return res.status(405).json({ error: "POST only" });
   }
 
-  const { marketId, committeeSize = 3 } = req.body;
+  const { marketId, committeeSize = 3, committeeNames } = req.body;
   if (!marketId) {
     return res.status(400).json({ error: "marketId is required" });
   }
@@ -74,7 +74,18 @@ export default async function handler(
     return res.status(400).json({ error: "No minted agents found" });
   }
 
-  const committee = selectCommittee(allAgents, committeeSize);
+  // Reuse the same committee from Round 1 if names are provided
+  let committee: typeof allAgents;
+  if (committeeNames && Array.isArray(committeeNames) && committeeNames.length > 0) {
+    committee = committeeNames
+      .map((name: string) => allAgents.find((a) => a.displayName === name))
+      .filter((a): a is (typeof allAgents)[number] => a != null);
+    if (committee.length === 0) {
+      committee = selectCommittee(allAgents, committeeSize);
+    }
+  } else {
+    committee = selectCommittee(allAgents, committeeSize);
+  }
 
   const baseUrl = getBaseUrl(req);
   let walletAddress: string;

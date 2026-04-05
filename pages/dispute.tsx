@@ -3,54 +3,81 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Header from '../components/header/Header';
 import { Roboto, Figtree } from "next/font/google";
+import dynamic from 'next/dynamic';
 import cloud from 'd3-cloud';
+import type { AgentDiscussionGraphProps } from '@/components/AgentDiscussionGraph';
+
+const AgentDiscussionGraph = dynamic<AgentDiscussionGraphProps>(
+    () => import('@/components/AgentDiscussionGraph'),
+    { ssr: false }
+);
 
 const roboto = Roboto({ weight: ['400', '500', '700'], subsets: ['latin'], variable: '--font-roboto' });
 const figtree = Figtree({ weight: ['400', '500', '600', '700'], subsets: ['latin'], variable: '--font-figtree' });
 
-interface WordNode { text: string; size: number; x?: number; y?: number; rotate?: number; font?: string; color?: string; weight?: string | number; forceRotate?: number; }
+interface WordNode {
+    text: string;
+    size: number;
+    x?: number;
+    y?: number;
+    rotate?: number;
+    font?: string;
+    color?: string;
+    weight?: string | number;
+    forceRotate?: number;
+}
 
-const cloudWordsData = [
-    { text: "Analysis", size: 144, color: "#111623", weight: 900, forceRotate: 0 },
-    { text: "Forecast", size: 108, color: "#066a9c", weight: 900 },
-    { text: "Probability", size: 86, color: "#212529", weight: 900 },
-    { text: "Consensus", size: 74, color: "#c2410c", weight: 900, forceRotate: 0 },
-    { text: "Trend", size: 70, color: "#28a745", weight: 900 },
-    { text: "Market", size: 62, color: "#066a9c", weight: 900 },
-    { text: "Prediction", size: 55, color: "#111623", weight: 900 },
-    { text: "Odds", size: 53, color: "#c2410c", weight: 900 },
-    { text: "Sentiment", size: 48, color: "#066a9c", weight: 900 },
-    { text: "yes", size: 43, color: "#28a745", weight: 900 },
-    { text: "volatility", size: 38, color: "#212529", weight: 900 },
-    { text: "Volume", size: 41, color: "#b91c1c", weight: 900 },
-    { text: "Dispute", size: 36, color: "#b91c1c", weight: 900 },
-    { text: "Oracle", size: 31, color: "#066a9c", weight: 900 },
-    { text: "Resolution", size: 31, color: "#6c757d", weight: 800 },
-    { text: "Truth", size: 29, color: "#111623", weight: 900 },
-    { text: "Wisdom", size: 29, color: "#212529", weight: 800 },
-];
-
-function InteractiveWordCloud() {
+function InteractiveWordCloud({ words: wordData }: { words: WordNode[] }) {
     const [words, setWords] = useState<WordNode[]>([]);
-    const width = 1300; const height = 580;
+    const width = 1300;
+    const height = 580;
+
     useEffect(() => {
+        if (wordData.length === 0) return;
         let seed = 42;
-        const seededRand = () => { seed = (seed * 1664525 + 1013904223) & 0xffffffff; return (seed >>> 0) / 0x100000000; };
+        const seededRand = () => {
+            seed = (seed * 1664525 + 1013904223) & 0xffffffff;
+            return (seed >>> 0) / 0x100000000;
+        };
         const origRandom = Math.random;
         Math.random = seededRand;
-        cloud<WordNode>().size([width, height]).words(cloudWordsData.map(d => ({ ...d }))).padding(6)
+
+        cloud<WordNode>()
+            .size([width, height])
+            .words(wordData.map(d => ({ ...d })))
+            .padding(6)
             .rotate((d: WordNode) => d.forceRotate !== undefined ? d.forceRotate : (seededRand() > 0.5 ? 0 : -90))
-            .font("Satoshi").fontSize(d => d.size)
-            .on("end", (computedWords) => { Math.random = origRandom; setWords(computedWords as WordNode[]); }).start();
+            .font("Satoshi")
+            .fontSize(d => d.size)
+            .on("end", (computedWords) => {
+                Math.random = origRandom;
+                setWords(computedWords as WordNode[]);
+            })
+            .start();
+
         return () => { Math.random = origRandom; };
-    }, []);
+    }, [wordData]);
+
     return (
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full min-h-[160px] overflow-visible">
             <g transform={`translate(${width / 2},${height / 2})`}>
                 {words.filter(w => w.x !== undefined && w.y !== undefined).map((w, i) => (
-                    <text key={i} textAnchor="middle" transform={`translate(${w.x},${w.y}) rotate(${w.rotate})`}
-                        style={{ fontSize: `${w.size}px`, fontFamily: `${w.font}, Impact, system-ui, sans-serif`, fill: w.color, fontWeight: 900, letterSpacing: "-0.02em", transition: "all 0.3s ease" }}
-                        className="hover:opacity-70 cursor-pointer drop-shadow-sm">{w.text}</text>
+                    <text
+                        key={i}
+                        textAnchor="middle"
+                        transform={`translate(${w.x},${w.y}) rotate(${w.rotate})`}
+                        style={{
+                            fontSize: `${w.size}px`,
+                            fontFamily: `${w.font}, Impact, system-ui, sans-serif`,
+                            fill: w.color,
+                            fontWeight: 900,
+                            letterSpacing: "-0.02em",
+                            transition: "all 0.3s ease"
+                        }}
+                        className="hover:opacity-70 cursor-pointer drop-shadow-sm"
+                    >
+                        {w.text}
+                    </text>
                 ))}
             </g>
         </svg>
@@ -91,289 +118,7 @@ const STEPS = [
 
 const OUTCOME_INDEX_PERCENT = { yes: 1, no: 99 } as const;
 
-// ── Linkage Graph (SVG) ──────────────────────────────────────
 
-const AGENT_REFERENCES: Record<string, string[]> = {
-    ResearchBot: ["Reuters", "Bloomberg"], CritiqueBot: ["OPEC+", "IEA"],
-    MarketBot: ["CME", "EIA"], DataBot: ["WorldBank", "IMF"],
-    SentinelBot: ["UN", "Sanctions"], OracleAlpha: ["AP News", "Fed"],
-    TruthSeeker: ["FactCheck", "Snopes"], RiskAnalyst: ["VIX", "CDS"],
-    DeepDive: ["ArXiv", "Paper"], ConsensusAI: ["Delphi", "Survey"],
-    FactChecker: ["Reuters", "AFP"], TrendWatcher: ["Trends", "X"],
-    PolicyBot: ["Congress", "EU"], ArbitrageAI: ["Polymarket", "Kalshi"],
-    SignalBot: ["TradingView", "Coinglass"],
-};
-
-const AGENT_REP: Record<string, number> = {
-    ResearchBot: 18, CritiqueBot: 15, MarketBot: 14, DataBot: 12, SentinelBot: 11,
-    OracleAlpha: 16, TruthSeeker: 13, RiskAnalyst: 17, DeepDive: 10, ConsensusAI: 14,
-    FactChecker: 15, TrendWatcher: 11, PolicyBot: 13, ArbitrageAI: 12, SignalBot: 10,
-};
-
-// Generate rich cross-agent discussion links with message snippets
-function buildAgentLinks(agents: string[], votes: Record<string, "YES" | "NO" | null>) {
-    const links: { from: number; to: number; msg: string }[] = [];
-    const snippets = [
-        "I agree with your supply analysis",
-        "Your demand data contradicts mine",
-        "The sanctions evidence you cited is outdated",
-        "Good point on tail risk — I'm revising",
-        "Your OPEC+ reference confirms my thesis",
-        "I challenge your resolution criteria",
-        "The IEA data supports this position",
-        "Counter: Bloomberg shows opposite trend",
-        "Reviewing your futures curve argument",
-        "I concur on the geopolitical factor",
-        "Your confidence is too high given uncertainty",
-        "Strong evidence — shifting my vote",
-        "Disagree: the fundamentals don't support this",
-        "Cross-referencing with my oracle endpoints",
-        "Your source is unverified — flagging",
-    ];
-    // Create many links — every agent talks to 3–5 others
-    let si = 0;
-    for (let i = 0; i < agents.length; i++) {
-        const numLinks = 3 + Math.floor(Math.random() * 3);
-        const targets = [...Array(agents.length).keys()].filter(j => j !== i).sort(() => Math.random() - 0.5).slice(0, numLinks);
-        for (const j of targets) {
-            if (!links.some(l => (l.from === i && l.to === j) || (l.from === j && l.to === i))) {
-                const fromVote = votes[agents[i]];
-                const toVote = votes[agents[j]];
-                const isAgreement = fromVote === toVote;
-                links.push({ from: i, to: j, msg: `${agents[i]} → ${agents[j]}: ${isAgreement ? snippets[si % snippets.length] : snippets[(si + 7) % snippets.length]}` });
-                si++;
-            }
-        }
-    }
-    return links;
-}
-
-function LinkageGraph3D({
-    agents, votes, messages, finalOutcome,
-}: {
-    agents: string[];
-    votes: Record<string, "YES" | "NO" | null>;
-    messages: { agent: string; text: string }[];
-    finalOutcome: "YES" | "NO" | null;
-}) {
-    const [hoveredAgent, setHoveredAgent] = useState<number | null>(null);
-    const [hoveredLink, setHoveredLink] = useState<number | null>(null);
-    const [selectedAgent, setSelectedAgent] = useState<number | null>(null);
-    const [tooltip, setTooltip] = useState<{ x: number; y: number; text: string } | null>(null);
-    const [zoom, setZoom] = useState(1);
-    const [pan, setPan] = useState({ x: 0, y: 0 });
-    const [dragging, setDragging] = useState(false);
-    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-    const svgRef = React.useRef<SVGSVGElement>(null);
-
-    const cx = 400, cy = 340, agentRadius = 200, refRadius = 55;
-
-    const agentPositions = agents.map((name, i) => {
-        const angle = (i / agents.length) * 2 * Math.PI - Math.PI / 2;
-        const rep = AGENT_REP[name] || 12;
-        return { name, x: cx + agentRadius * Math.cos(angle), y: cy + agentRadius * Math.sin(angle), size: 14 + (rep - 10) * 2, vote: votes[name], refs: AGENT_REFERENCES[name] || ["Src A", "Src B"], angle, rep };
-    });
-
-    // Build rich links from discussion messages + generated cross-talk
-    const agentLinks = React.useMemo(() => {
-        const fromMessages: { from: number; to: number; msg: string }[] = [];
-        messages.forEach(msg => {
-            const fromIdx = agents.indexOf(msg.agent);
-            if (fromIdx === -1) return;
-            agents.forEach((other, toIdx) => {
-                if (other !== msg.agent && msg.text.includes(other)) {
-                    fromMessages.push({ from: fromIdx, to: toIdx, msg: `${msg.agent}: "${msg.text.slice(0, 80)}..."` });
-                }
-            });
-        });
-        const generated = buildAgentLinks(agents, votes);
-        // Merge, deduplicate
-        const all = [...fromMessages];
-        for (const g of generated) {
-            if (!all.some(l => (l.from === g.from && l.to === g.to) || (l.from === g.to && l.to === g.from))) {
-                all.push(g);
-            }
-        }
-        return all;
-    }, [agents, messages, votes]);
-
-    const truthColor = finalOutcome === "YES" ? "#34d399" : finalOutcome === "NO" ? "#f87171" : "#a3a3a3";
-
-    // Is this link related to hovered/selected agent?
-    const isLinkVisible = (link: { from: number; to: number }) => {
-        if (hoveredAgent !== null) return link.from === hoveredAgent || link.to === hoveredAgent;
-        if (selectedAgent !== null) return link.from === selectedAgent || link.to === selectedAgent;
-        return false; // hide all by default
-    };
-
-    // Is this ref visible?
-    const isRefVisible = (agentIdx: number) => {
-        return hoveredAgent === agentIdx || selectedAgent === agentIdx;
-    };
-
-    // Zoom with scroll
-    const handleWheel = (e: React.WheelEvent) => {
-        e.preventDefault();
-        const delta = e.deltaY > 0 ? 0.9 : 1.1;
-        setZoom(z => Math.max(0.5, Math.min(4, z * delta)));
-    };
-
-    // Pan with drag
-    const handleMouseDown = (e: React.MouseEvent) => {
-        if (e.button === 0 && !e.shiftKey) {
-            setDragging(true);
-            setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
-        }
-    };
-    const handleMouseMove = (e: React.MouseEvent) => {
-        if (dragging) {
-            setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
-        }
-    };
-    const handleMouseUp = () => setDragging(false);
-
-    // Reset view
-    const resetView = () => { setZoom(1); setPan({ x: 0, y: 0 }); setSelectedAgent(null); };
-
-    // Zoom to agent
-    const zoomToAgent = (idx: number) => {
-        const a = agentPositions[idx];
-        setSelectedAgent(idx === selectedAgent ? null : idx);
-        if (idx !== selectedAgent) {
-            setZoom(2.5);
-            setPan({ x: -(a.x - 400) * 2.5 + 0, y: -(a.y - 340) * 2.5 + 0 });
-        } else {
-            resetView();
-        }
-    };
-
-    const viewBox = `${-pan.x / zoom + 400 - 400 / zoom} ${-pan.y / zoom + 340 - 340 / zoom} ${800 / zoom} ${680 / zoom}`;
-
-    return (
-        <div className="w-full h-full relative" style={{ cursor: dragging ? 'grabbing' : 'grab' }}>
-            <svg ref={svgRef} viewBox={viewBox} className="w-full h-full"
-                onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
-
-                {/* Truth-to-agent lines (always visible, dim) */}
-                {agentPositions.map((a, i) => (
-                    <line key={`truth-${i}`} x1={cx} y1={cy} x2={a.x} y2={a.y} stroke="#374151" strokeWidth="0.8" strokeDasharray="4 4" opacity={hoveredAgent === i || selectedAgent === i ? 0.6 : 0.15} />
-                ))}
-
-                {/* Agent-to-agent links — only visible on hover/select */}
-                {agentLinks.map((link, i) => {
-                    const a = agentPositions[link.from], b = agentPositions[link.to];
-                    const visible = isLinkVisible(link);
-                    if (!visible) return null;
-                    const midX = (a.x + b.x) / 2, midY = (a.y + b.y) / 2;
-                    return (
-                        <g key={`link-${i}`}
-                            onMouseEnter={(e) => { setHoveredLink(i); setTooltip({ x: e.clientX, y: e.clientY, text: link.msg }); }}
-                            onMouseLeave={() => { setHoveredLink(null); setTooltip(null); }}
-                        >
-                            {/* Wider invisible hit area */}
-                            <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="transparent" strokeWidth="12" />
-                            {/* Visible line */}
-                            <line x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-                                stroke={hoveredLink === i ? "#facc15" : "#fbbf24"} strokeWidth={hoveredLink === i ? 2.5 : 1.5}
-                                opacity={hoveredLink === i ? 1 : 0.6} strokeDasharray="6 3"
-                                style={{ transition: 'all 0.2s' }} />
-                            {/* Small dot at midpoint */}
-                            <circle cx={midX} cy={midY} r={hoveredLink === i ? 4 : 2} fill="#fbbf24" opacity={hoveredLink === i ? 1 : 0.5} style={{ transition: 'all 0.2s' }} />
-                        </g>
-                    );
-                })}
-
-                {/* Reference sub-nodes — only visible on hover/select */}
-                {agentPositions.map((a, i) => {
-                    if (!isRefVisible(i)) return null;
-                    const stroke = a.vote === "YES" ? "#34d399" : a.vote === "NO" ? "#f87171" : "#6b7280";
-                    return a.refs.map((ref, ri) => {
-                        const refAngle = a.angle + ((ri - (a.refs.length - 1) / 2) * 0.45);
-                        const rx = a.x + refRadius * Math.cos(refAngle), ry = a.y + refRadius * Math.sin(refAngle);
-                        return (
-                            <g key={`ref-${i}-${ri}`} style={{ animation: 'fadeIn 0.3s ease-out' }}>
-                                <line x1={a.x} y1={a.y} x2={rx} y2={ry} stroke={stroke} strokeWidth="1" opacity="0.5" />
-                                <circle cx={rx} cy={ry} r={7} fill="#1f2937" stroke={stroke} strokeWidth="1.5"
-                                    className="cursor-pointer" onClick={(e) => { e.stopPropagation(); setTooltip({ x: e.clientX, y: e.clientY, text: `Source: ${ref} — cited by ${a.name} (${a.vote})` }); setTimeout(() => setTooltip(null), 3000); }} />
-                                <text x={rx} y={ry + 17} textAnchor="middle" fontSize="7" fill="#d1d5db" fontFamily="monospace" fontWeight="600">{ref}</text>
-                            </g>
-                        );
-                    });
-                })}
-
-                {/* Agent nodes */}
-                {agentPositions.map((a, i) => {
-                    const isActive = hoveredAgent === i || selectedAgent === i;
-                    const fill = a.vote === "YES" ? "#065f46" : a.vote === "NO" ? "#991b1b" : "#374151";
-                    const stroke = a.vote === "YES" ? "#34d399" : a.vote === "NO" ? "#f87171" : "#6b7280";
-                    const glowR = isActive ? a.size + 8 : 0;
-                    return (
-                        <g key={`agent-${i}`}
-                            onMouseEnter={() => setHoveredAgent(i)}
-                            onMouseLeave={() => { if (selectedAgent !== i) setHoveredAgent(null); }}
-                            onClick={(e) => { e.stopPropagation(); zoomToAgent(i); }}
-                            className="cursor-pointer"
-                        >
-                            {/* Glow ring on hover */}
-                            {isActive && <circle cx={a.x} cy={a.y} r={glowR} fill="transparent" stroke={stroke} strokeWidth="1" opacity="0.3" style={{ animation: 'fadeIn 0.2s' }} />}
-                            {/* Main circle */}
-                            <circle cx={a.x} cy={a.y} r={isActive ? a.size + 3 : a.size} fill={fill} stroke={stroke}
-                                strokeWidth={isActive ? 3.5 : 2} style={{ transition: 'all 0.2s' }} />
-                            {/* Name */}
-                            <text x={a.x} y={a.y - 3} textAnchor="middle" fontSize={isActive ? 9 : 8} fill="white" fontWeight="700" fontFamily="monospace">
-                                {a.name.length > 10 ? a.name.slice(0, 9) + '..' : a.name}
-                            </text>
-                            {/* Vote */}
-                            <text x={a.x} y={a.y + 8} textAnchor="middle" fontSize="7" fill={stroke} fontWeight="600" fontFamily="monospace">
-                                {a.vote || '?'}
-                            </text>
-                            {/* Rep badge */}
-                            {isActive && (
-                                <text x={a.x} y={a.y + a.size + 14} textAnchor="middle" fontSize="7" fill="#9ca3af" fontFamily="monospace">
-                                    REP: {a.rep}
-                                </text>
-                            )}
-                        </g>
-                    );
-                })}
-
-                {/* Center: TRUTH node */}
-                <g className="cursor-pointer" onClick={resetView}>
-                    <circle cx={cx} cy={cy} r={36} fill="#111827" stroke={truthColor} strokeWidth="3" />
-                    <circle cx={cx} cy={cy} r={28} fill="transparent" stroke={truthColor} strokeWidth="1" opacity="0.3" />
-                    <text x={cx} y={cy - 4} textAnchor="middle" fontSize="11" fill="white" fontWeight="900">TRUTH</text>
-                    <text x={cx} y={cy + 10} textAnchor="middle" fontSize="8" fill={truthColor} fontWeight="700" fontFamily="monospace">{finalOutcome || 'PENDING'}</text>
-                </g>
-
-                {/* Legend */}
-                <g transform={`translate(${-pan.x / zoom + 400 - 400 / zoom + 10}, ${-pan.y / zoom + 340 - 340 / zoom + 10})`}>
-                    <rect x={0} y={0} width={130} height={90} rx={6} fill="#111827" opacity="0.8" />
-                    <circle cx={12} cy={14} r={5} fill="#065f46" stroke="#34d399" strokeWidth="1" /><text x={24} y={17} fontSize="8" fill="#9ca3af" fontFamily="monospace">YES vote</text>
-                    <circle cx={12} cy={30} r={5} fill="#991b1b" stroke="#f87171" strokeWidth="1" /><text x={24} y={33} fontSize="8" fill="#9ca3af" fontFamily="monospace">NO vote</text>
-                    <line x1={6} y1={46} x2={18} y2={46} stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="3 2" /><text x={24} y={49} fontSize="8" fill="#9ca3af" fontFamily="monospace">Discussion</text>
-                    <circle cx={12} cy={62} r={4} fill="#1f2937" stroke="#6b7280" strokeWidth="1" /><text x={24} y={65} fontSize="8" fill="#9ca3af" fontFamily="monospace">Reference</text>
-                    <text x={8} y={80} fontSize="7" fill="#6b7280" fontFamily="monospace">Hover node | Scroll zoom</text>
-                </g>
-            </svg>
-
-            {/* Floating tooltip */}
-            {tooltip && (
-                <div className="fixed z-[10000] pointer-events-none" style={{ left: tooltip.x + 12, top: tooltip.y - 10 }}>
-                    <div className="bg-gray-900 text-white text-[11px] font-medium px-3 py-2 rounded-lg shadow-xl border border-gray-700 max-w-[300px] leading-relaxed">
-                        {tooltip.text}
-                    </div>
-                </div>
-            )}
-
-            {/* Zoom controls */}
-            <div className="absolute bottom-3 right-3 flex gap-1.5">
-                <button onClick={() => setZoom(z => Math.min(4, z * 1.3))} className="w-7 h-7 rounded bg-gray-800/80 text-white text-sm font-bold hover:bg-gray-700 border border-gray-600">+</button>
-                <button onClick={() => setZoom(z => Math.max(0.5, z * 0.7))} className="w-7 h-7 rounded bg-gray-800/80 text-white text-sm font-bold hover:bg-gray-700 border border-gray-600">-</button>
-                <button onClick={resetView} className="h-7 px-2 rounded bg-gray-800/80 text-white text-[10px] font-bold hover:bg-gray-700 border border-gray-600">Reset</button>
-            </div>
-        </div>
-    );
-}
 
 export default function DisputePage() {
     const router = useRouter();
@@ -390,12 +135,41 @@ export default function DisputePage() {
     const [showDiscussion, setShowDiscussion] = useState(false);
     const [discussionMessages, setDiscussionMessages] = useState<{ agent: string; text: string }[]>([]);
     const [round1Result, setRound1Result] = useState<{ yes: number; no: number } | null>(null);
+    const [finalConsensus, setFinalConsensus] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [marketQuestion, setMarketQuestion] = useState("What will WTI Crude Oil (WTI) hit in April 2026?");
 
     // Store raw API responses for the graph
     const [r1Data, setR1Data] = useState<Record<string, unknown> | null>(null);
+    const [graphEnlarged, setGraphEnlarged] = useState(false);
     const [r2Data, setR2Data] = useState<Record<string, unknown> | null>(null);
+
+    // Word cloud + references (generated via OpenAI)
+    const [wordCloudData, setWordCloudData] = useState<WordNode[]>([]);
+    const [references, setReferences] = useState<{ id: number; title: string; url: string; source: string }[]>([]);
+    const [insightsLoading, setInsightsLoading] = useState(false);
+
+    // Fetch word cloud + references from OpenAI based on discussion messages
+    const fetchInsights = useCallback(async (msgs: { agent: string; text: string }[], question: string) => {
+        if (msgs.length === 0) return;
+        setInsightsLoading(true);
+        try {
+            const res = await fetch("/api/commands/generate-insights", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ messages: msgs, question }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setWordCloudData(data.wordCloud || []);
+                setReferences(data.references || []);
+            }
+        } catch (err) {
+            console.error("Failed to fetch insights:", err);
+        } finally {
+            setInsightsLoading(false);
+        }
+    }, []);
 
     // Animate commits appearing one by one
     const animateAgents = useCallback((agents: string[], delay: number) => {
@@ -476,6 +250,7 @@ export default function DisputePage() {
                 setRound1Result({ yes, no });
 
                 if (data.resolved) {
+                    setFinalConsensus(data.consensus);
                     setDisputeStep(7);
                 } else {
                     // Extract discussion messages from resolve-1 reasoning
@@ -486,6 +261,7 @@ export default function DisputePage() {
                         }
                     }
                     setDiscussionMessages(msgs);
+                    fetchInsights(msgs, marketQuestion);
                     setDisputeStep(4);
                 }
                 setLoading(false);
@@ -511,7 +287,7 @@ export default function DisputePage() {
             const res = await fetch("/api/commands/resolve-2", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ marketId, committeeSize: 5 }),
+                body: JSON.stringify({ marketId, committeeSize: 5, committeeNames: selectedAgents }),
             });
             const data = await res.json();
             setR2Data(data);
@@ -527,6 +303,7 @@ export default function DisputePage() {
                 for (const r of disc2.responses) msgs.push({ agent: r.agent, text: (r.response || "") });
             }
             setDiscussionMessages(msgs);
+            fetchInsights(msgs, marketQuestion);
             // Auto-open discussion modal so user sees chat in real-time
             if (msgs.length > 0) setShowDiscussion(true);
 
@@ -549,6 +326,7 @@ export default function DisputePage() {
 
             animateReveals(agents, votes, () => {
                 if (data.resolved) {
+                    setFinalConsensus(data.consensus);
                     setDisputeStep(7);
                 }
                 setLoading(false);
@@ -568,6 +346,17 @@ export default function DisputePage() {
     const isDiscussionPhase = disputeStep === 4;
 
     const trackerStep = disputeStep === 0 ? 0 : disputeStep <= 3 ? 2 : disputeStep === 4 ? 3 : disputeStep <= 6 ? 4 : 5;
+
+    // Map disputeStep → AgentDiscussionGraph stage (1-5)
+    // Phase 1 (resolve-1): stage 0=selection(2), stage 1=R1 votes(4)
+    // Phase 2 (resolve-2): stage 3=discussion(5), stage 4=decision(5+consensus)
+    const graphStage: 1 | 2 | 3 | 4 | 5 =
+        disputeStep === 0 ? 1 :            // idle
+        disputeStep === 2 ? 2 :            // R1 commit → selection animation (auto → fading → voting)
+        disputeStep === 3 ? 4 :            // R1 reveal → voting colors
+        disputeStep === 4 ? 4 :            // discussion text → stays at voting
+        disputeStep >= 5 ? 5 :             // R2 → discussion (truth node appears when consensus set)
+        1;
 
     // Determine revealed vote counts for right panel
     const revealedYes = Object.values(agentVotes).filter(v => v === "YES").length;
@@ -605,11 +394,11 @@ export default function DisputePage() {
                     <div className="flex flex-col gap-6">
                         {/* Outcome hero */}
                         <div className="bg-white rounded-3xl p-8 flex flex-col items-center justify-center text-center border border-gray-200 shadow-sm h-[200px]">
-                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-lg transition-all duration-1000 ${disputeStep >= 7 ? 'bg-emerald-500 shadow-emerald-200' : 'bg-[#EF5A5A] shadow-red-200'}`}>
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-lg transition-all duration-1000 ${disputeStep >= 7 && finalConsensus === 'YES' ? 'bg-emerald-500 shadow-emerald-200' : 'bg-[#EF5A5A] shadow-red-200'}`}>
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                             </div>
-                            <h2 className={`font-['Satoshi'] font-bold text-2xl mb-1 tracking-wide transition-colors duration-1000 ${disputeStep >= 7 ? 'text-emerald-500' : 'text-[#EF5A5A]'}`}>
-                                Outcome: {disputeStep >= 7 ? 'Yes' : 'No'}
+                            <h2 className={`font-['Satoshi'] font-bold text-2xl mb-1 tracking-wide transition-colors duration-1000 ${disputeStep >= 7 && finalConsensus === 'YES' ? 'text-emerald-500' : 'text-[#EF5A5A]'}`}>
+                                Outcome: {disputeStep >= 7 ? (finalConsensus === 'YES' ? 'Yes' : 'No') : 'No'}
                             </h2>
                             <p className="text-gray-500 font-medium text-sm">March 15</p>
                         </div>
@@ -619,14 +408,14 @@ export default function DisputePage() {
                             <div className="flex items-center justify-between gap-3 mb-3">
                                 <span className="font-['Satoshi'] font-bold text-gray-900 text-sm">Outcome</span>
                                 <span className="text-xs font-semibold">
-                                    <span className="text-emerald-500">{disputeStep >= 7 ? '80' : OUTCOME_INDEX_PERCENT.yes}% yes</span>
+                                    <span className="text-emerald-500">{disputeStep >= 7 ? yesPercent : OUTCOME_INDEX_PERCENT.yes}% yes</span>
                                     <span className="text-gray-400"> · </span>
-                                    <span className="text-red-500">{disputeStep >= 7 ? '20' : OUTCOME_INDEX_PERCENT.no}% no</span>
+                                    <span className="text-red-500">{disputeStep >= 7 ? (100 - yesPercent) : OUTCOME_INDEX_PERCENT.no}% no</span>
                                 </span>
                             </div>
                             <div className="relative h-8 w-full rounded-full border border-gray-200 overflow-hidden bg-gray-50">
-                                <div className="absolute inset-y-0 left-0 bg-emerald-400 transition-all duration-1000" style={{ width: `${disputeStep >= 7 ? 80 : OUTCOME_INDEX_PERCENT.yes}%` }} />
-                                <div className="absolute inset-y-0 bg-red-400/92 transition-all duration-1000" style={{ left: `${disputeStep >= 7 ? 80 : OUTCOME_INDEX_PERCENT.yes}%`, right: 0 }} />
+                                <div className="absolute inset-y-0 left-0 bg-emerald-400 transition-all duration-1000" style={{ width: `${disputeStep >= 7 ? yesPercent : OUTCOME_INDEX_PERCENT.yes}%` }} />
+                                <div className="absolute inset-y-0 bg-red-400/92 transition-all duration-1000" style={{ left: `${disputeStep >= 7 ? yesPercent : OUTCOME_INDEX_PERCENT.yes}%`, right: 0 }} />
                             </div>
                         </div>
 
@@ -789,17 +578,14 @@ export default function DisputePage() {
                                     </button>
                                 )}
 
-                                {/* Linkage Graph — below commitment logs */}
-                                {(isRevealPhase || disputeStep === 4 || disputeStep === 7) && selectedAgents.length > 0 && (
-                                    <div className="mt-4 bg-gray-950 rounded-2xl overflow-hidden border border-gray-800 shadow-sm" style={{ height: 400 }}>
-                                        <LinkageGraph3D
-                                            agents={selectedAgents}
-                                            votes={agentVotes}
-                                            messages={discussionMessages}
-                                            finalOutcome={disputeStep >= 7 ? ((r2Data as Record<string, unknown>)?.consensus as "YES" | "NO") || ((r1Data as Record<string, unknown>)?.consensus as "YES" | "NO") || null : null}
-                                        />
-                                    </div>
-                                )}
+                                {/* 3D Linkage Graph — always visible, click to enlarge */}
+                                <div
+                                    className="mt-4 rounded-2xl overflow-hidden border border-gray-800 shadow-sm cursor-pointer hover:border-gray-600 transition-all"
+                                    style={{ height: 400 }}
+                                    onClick={() => setGraphEnlarged(true)}
+                                >
+                                    <AgentDiscussionGraph stage={graphStage} agentNames={selectedAgents} agentVotes={agentVotes as Record<string, "YES" | "NO">} consensus={finalConsensus as "YES" | "NO" | null} />
+                                </div>
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center gap-6 my-auto relative z-10">
@@ -832,47 +618,63 @@ export default function DisputePage() {
                                     </div>
                                     <div className="flex-1 bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex flex-col justify-center">
                                         <div className="flex items-center gap-2 mb-3">
-                                            <div className={`w-5 h-5 rounded-full text-white flex items-center justify-center ${currentRound === 2 && allVotesRevealed ? 'bg-emerald-500' : 'bg-red-500'}`}>
+                                            <div className={`w-5 h-5 rounded-full text-white flex items-center justify-center ${allVotesRevealed && finalConsensus ? 'bg-emerald-500' : allVotesRevealed ? 'bg-red-500' : 'bg-gray-400'}`}>
                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /></svg>
                                             </div>
                                             <span className="font-bold text-gray-900 text-sm">
-                                                {currentRound === 2 && allVotesRevealed ? 'Consensus Reached' : allVotesRevealed ? 'No Consensus' : 'Revealing...'}
+                                                {allVotesRevealed && finalConsensus ? 'Consensus Reached' : allVotesRevealed ? 'No Consensus' : 'Revealing...'}
                                             </span>
                                         </div>
                                         <p className="text-xs text-gray-500">
                                             {allVotesRevealed
-                                                ? currentRound === 2
-                                                    ? `Round 2: ${revealedYes}/10 voted YES (${yesPercent}%). Threshold met.`
-                                                    : `Round 1: ${revealedYes} YES / ${revealedNo} NO (${yesPercent}%). Need 70% for consensus.`
+                                                ? `Round ${currentRound}: ${revealedYes}/${selectedAgents.length} voted YES (${yesPercent}%).${finalConsensus ? ' Threshold met.' : ' Need 70% for consensus.'}`
                                                 : `${revealedYes + revealedNo}/${selectedAgents.length} votes revealed...`
                                             }
                                         </p>
                                     </div>
                                 </div>
 
-                                {/* Word cloud + references only in round 2 */}
-                                {currentRound === 2 && allVotesRevealed && (
-                                    <div className="flex flex-col gap-4">
-                                        <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-                                            <h5 className="font-bold text-gray-900 mb-2 text-[15px] font-['Satoshi']">References</h5>
-                                            <div className="w-full h-px bg-gray-200 mb-2" />
-                                            <div className="flex flex-col gap-1.5">
-                                                {['OPEC+ Monthly Report — production quotas', 'IEA Oil Market Report Q1 2026', 'Reuters — Middle East supply disruption', 'Bloomberg Energy — WTI futures curve'].map((ref, i) => (
-                                                    <div key={i} className="text-sm text-gray-600 hover:text-blue-600 cursor-pointer flex gap-1.5 items-center">
-                                                        <span className="text-gray-400 font-mono text-xs">{`<${i + 1}>`}</span><span>{ref}</span>
-                                                    </div>
+                                {/* References */}
+                                {(references.length > 0 || insightsLoading) && (
+                                    <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex flex-col max-h-[280px]">
+                                        <h5 className="font-bold text-gray-900 mb-2 text-[15px] font-['Satoshi'] tracking-wide">References</h5>
+                                        <div className="w-full h-px bg-gray-200 mb-3" />
+                                        {insightsLoading ? (
+                                            <div className="flex items-center gap-2 text-sm text-gray-400 py-4 justify-center">
+                                                <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
+                                                Generating references...
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col gap-2 overflow-y-auto pr-2 pb-2">
+                                                {references.map((ref) => (
+                                                    <a key={ref.id} href={ref.url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-gray-600 hover:text-blue-600 cursor-pointer flex gap-1.5 items-start">
+                                                        <span className="text-gray-400 font-mono text-xs shrink-0">{`<${ref.id}>`}</span>
+                                                        <span className="leading-snug">{ref.title} <span className="text-gray-400">— {ref.source}</span></span>
+                                                    </a>
                                                 ))}
                                             </div>
-                                        </div>
-                                        <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-                                            <h5 className="font-bold text-gray-900 mb-2 text-[15px] font-['Satoshi']">Word Cloud</h5>
-                                            <div className="w-full h-px bg-gray-200 mb-2" />
-                                            <div className="flex items-center justify-center p-2 rounded-xl bg-gray-50/50 min-h-[160px] overflow-hidden">
-                                                <InteractiveWordCloud />
-                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Word Cloud */}
+                                {(wordCloudData.length > 0 || insightsLoading) && (
+                                    <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex flex-col">
+                                        <h5 className="font-bold text-gray-900 mb-2 text-[15px] font-['Satoshi'] tracking-wide">Word Cloud</h5>
+                                        <div className="w-full h-px bg-gray-200 mb-3" />
+                                        <div className="flex-1 flex flex-wrap items-center justify-center p-2 rounded-xl bg-gray-50/50 min-h-[160px] w-full overflow-hidden relative">
+                                            {insightsLoading ? (
+                                                <div className="flex items-center gap-2 text-sm text-gray-400">
+                                                    <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
+                                                    Generating word cloud...
+                                                </div>
+                                            ) : (
+                                                <InteractiveWordCloud words={wordCloudData} />
+                                            )}
                                         </div>
                                     </div>
                                 )}
+
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center gap-6 my-auto relative z-10">
@@ -905,10 +707,9 @@ export default function DisputePage() {
                             </button>
                         </div>
 
-                        {/* Body: chat + graph side by side */}
+                        {/* Body: chat */}
                         <div className="flex-1 flex overflow-hidden">
-                            {/* Left: Chat */}
-                            <div className="w-1/2 border-r border-gray-100 flex flex-col">
+                            <div className="w-full flex flex-col">
                                 <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-4">
                                     <div className="w-full text-center my-2">
                                         <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full uppercase tracking-wider">Post Round 1 Discussion</span>
@@ -917,7 +718,7 @@ export default function DisputePage() {
                                         const vote = agentVotes[msg.agent];
                                         const isYes = vote === "YES";
                                         return (
-                                            <div key={i} className="flex flex-col gap-1 w-full max-w-[95%]">
+                                            <div key={i} className="flex flex-col gap-1 w-full max-w-[700px] mx-auto">
                                                 <span className="text-[9px] font-bold text-gray-400 uppercase ml-[52px]">{msg.agent}</span>
                                                 <div className="flex gap-3 items-start">
                                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-[11px] shrink-0 border ${isYes ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-red-100 text-red-700 border-red-200'}`}>
@@ -936,18 +737,20 @@ export default function DisputePage() {
                                     Discussion finalized. Votes locked by protocol.
                                 </div>
                             </div>
-
-                            {/* Right: Linkage Graph */}
-                            <div className="w-1/2 bg-gray-950 flex items-center justify-center overflow-hidden relative">
-                                <LinkageGraph3D
-                                    agents={selectedAgents}
-                                    votes={agentVotes}
-                                    messages={discussionMessages}
-                                    finalOutcome={disputeStep >= 7 ? "YES" : null}
-                                />
-                            </div>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Enlarged Graph Modal */}
+            {graphEnlarged && (
+                <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center" onClick={() => setGraphEnlarged(false)}>
+                    <div className="w-[95vw] h-[90vh] rounded-2xl overflow-hidden border border-gray-700" onClick={e => e.stopPropagation()}>
+                        <AgentDiscussionGraph stage={graphStage} agentNames={selectedAgents} agentVotes={agentVotes as Record<string, "YES" | "NO">} consensus={finalConsensus as "YES" | "NO" | null} />
+                    </div>
+                    <button onClick={() => setGraphEnlarged(false)} className="absolute top-6 right-6 w-10 h-10 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center text-white hover:bg-gray-700 transition-colors">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                    </button>
                 </div>
             )}
 
