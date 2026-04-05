@@ -4,32 +4,70 @@ interface DisputeResolutionProps {
   marketId: string;
 }
 
+// Set NEXT_PUBLIC_NGROK_URL in .env for demo (e.g. https://abc123.ngrok-free.app)
+// Falls back to same-origin (relative URL) if not set
+const API_BASE = process.env.NEXT_PUBLIC_NGROK_URL || "";
+
 export default function DisputeResolution({ marketId }: DisputeResolutionProps) {
   const [disputeStep, setDisputeStep] = useState(1);
   const [animating, setAnimating] = useState(false);
+  const [phase1Result, setPhase1Result] = useState<string | null>(null);
+  const [phase2Result, setPhase2Result] = useState<string | null>(null);
+  const [finalOutcome, setFinalOutcome] = useState<string | null>(null);
+  const [bondSlashed, setBondSlashed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const startDispute = useCallback(async () => {
     setAnimating(true);
+    setError(null);
     setDisputeStep(2);
-    let step = 2;
 
-    // Trigger backend dispute orchestration
     try {
-      await fetch(`https://localhost:3001/dispute/${marketId}`, {
+      // Phase 1: Research + first commit-reveal vote
+      const res1 = await fetch(`${API_BASE}/api/commands/resolve-1`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ marketId, committeeSize: 5 }),
       });
-    } catch {
-      // orchestrator may not be running
-    }
+      const data1 = await res1.json();
 
-    const interval = setInterval(() => {
-      step++;
-      setDisputeStep(step);
-      if (step >= 6) {
-        clearInterval(interval);
+      if (data1.error) { setError(data1.error); setAnimating(false); return; }
+
+      setDisputeStep(3);
+      const r1 = data1.resolved ? data1.consensus : "Unsure";
+      setPhase1Result(r1);
+
+      if (data1.resolved) {
+        setFinalOutcome(data1.consensus);
+        setBondSlashed(data1.consensus === "YES");
+        setDisputeStep(6);
         setAnimating(false);
+        return;
       }
-    }, 5000);
+
+      // Phase 2: Discussion + second commit-reveal vote
+      setDisputeStep(4);
+      const res2 = await fetch(`${API_BASE}/api/commands/resolve-2`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ marketId, committeeSize: 5 }),
+      });
+      const data2 = await res2.json();
+
+      if (data2.error) { setError(data2.error); setAnimating(false); return; }
+
+      setDisputeStep(5);
+      const r2 = data2.resolved ? data2.consensus : "Unsure";
+      setPhase2Result(r2);
+
+      setFinalOutcome(data2.resolved ? data2.consensus : "Unresolved");
+      setBondSlashed(data2.resolved && data2.consensus === "YES");
+      setDisputeStep(6);
+      setAnimating(false);
+    } catch {
+      setError(`Cannot reach server. Make sure ngrok is running.`);
+      setAnimating(false);
+    }
   }, [marketId]);
 
   const gavelIcon = (
@@ -50,9 +88,9 @@ export default function DisputeResolution({ marketId }: DisputeResolutionProps) 
   const allSteps = [
     { label: "Outcome proposed: Yes", sub: null, icon: null },
     { label: "Dispute window", sub: "Bond: 750 USDC", icon: gavelIcon },
-    { label: "First round voting", sub: "Result: Unsure", icon: null },
-    { label: "Discussion", sub: "3 agents debated", icon: chatIcon },
-    { label: "Second round voting", sub: "Result: Yes", icon: null },
+    { label: "First round voting", sub: phase1Result ? `Result: ${phase1Result}` : null, icon: null },
+    { label: "Discussion", sub: disputeStep > 4 ? "Agents debated" : null, icon: chatIcon },
+    { label: "Second round voting", sub: phase2Result ? `Result: ${phase2Result}` : null, icon: null },
     { label: "Final outcome", sub: null, icon: null },
   ];
 
@@ -147,17 +185,26 @@ export default function DisputeResolution({ marketId }: DisputeResolutionProps) 
         </div>
       )}
 
+      {/* Error */}
+      {error && (
+        <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-3 dark:bg-red-900/20 dark:border-red-800">
+          <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
+        </div>
+      )}
+
       {/* Progress / result */}
-      {disputeStep >= 2 && (
+      {disputeStep >= 2 && !error && (
         <div className="mt-5 pt-4 border-t border-zinc-200 dark:border-zinc-700">
-          {disputeStep < 6 && (
+          {disputeStep < 6 && animating && (
             <div className="flex items-start gap-2">
               <div className="w-3.5 h-3.5 mt-0.5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin shrink-0" />
               <div>
                 <span className="text-xs text-blue-500 font-semibold">Processing dispute...</span>
                 <p className="text-xs text-zinc-500 mt-0.5">
-                  {disputeStep === 2 && "Bond of 750 USDC locked."}
-                  {disputeStep >= 3 && disputeStep < 6 && "Bond cannot be returned after final result."}
+                  {disputeStep === 2 && "Bond locked. Running Phase 1 research..."}
+                  {disputeStep === 3 && "First vote complete. Checking consensus..."}
+                  {disputeStep === 4 && "Agents are discussing and debating..."}
+                  {disputeStep === 5 && "Second vote complete. Finalizing..."}
                 </p>
               </div>
             </div>
@@ -172,15 +219,24 @@ export default function DisputeResolution({ marketId }: DisputeResolutionProps) 
                   </svg>
                 </div>
                 <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
-                  Market resolved: <span className="text-blue-500">Yes</span>
+                  Market resolved: <span className="text-blue-500">{finalOutcome}</span>
                 </span>
               </div>
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 dark:bg-red-900/20 dark:border-red-800">
-                <div className="text-xs font-bold text-red-700 dark:text-red-400 mb-0.5">Bond slashed</div>
-                <p className="text-xs text-red-600 dark:text-red-400">
-                  Result didn&apos;t change. Your bond of <span className="font-bold">750 USDC</span> has been slashed.
-                </p>
-              </div>
+              {bondSlashed ? (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 dark:bg-red-900/20 dark:border-red-800">
+                  <div className="text-xs font-bold text-red-700 dark:text-red-400 mb-0.5">Bond slashed</div>
+                  <p className="text-xs text-red-600 dark:text-red-400">
+                    Result didn&apos;t change. Your bond of <span className="font-bold">750 USDC</span> has been slashed.
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 dark:bg-green-900/20 dark:border-green-800">
+                  <div className="text-xs font-bold text-green-700 dark:text-green-400 mb-0.5">Bond returned</div>
+                  <p className="text-xs text-green-600 dark:text-green-400">
+                    Dispute successful! Your bond of <span className="font-bold">750 USDC</span> has been returned.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
