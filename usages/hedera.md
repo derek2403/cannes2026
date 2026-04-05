@@ -14,3 +14,8 @@
 - Hedera account creation — `pages/api/hedera/create-account.ts` — https://github.com/derek2403/cannes2026/blob/main/pages/api/hedera/create-account.ts
 - HTS token creation (YES/NO outcome tokens) — `pages/api/hedera/create-token.ts` — https://github.com/derek2403/cannes2026/blob/main/pages/api/hedera/create-token.ts
 - Scheduled transactions — `pages/api/hedera/schedule-transaction.ts` — https://github.com/derek2403/cannes2026/blob/main/pages/api/hedera/schedule-transaction.ts
+- x402 subscription via Hedera ScheduleCreateTransaction — `pages/api/x402/subscribe.ts` — https://github.com/derek2403/cannes2026/blob/main/pages/api/x402/subscribe.ts
+- x402 news feed (reads Hedera state, auto-creates scheduled txs) — `pages/api/x402/news.ts` — https://github.com/derek2403/cannes2026/blob/main/pages/api/x402/news.ts
+- x402 subscription checker — `pages/api/x402/check-sub.ts` — https://github.com/derek2403/cannes2026/blob/main/pages/api/x402/check-sub.ts
+- x402 payment middleware (paywall + subscription bypass) — `middleware.ts` — https://github.com/derek2403/cannes2026/blob/main/middleware.ts
+- x402 demo page — `pages/402.tsx` — https://github.com/derek2403/cannes2026/blob/main/pages/402.tsx
