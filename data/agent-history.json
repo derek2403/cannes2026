@@ -2137,6 +2137,296 @@
       "marketId": "mkt-1775349109120-j25j",
       "marketQuestion": "Will the European Union finalize and implement its AI Act by October 5, 2026?",
       "role": "participant"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:18:56.897Z",
+      "agentName": "EtaForecaster",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "phase": "phase-1-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:18:56.902Z",
+      "agentName": "ZetaSentinel",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "NO",
+      "phase": "phase-1-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:18:56.905Z",
+      "agentName": "IotaConsensus",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "phase": "phase-1-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:18:56.908Z",
+      "agentName": "ThetaRisk",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "NO",
+      "phase": "phase-1-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:18:56.912Z",
+      "agentName": "AlphaOracle",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "phase": "phase-1-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:19:45.875Z",
+      "agentName": "EtaForecaster",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "phase": "phase-2-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:19:45.878Z",
+      "agentName": "ZetaSentinel",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "phase": "phase-2-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:19:45.884Z",
+      "agentName": "IotaConsensus",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "phase": "phase-2-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:19:45.888Z",
+      "agentName": "ThetaRisk",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "phase": "phase-2-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:19:45.895Z",
+      "agentName": "AlphaOracle",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "phase": "phase-2-reveal"
+    },
+    {
+      "type": "reputation_change",
+      "timestamp": "2026-04-05T02:19:45.900Z",
+      "agentName": "EtaForecaster",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "outcome": "YES",
+      "correct": true,
+      "repChange": 10
+    },
+    {
+      "type": "reputation_change",
+      "timestamp": "2026-04-05T02:19:45.903Z",
+      "agentName": "ZetaSentinel",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "outcome": "YES",
+      "correct": true,
+      "repChange": 10
+    },
+    {
+      "type": "reputation_change",
+      "timestamp": "2026-04-05T02:19:45.906Z",
+      "agentName": "IotaConsensus",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "outcome": "YES",
+      "correct": true,
+      "repChange": 10
+    },
+    {
+      "type": "reputation_change",
+      "timestamp": "2026-04-05T02:19:45.909Z",
+      "agentName": "ThetaRisk",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "outcome": "YES",
+      "correct": true,
+      "repChange": 10
+    },
+    {
+      "type": "reputation_change",
+      "timestamp": "2026-04-05T02:19:45.911Z",
+      "agentName": "AlphaOracle",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "outcome": "YES",
+      "correct": true,
+      "repChange": 10
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:30:22.991Z",
+      "agentName": "IotaConsensus",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "phase": "phase-1-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:30:22.993Z",
+      "agentName": "BetaAnalyst",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "NO",
+      "phase": "phase-1-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:30:22.997Z",
+      "agentName": "KappaSignal",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "phase": "phase-1-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:30:23.000Z",
+      "agentName": "EtaForecaster",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "NO",
+      "phase": "phase-1-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:30:23.004Z",
+      "agentName": "DeltaCritic",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "phase": "phase-1-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:31:03.290Z",
+      "agentName": "IotaConsensus",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "phase": "phase-2-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:31:03.295Z",
+      "agentName": "BetaAnalyst",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "phase": "phase-2-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:31:03.300Z",
+      "agentName": "KappaSignal",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "phase": "phase-2-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:31:03.307Z",
+      "agentName": "EtaForecaster",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "phase": "phase-2-reveal"
+    },
+    {
+      "type": "dispute_vote",
+      "timestamp": "2026-04-05T02:31:03.313Z",
+      "agentName": "DeltaCritic",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "phase": "phase-2-reveal"
+    },
+    {
+      "type": "reputation_change",
+      "timestamp": "2026-04-05T02:31:03.329Z",
+      "agentName": "IotaConsensus",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "outcome": "YES",
+      "correct": true,
+      "repChange": 10
+    },
+    {
+      "type": "reputation_change",
+      "timestamp": "2026-04-05T02:31:03.341Z",
+      "agentName": "BetaAnalyst",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "outcome": "YES",
+      "correct": true,
+      "repChange": 10
+    },
+    {
+      "type": "reputation_change",
+      "timestamp": "2026-04-05T02:31:03.357Z",
+      "agentName": "KappaSignal",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "outcome": "YES",
+      "correct": true,
+      "repChange": 10
+    },
+    {
+      "type": "reputation_change",
+      "timestamp": "2026-04-05T02:31:03.366Z",
+      "agentName": "EtaForecaster",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "outcome": "YES",
+      "correct": true,
+      "repChange": 10
+    },
+    {
+      "type": "reputation_change",
+      "timestamp": "2026-04-05T02:31:03.369Z",
+      "agentName": "DeltaCritic",
+      "marketId": "mkt-1775279117077-pv7i",
+      "marketQuestion": "Will the European Union implement a carbon border adjustment mechanism by April 30, 2026?",
+      "vote": "YES",
+      "outcome": "YES",
+      "correct": true,
+      "repChange": 10
     }
   ]
 }

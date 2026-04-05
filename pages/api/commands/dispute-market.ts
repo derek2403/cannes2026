@@ -11,6 +11,42 @@
  */
 import type { NextApiRequest, NextApiResponse } from "next";
 
+interface RepUpdate {
+  agent: string;
+  vote: string;
+  correct: boolean;
+  change: number;
+  newRep: number;
+}
+
+async function runPayout(
+  baseUrl: string,
+  marketId: string,
+  consensus: string,
+  reputationUpdates: RepUpdate[] | undefined
+) {
+  if (!reputationUpdates?.length) return null;
+
+  try {
+    const payoutRes = await fetch(`${baseUrl}/api/market/payout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        marketId,
+        consensus,
+        agentVotes: reputationUpdates.map((u) => ({
+          agent: u.agent,
+          vote: u.vote,
+          correct: u.correct,
+        })),
+      }),
+    });
+    return await payoutRes.json();
+  } catch {
+    return { error: "Payout call failed" };
+  }
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
@@ -30,12 +66,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (r1.error) return res.json({ phase: 1, error: r1.error, r1 });
 
   if (r1.resolved) {
+    // Payout USDC to correct voters
+    const payout = await runPayout(baseUrl, marketId, r1.consensus, r1.reputationUpdates);
+
     return res.json({
       phase: 1,
       resolved: true,
       consensus: r1.consensus,
       r1,
       r2: null,
+      payout,
     });
   }
 
@@ -47,11 +87,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   });
   const r2 = await r2Res.json();
 
+  // Payout if resolved after phase 2
+  let payout = null;
+  if (r2.resolved && r2.consensus) {
+    payout = await runPayout(baseUrl, marketId, r2.consensus, r2.reputationUpdates);
+  }
+
   return res.json({
     phase: 2,
     resolved: r2.resolved || false,
     consensus: r2.consensus || null,
     r1,
     r2,
+    payout,
   });
 }
